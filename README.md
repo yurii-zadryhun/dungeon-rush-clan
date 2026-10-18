@@ -33,7 +33,7 @@ npm run build
 npm start
 ```
 
-Open the deployment URL. If no owner exists, you are prompted for the initial `BOOTSTRAP_TOKEN`. Scan the displayed authenticator QR, pick a username/password (12+ chars), and enter the six-digit TOTP code. The first account becomes **owner**. Then remove `BOOTSTRAP_TOKEN` from the environment and restart. **Back up `data/clan.sqlite` and AUTH_ENCRYPTION_KEY**; losing the key makes enrolled TOTP secrets unrecoverable. Keep `data` outside any web document root.
+Open the deployment URL. If no owner exists, you are prompted for the initial `BOOTSTRAP_TOKEN`. Scan the displayed authenticator QR, pick a username/password (8+ chars), and enter the six-digit TOTP code. The first account becomes **owner**. Then remove `BOOTSTRAP_TOKEN` from the environment and restart. **Back up `data/clan.sqlite` and AUTH_ENCRYPTION_KEY**; losing the key makes enrolled TOTP secrets unrecoverable. Keep `data` outside any web document root.
 
 Do not commit `.env`, `data`, screenshot uploads, service keys or real TOTP QR codes. Secrets and invitations should only be shared privately.
 

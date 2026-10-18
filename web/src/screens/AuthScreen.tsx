@@ -45,7 +45,7 @@ export function AuthScreen({mode,invite,onDone}:{mode:string;invite:string|null;
         {(!login&&step===1)&&<div className="qr-box"><img src={qr} alt="Authenticator enrollment QR"/><p>Scan in your authenticator app, then enter its six-digit code below.</p></div>}
         {(login||step===1)&&<>
           <label>Username<input autoComplete="username" value={username} maxLength={50} onChange={e=>setUsername(e.target.value)} required/></label>
-          <label>Password <span className="muted tiny">{login?'':'(12+ characters)'}</span><input type="password" autoComplete={login?'current-password':'new-password'} value={password} onChange={e=>setPassword(e.target.value)} minLength={login?undefined:12} required/></label>
+          <label>Password <span className="muted tiny">{login?'':'(8+ characters)'}</span><input type="password" autoComplete={login?'current-password':'new-password'} value={password} onChange={e=>setPassword(e.target.value)} minLength={login?undefined:8} required/></label>
           <label>Authenticator code<input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={otp} onChange={e=>setOtp(e.target.value.replace(/\D/g,''))} placeholder="000000" required/></label>
         </>}
         {error&&<div role="alert" className="error-strip">{error}</div>}

@@ -9,7 +9,7 @@ const WEEK = 7 * 86400000;
 const hash = (value: string) => createHash('sha256').update(value).digest('hex');
 const token = () => randomBytes(32).toString('base64url');
 const nameSchema = z.string().trim().min(2).max(50);
-const passwordSchema = z.string().min(12).max(200);
+const passwordSchema = z.string().min(8).max(200);
 const otpSchema = z.string().regex(/^\d{6}$/);
 type SafeAccount = { id: number; username: string; displayName: string; role: Role };
 type RequestWithAccount = FastifyRequest & { account?: SafeAccount };
