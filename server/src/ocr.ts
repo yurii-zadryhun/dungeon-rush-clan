@@ -192,7 +192,16 @@ export class VisionService {
         signal: controller.signal
       });
     } catch {throw new BadRequestException('Cloud OCR service unavailable');} finally {clearTimeout(timeout);}
-    if (!response.ok) throw new BadRequestException('Cloud OCR request failed (' + response.status + ')');
+    if (!response.ok) {
+      const failure = await response.json().catch(() => null) as {
+        error?: { message?: string; status?: string };
+      } | null;
+      const detail = failure?.error?.message?.replace(/key=[^\\s&]+/gi, 'key=[redacted]');
+      const reason = detail || failure?.error?.status || 'Unknown provider error';
+      throw new BadRequestException(
+        `Google Cloud Vision (HTTP ${response.status}): ${reason}`,
+      );
+    }
     const payload: any = await response.json();
     const result = payload.responses?.[0];
     if (result?.error) throw new BadRequestException('Cloud OCR: ' + String(result.error.message));

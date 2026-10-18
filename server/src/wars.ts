@@ -13,7 +13,7 @@ export class WarsService {
     const now = new Date(), current = warStart(now);
     if (anchor && !/^\d{4}-\d{2}-\d{2}$/.test(anchor)) throw new BadRequestException('Invalid date');
     if (anchor && warStart(new Date(anchor + 'T00:00:00Z')) !== anchor) throw new BadRequestException('Anchor must be a Tuesday');
-    const end = anchor || shiftWar(current, 2);
+    const end = anchor || shiftWar(current, 1);
     const limit = Math.max(1, Math.min(20, Number.isFinite(count) ? Math.floor(count) : 10));
     const starts = Array.from({ length: limit }, (_, i) => shiftWar(end, i - limit + 1));
     const rows = await this.db.query.selectFrom('wars').leftJoin('clans', 'wars.opponent_clan_id', 'clans.id')
