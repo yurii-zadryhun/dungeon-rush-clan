@@ -5,22 +5,53 @@ import { mkdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 export type Role = 'owner' | 'admin' | 'member';
+
 export interface Tables {
   settings: { id: number; clan_name: string; minimum_points: number; weights_json: string };
-  accounts: { id: Generated<number>; username: string; display_name: string; role: Role; password_hash: string; totp_secret: string; last_totp_step: number; active: number; created_at: number };
+  accounts: {
+    id: Generated<number>;
+    username: string;
+    display_name: string;
+    role: Role;
+    password_hash: string;
+    totp_secret: string;
+    last_totp_step: number;
+    active: number;
+    created_at: number
+  };
   sessions: { token_hash: string; account_id: number; expires_at: number; extended_at: number };
-  invites: { id: Generated<number>; token_hash: string; label: string; role: 'admin' | 'member'; setup_secret: string | null; expires_at: number; used_at: number | null; created_by: number };
+  invites: {
+    id: Generated<number>;
+    token_hash: string;
+    label: string;
+    role: 'admin' | 'member';
+    setup_secret: string | null;
+    expires_at: number;
+    used_at: number | null;
+    created_by: number
+  };
   bootstrap: { id: number; secret: string; expires_at: number };
   clans: { id: Generated<number>; name: string; normalized_name: string };
-  wars: { id: Generated<number>; start_date: string; opponent_clan_id: number | null; our_score: number | null; opponent_score: number | null; ranking_imported_at: number | null; result_imported_at: number | null; created_at: number };
+  wars: {
+    id: Generated<number>;
+    start_date: string;
+    opponent_clan_id: number | null;
+    our_score: number | null;
+    opponent_score: number | null;
+    ranking_imported_at: number | null;
+    result_imported_at: number | null;
+    created_at: number
+  };
   players: { id: Generated<number>; name: string; normalized_name: string; active: number; created_at: number };
   player_scores: { war_id: number; player_id: number; position: number; points: number };
   war_days: { war_id: number; day_number: number; points: number; winner: 'ours' | 'opponent'; mvp: string };
 }
+
 @Injectable()
 export class Db implements OnModuleDestroy {
   readonly connection: Database.Database;
   readonly query: Kysely<Tables>;
+
   constructor() {
     const directory = resolve(process.env.DATA_DIR || './data');
     mkdirSync(directory, { recursive: true, mode: 0o700 });
@@ -45,6 +76,8 @@ export class Db implements OnModuleDestroy {
     `);
     this.query = new Kysely<Tables>({ dialect: new SqliteDialect({ database: this.connection }) });
   }
+
   async onModuleDestroy() { await this.query.destroy(); }
 }
+
 export function normalizeName(name: string): string { return name.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase(); }
