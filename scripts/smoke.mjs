@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import {createHmac} from 'node:crypto';
 
 const base = 'http://127.0.0.1:' + (process.env.PORT || 3128) + '/api/';
 
@@ -10,25 +9,6 @@ async function request(path, method = 'GET', body = null, cookie = '') {
     const res = await fetch(base + path, {method, headers, body: body === null ? undefined : JSON.stringify(body)});
     const data = await res.json().catch(() => ({}));
     return {status: res.status, body: data, cookie: (res.headers.get('set-cookie') || '').split(';')[0]};
-}
-
-function totp(secret) {
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-    let accumulator = 0, bits = 0;
-    const bytes = [];
-    for (const c of secret) {
-        accumulator = (accumulator << 5) | alphabet.indexOf(c);
-        bits += 5;
-        if (bits >= 8) {
-            bits -= 8;
-            bytes.push((accumulator >> bits) & 255);
-        }
-    }
-    const step = Math.floor(Date.now() / 30000);
-    const counter = Buffer.alloc(8);
-    counter.writeBigUInt64BE(BigInt(step));
-    const hash = createHmac('sha1', Buffer.from(bytes)).update(counter).digest();
-    return String((hash.readUInt32BE(hash[19] & 15) & 0x7fffffff) % 1000000).padStart(6, '0');
 }
 
 function startFor(date) {
@@ -50,19 +30,18 @@ function ensure(actual, expected, context) {
 async function run() {
     ensure((await request('auth/setup-state')).body.initialized, false, 'Uninitialized');
     ensure((await request('dashboard')).status, 401, 'Dashboard guarded');
-    const boot = await request('auth/bootstrap/start', 'POST', {bootstrapToken: process.env.BOOTSTRAP_TOKEN});
-    ensure(boot.status, 201, 'Bootstrap start');
-    const secret = new URL(boot.body.uri).searchParams.get('secret');
-    const owner = await request('auth/bootstrap/finish', 'POST', {
+    const owner = await request('auth/bootstrap', 'POST', {
         bootstrapToken: process.env.BOOTSTRAP_TOKEN,
         username: 'owner',
-        password: 'testing-password-1234',
-        code: totp(secret)
+        password: 'testing-password-1234'
     });
     ensure(owner.status, 201, 'Owner enrolled');
     const ownerCookie = owner.cookie;
     assert.ok(ownerCookie.startsWith('clan_session='), 'Owner cookie was issued');
     ensure((await request('auth/me', 'GET', null, ownerCookie)).body.role, 'owner', 'Owner role');
+    ensure((await request('auth/locale', 'PATCH', {locale: 'en'}, ownerCookie)).status, 200, 'Locale update');
+    ensure((await request('auth/me', 'GET', null, ownerCookie)).body.locale, 'en', 'Locale persisted');
+    ensure((await request('auth/login', 'POST', {username: 'owner', password: 'testing-password-1234'})).status, 201, 'Password-only login');
     const old = weekOffset(startFor(new Date()), -3);
     const recent = weekOffset(startFor(new Date()), -2);
     const dayPoints = [1, 2, 2, 2, 2, 4];
@@ -98,13 +77,11 @@ async function run() {
     const invitation = await request('auth/invites', 'POST', {label: 'Guest', role: 'member'}, ownerCookie);
     ensure(invitation.status, 201, 'Owner can invite');
     const inviteToken = new URL(invitation.body.url).searchParams.get('invite');
-    const enroll = await request('auth/invite/' + inviteToken + '/start', 'POST', {});
-    ensure(enroll.status, 201, 'Member can enroll');
-    const secret2 = new URL(enroll.body.uri).searchParams.get('secret');
-    const member = await request('auth/invite/' + inviteToken + '/finish', 'POST', {
+    const info = await request('auth/invite/' + inviteToken);
+    ensure(info.body.label, 'Guest', 'Invitation display name');
+    const member = await request('auth/invite/' + inviteToken + '/register', 'POST', {
         username: 'guest',
-        password: 'guest-password-1234',
-        code: totp(secret2)
+        password: 'guest-password-1234'
     });
     ensure(member.status, 201, 'Member account registered');
     const memberCookie = member.cookie;
