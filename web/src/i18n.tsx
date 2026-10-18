@@ -375,6 +375,33 @@ export function LanguagePicker({ onSelect }: { onSelect?: (locale: Locale) => vo
   );
 }
 
+const backendErrors: Record<string, string> = {
+  'War must start on a Tuesday': 'Війна має починатися у вівторок.',
+  'Invalid Tuesday date': 'Неправильна дата початку війни.',
+  'Invalid date': 'Неправильна дата.',
+  'Anchor must be a Tuesday': 'Дата має припадати на вівторок.',
+  'Rankings become available Sunday 00:00 UTC': 'Рейтинг можна імпортувати з неділі.',
+  'Final results become available Monday 00:00 UTC': 'Підсумок можна імпортувати з понеділка.',
+  'Duplicate player/rank entries': 'Повторюються гравці або місця в рейтингу.',
+  'Each day must appear once': 'Кожен із шести днів має бути вказаний один раз.',
+  'Daily winners do not match final score': 'Переможці за днями не відповідають підсумковому рахунку.',
+  'Player ranking already imported for this war': 'Рейтинг цієї війни вже імпортовано.',
+  'Final result already imported for this war': 'Підсумок цієї війни вже імпортовано.',
+  'Same player assigned to multiple ranks': 'Один гравець займає кілька місць.',
+  'Name or rank is already used': "Ім'я або місце вже використано.",
+  'Weights must sum to 1': 'Сума ваг має дорівнювати 100%.',
+  'Too many login attempts': 'Забагато спроб входу. Спробуйте пізніше.',
+  'Cannot revoke yourself': 'Не можна відкликати власний доступ.',
+  'Cannot revoke owner': 'Не можна відкликати доступ власника.',
+  'Cloud OCR service unavailable': 'Сервіс розпізнавання тимчасово недоступний.',
+  'No text detected in image': 'На зображенні не знайдено тексту.',
+  'Unexpected image field': 'Непідтримуваний тип вкладення.',
+  'PNG, JPEG or WebP required': 'Підтримуються PNG, JPEG та WebP.',
+  'Image exceeds 6 MB': 'Розмір зображення перевищує 6 МБ.',
+  'Maximum 10 ranking screenshots and one result': 'Дозволено до 10 скриншотів рейтингу й один підсумковий.',
+  'Invalid image count': 'Невірна кількість зображень.',
+};
+
 const serverMessages: Record<string, MessageKey> = {
   'Invalid username or password': 'invalidCredentials',
   'Invalid setup token': 'invalidSetupToken',
@@ -393,7 +420,12 @@ export function localizeError(raw: string, locale: Locale, status?: number): str
   if (raw.startsWith('Google Cloud Vision (HTTP 403)')) {
     return dictionaries[locale].ocrPermission + '\n' + raw;
   }
-  if (status === 403) return dictionaries[locale].forbidden;
+  if (locale === 'uk' && backendErrors[raw]) return backendErrors[raw];
+  const invalidDay = raw.match(/^Invalid day (\d+) points$/);
+  if (locale === 'uk' && invalidDay) return 'Невірна кількість очок за день ' + invalidDay[1];
+  const unknownPlayer = raw.match(/^Unknown player ID (\d+)$/);
+  if (locale === 'uk' && unknownPlayer) return 'Невідомий гравець #' + unknownPlayer[1];
+    if (status === 403) return dictionaries[locale].forbidden;
   if (status === 401) return dictionaries[locale].unauthorized;
   return raw;
 }

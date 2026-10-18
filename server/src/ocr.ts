@@ -250,7 +250,7 @@ export class VisionService {
       const failure = (await response.json().catch(() => null)) as {
         error?: { message?: string; status?: string };
       } | null;
-      const detail = failure?.error?.message?.replace(/key=[^\\s&]+/gi, 'key=[redacted]');
+      const detail = failure?.error?.message?.replace(/key=[^\s&]+/gi, 'key=[redacted]');
       const reason = detail || failure?.error?.status || 'Unknown provider error';
       throw new BadRequestException(`Google Cloud Vision (HTTP ${response.status}): ${reason}`);
     }
