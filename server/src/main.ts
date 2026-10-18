@@ -30,11 +30,6 @@ async function bootstrap() {
   const webRoot=resolve(__dirname,'../../web/dist');
   if(existsSync(webRoot)) {
     await app.register(fastifyStatic,{root:webRoot,prefix:'/',wildcard:false});
-    http.setNotFoundHandler((req,reply)=>{
-      if(req.url.startsWith('/api/')) return reply.code(404).send({message:'Not found'});
-      if(req.method==='GET' || req.method==='HEAD') return reply.sendFile('index.html');
-      return reply.code(404).send({message:'Not found'});
-    });
   }
   await app.listen({host:'0.0.0.0',port:Number(process.env.PORT||3000)});
 }
