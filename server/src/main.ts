@@ -10,6 +10,7 @@ import { AppModule } from './module';
 
 async function bootstrap() {
   try { process.loadEnvFile('.env'); } catch { /* environment provided by deployment */ }
+  if(process.env.NODE_ENV==='production' && !/^https:\/\//.test(process.env.APP_ORIGIN||'')) throw new Error('Production APP_ORIGIN must be an HTTPS origin');
   const app=await NestFactory.create<NestFastifyApplication>(AppModule,new FastifyAdapter({trustProxy:process.env.TRUST_PROXY==='1',bodyLimit:1024*1024}),{logger:['log','warn','error']});
   await app.register(cookie);
   await app.register(multipart,{limits:{fileSize:6*1024*1024,files:11,fields:2}});
