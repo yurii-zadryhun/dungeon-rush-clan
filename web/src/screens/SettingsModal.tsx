@@ -1,62 +1,95 @@
 import React from 'react';
 import { Plus, Save, Settings, Trash2, X } from 'lucide-react';
-import { api, Dashboard, json } from '../api';
+import { api, json, type Dashboard } from '../api';
+import { useI18n } from '../i18n';
 
 export function SettingsModal({ current, onClose, onDone }: {
   current: Dashboard['rankings']['settings'];
   onClose: () => void;
-  onDone: (next: Dashboard) => void
+  onDone: (next: Dashboard) => void;
 }) {
+  const { t } = useI18n();
   const [clanName, setClanName] = React.useState(current.clanName);
   const [minimum, setMinimum] = React.useState(String(current.minimumPoints / 1000));
-  const [weights, setWeights] = React.useState(current.weights.map(w => String(Math.round(w * 10000) / 100)));
+  const [weights, setWeights] = React.useState(
+    current.weights.map(weight => String(Math.round(weight * 10000) / 100)),
+  );
   const [error, setError] = React.useState('');
   const [busy, setBusy] = React.useState(false);
+
+  function updateWeight(index: number, value: string) {
+    setWeights(existing => existing.map((weight, position) => position === index ? value : weight));
+  }
 
   async function save() {
     setBusy(true);
     setError('');
     try {
-      const list = weights.map(w => Number(w) / 100);
-      if (list.some(w => !Number.isFinite(w) || w <= 0) || Math.abs(list.reduce((s, w) => s + w, 0) - 1) > 0.00001) throw new Error('Weights must be positive and total exactly 100%.');
-      const min = Number(minimum);
-      if (!Number.isInteger(min * 1000) || min < 0) throw new Error('Requirement must be a non-negative number of thousands.');
-      onDone(await api<Dashboard>('settings', json('PATCH', { clanName, minimumPoints: min * 1000, weights: list })));
-    } catch (e) {setError((e as Error).message);} finally {setBusy(false);}
+      const list = weights.map(weight => Number(weight) / 100);
+      const total = list.reduce((sum, weight) => sum + weight, 0);
+      if (list.some(weight => !Number.isFinite(weight) || weight <= 0) || Math.abs(total - 1) > 0.00001) {
+        throw new Error(t('weightsError'));
+      }
+      const minimumThousands = Number(minimum);
+      if (!Number.isInteger(minimumThousands * 1000) || minimumThousands < 0) {
+        throw new Error(t('minimumError'));
+      }
+      const updated = await api<Dashboard>('settings', json('PATCH', {
+        clanName, minimumPoints: minimumThousands * 1000, weights: list,
+      }));
+      onDone(updated);
+    } catch (failure) {
+      setError((failure as Error).message);
+    } finally {
+      setBusy(false);
+    }
   }
 
-  return <div className="modal-backdrop" onMouseDown={e => {if (e.target === e.currentTarget) onClose();}}>
-    <section className="panel modal settings-modal" role="dialog" aria-modal="true">
-      <header className="modal-header"><h2><Settings/> Clan settings</h2>
-        <button className="close-button" onClick={onClose}><X/></button>
-      </header>
-      <div className="modal-content">
-        <label>Clan name<input value={clanName} onChange={e => setClanName(e.target.value)}/></label>
-        <label>Minimum calculated weekly score
-          <div className="input-suffix"><input type="number" step="1" min="0" value={minimum}
-                                               onChange={e => setMinimum(e.target.value)}/><span>k pts</span></div>
-        </label>
-        <div className="review-head"><h3>Calculated score weights</h3>
-          <button className="game-button secondary" disabled={weights.length >= 12}
-                  onClick={() => setWeights(old => [...old, '0'])}><Plus size={14}/> Add
+  const sum = weights.reduce((total, weight) => total + (Number(weight) || 0), 0);
+  return (
+    <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
+      <section className="panel modal settings-modal" role="dialog" aria-modal="true" aria-label={t('clanSettings')}>
+        <header className="modal-header">
+          <h2><Settings /> {t('clanSettings')}</h2>
+          <button aria-label={t('close')} className="close-button" onClick={onClose}><X /></button>
+        </header>
+        <div className="modal-content">
+          <label>{t('clanName')}
+            <input value={clanName} onChange={event => setClanName(event.target.value)} />
+          </label>
+          <label>{t('minimumScore')}
+            <div className="input-suffix">
+              <input type="number" step="1" min="0" value={minimum}
+                onChange={event => setMinimum(event.target.value)} />
+              <span>k</span>
+            </div>
+          </label>
+          <h3>{t('weights')}</h3>
+          <p className="tiny muted">{t('weightsHelp')}</p>
+          {weights.map((weight, index) => (
+            <div className="weight-row" key={index}>
+              <span>{index === 0 ? t('newestWar') : t('previousWar', { offset: index })}</span>
+              <input type="number" step=".01" min="0" max="100"
+                value={weight} onChange={event => updateWeight(index, event.target.value)} />
+              <span>%</span>
+              <button aria-label={t('removeRow')} className="icon-button danger" disabled={weights.length <= 1}
+                onClick={() => setWeights(existing => existing.filter((_, position) => position !== index))}>
+                <Trash2 size={16} />
+              </button>
+            </div>
+          ))}
+          <button className="game-button secondary weight-add" disabled={weights.length >= 12}
+            onClick={() => setWeights(existing => [...existing, '0'])}>
+            <Plus size={14} /> {t('add')}
           </button>
+          <div className="sum-row">{t('total')}: <b>{sum.toFixed(2)}%</b></div>
         </div>
-        <p className="tiny muted">Newest imported war first. The weights must sum to 100%. If fewer wars are available,
-          the available weights are normalized.</p>
-        {weights.map((w, i) => <div className="weight-row" key={i}><span>War −{i}</span><input type="number" step=".01"
-                                                                                               min="0" max="100"
-                                                                                               value={w}
-                                                                                               onChange={e => setWeights(old => old.map((v, j) => i === j ? e.target.value : v))}/><span>%</span>
-          <button className="icon-button danger" disabled={weights.length <= 1}
-                  onClick={() => setWeights(old => old.filter((_, j) => i !== j))}><Trash2 size={16}/></button>
-        </div>)}
-        <div className="sum-row">Total: <b>{weights.reduce((s, x) => s + (Number(x) || 0), 0).toFixed(2)}%</b></div>
-      </div>
-      {error && <div className="error-strip">{error}</div>}
-      <footer className="modal-actions">
-        <button className="game-button secondary" onClick={onClose}>Cancel</button>
-        <button className="game-button blue" disabled={busy} onClick={save}><Save size={17}/> Save</button>
-      </footer>
-    </section>
-  </div>;
+        {error && <div className="error-strip" role="alert">{error}</div>}
+        <footer className="modal-actions">
+          <button className="game-button secondary" onClick={onClose}>{t('cancel')}</button>
+          <button className="game-button blue" disabled={busy} onClick={save}><Save size={17} /> {t('save')}</button>
+        </footer>
+      </section>
+    </div>
+  );
 }

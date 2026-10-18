@@ -1458,3 +1458,30 @@ strong, b {
     font-weight: 900;
     text-align: left
 }
+
+/* Locale selection */
+.language-picker { display: inline-flex; gap: 3px; align-items: center; border: 2px solid #080808;
+  background: #242224; padding: 3px; border-radius: 11px; white-space: nowrap; }
+.language-choice { border: 0; background: transparent; color: #ada8aa; font-weight: 900;
+  border-radius: 7px; font-size: 11px; padding: 5px 6px; }
+.language-choice.selected { color: #fff; background: #386c96; }
+.language-choice span { font-size: 15px; vertical-align: -1px; }
+.auth-language { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+.auth-card form { gap: 14px; }
+.clan-summary-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.clan-summary-line h1 { margin: 12px 0; min-width: 0; overflow-wrap: anywhere; }
+.clan-record { display: flex; align-items: flex-start; gap: 15px; flex-shrink: 0; }
+.clan-record-entry { display: grid; gap: 1px; text-align: center; }
+.clan-record-entry strong { font-size: clamp(24px, 3vw, 37px); line-height: 1.05;
+  font-weight: 1000; text-shadow: 0 2px 0 #080808; font-variant-numeric: tabular-nums; }
+.clan-record-entry small { color: #bfb5b9; font-size: 10px; font-weight: 900; }
+.weight-add { justify-self: start; }
+.created-invite { background: #242e30; border-color: #315476; }
+@media (max-width: 650px) {
+  .site-header .brand small { font-size: 8px; }
+  .site-header .header-actions { gap: 4px; }
+  .language-choice { font-size: 9px; padding: 4px; }
+  .language-choice span { font-size: 13px; }
+  .clan-record { gap: 9px; }
+  .clan-record-entry strong { font-size: 25px; }
+}
