@@ -371,7 +371,7 @@ const serverMessages: Record<string, MessageKey> = {
 export function localizeError(raw: string, locale: Locale, status?: number): string {
   const key = serverMessages[raw];
   if (key) return dictionaries[locale][key];
-  if (status === 403 && raw.startsWith('Google Cloud Vision')) {
+  if (raw.startsWith('Google Cloud Vision (HTTP 403)')) {
     return dictionaries[locale].ocrPermission + '\n' + raw;
   }
   if (status === 403) return dictionaries[locale].forbidden;

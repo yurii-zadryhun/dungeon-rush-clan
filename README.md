@@ -10,7 +10,7 @@ Private, lightweight clan-war dashboard. **NestJS + Fastify, React + Vite, SQLit
 - Editable review of ranks, names, points, opponent, six daily winners and MVPs; duplicate ranks reconciled.
 - Player entry/exit detection based on the latest *chronological* imported weekly ranking (including 0-point members).
 - Rolling weighted leaderboard (75/25 by default), configurable minimum points, all-time average and latest-war widgets.
-- Individual accounts with password **and** TOTP, owner-managed single-use invitation URLs/QRs, roles, revocation and server-side rolling sessions.
+- Individual username/password accounts, owner-managed single-use invitation links, roles, revocation and server-side rolling sessions.
 - SQLite WAL, transactional imports, bounded OCR requests, local OCR cache; no Redis or runtime frontend build.
 
 ## Requirements
@@ -24,7 +24,7 @@ Private, lightweight clan-war dashboard. **NestJS + Fastify, React + Vite, SQLit
 ```sh
 npm install
 cp .env.example .env
-openssl rand -hex 32          # paste as AUTH_ENCRYPTION_KEY in .env
+
 openssl rand -hex 24          # paste as BOOTSTRAP_TOKEN in .env
 # configure APP_ORIGIN and GOOGLE_VISION_API_KEY
 npm run check
@@ -33,9 +33,9 @@ npm run build
 npm start
 ```
 
-Open the deployment URL. If no owner exists, you are prompted for the initial `BOOTSTRAP_TOKEN`. Scan the displayed authenticator QR, pick a username/password (8+ chars), and enter the six-digit TOTP code. The first account becomes **owner**. Then remove `BOOTSTRAP_TOKEN` from the environment and restart. **Back up `data/clan.sqlite` and AUTH_ENCRYPTION_KEY**; losing the key makes enrolled TOTP secrets unrecoverable. Keep `data` outside any web document root.
 
-Do not commit `.env`, `data`, screenshot uploads, service keys or real TOTP QR codes. Secrets and invitations should only be shared privately.
+
+Do not commit `.env`, `data`, screenshot uploads, service keys or real password-only link codes. Secrets and invitations should only be shared privately.
 
 For local frontend hot reload, use `npm run dev`; Vite proxies API traffic to the NestJS process. Set `APP_ORIGIN` appropriately for the production origin, without a trailing slash. Enable HTTPS and `NODE_ENV=production` in production, and set `TRUST_PROXY=1` only behind a trusted reverse proxy that overwrites proxy headers. Cookies are HttpOnly + SameSite Strict + Secure in production.
 
@@ -47,7 +47,7 @@ For local frontend hot reload, use `npm run dev`; Vite proxies API traffic to th
 | Admin | Yes | Yes | No |
 | Member | Yes | No | No |
 
-Invitations expire after 7 days, are single-use, and are **not** shared TOTP codes. The member configures a personal password and authenticator secret. Revoking an account also revokes all sessions. A new invite is required to grant a new account access.
+Invitations expire after 7 days, are single-use links, and grant roles stored on the server. The invited member chooses their own username and password. Revoking an account also revokes its sessions.
 
 ## Business rules
 
@@ -65,7 +65,7 @@ Invitations expire after 7 days, are single-use, and are **not** shared TOTP cod
 ```text
 server/src/
   database.ts       SQLite schema and Kysely wiring
-  auth.ts           TOTP, passwords, sessions, owner access management
+  auth.ts           password-only, passwords, sessions, owner access management
   calendar.ts       Pure UTC calendar logic
   ranking.ts        Weighted and all-time ranking calculations
   wars.ts           Dashboard and settings API

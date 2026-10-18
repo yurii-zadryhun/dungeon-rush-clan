@@ -42,6 +42,8 @@ function App() {
     return () => { mounted = false; };
   }, []);
 
+  React.useEffect(() => { document.title = 'Dungeon Rush · ' + t('appTitle'); }, [t]);
+
   React.useEffect(() => {
     if (phase !== 'ready') return;
     api<Dashboard>('dashboard').then(setDashboard)
