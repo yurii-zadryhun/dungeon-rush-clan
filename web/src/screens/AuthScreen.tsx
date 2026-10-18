@@ -1,5 +1,5 @@
 import React from 'react';
-import { KeyRound, ShieldCheck, Swords, ArrowRight } from 'lucide-react';
+import { ShieldCheck, ArrowRight } from 'lucide-react';
 import { Account,api,json } from '../api';
 
 export function AuthScreen({mode,invite,onDone}:{mode:string;invite:string|null;onDone:(user:Account)=>void}) {
@@ -34,7 +34,6 @@ export function AuthScreen({mode,invite,onDone}:{mode:string;invite:string|null;
     finally {setBusy(false);}
   }
   return <main className="auth-shell">
-    <div className="auth-logo"><Swords size={34}/></div>
     <div className="panel auth-card">
       <div className="eyebrow"><ShieldCheck size={16}/> PRIVATE CLAN AREA</div>
       <h1>Dungeon Rush</h1><h2>Clan War Archive</h2>
@@ -45,13 +44,12 @@ export function AuthScreen({mode,invite,onDone}:{mode:string;invite:string|null;
         {(!login&&step===1)&&<div className="qr-box"><img src={qr} alt="Authenticator enrollment QR"/><p>Scan in your authenticator app, then enter its six-digit code below.</p></div>}
         {(login||step===1)&&<>
           <label>Username<input autoComplete="username" value={username} maxLength={50} onChange={e=>setUsername(e.target.value)} required/></label>
-          <label>Password <span className="muted tiny">{login?'':'(8+ characters)'}</span><input type="password" autoComplete={login?'current-password':'new-password'} value={password} onChange={e=>setPassword(e.target.value)} minLength={login?undefined:8} required/></label>
+          <label>Password<input type="password" autoComplete={login?'current-password':'new-password'} value={password} onChange={e=>setPassword(e.target.value)} minLength={login?undefined:8} required/></label>
           <label>Authenticator code<input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={otp} onChange={e=>setOtp(e.target.value.replace(/\D/g,''))} placeholder="000000" required/></label>
         </>}
         {error&&<div role="alert" className="error-strip">{error}</div>}
         <button className="game-button blue full" disabled={busy}>{busy?'Please wait...':login?'Sign in':step===0?'Get authenticator QR':'Finish setup'} <ArrowRight size={17}/></button>
       </form>
-      <p className="tiny muted auth-foot"><KeyRound size={13}/> Private access · 7-day rolling session</p>
     </div>
   </main>;
 }
