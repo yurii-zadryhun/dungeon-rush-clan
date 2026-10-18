@@ -39,15 +39,20 @@ function App() {
       }
     }
     void restore();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  React.useEffect(() => { document.title = 'Dungeon Rush · ' + t('appTitle'); }, [t]);
+  React.useEffect(() => {
+    document.title = 'Dungeon Rush · ' + t('appTitle');
+  }, [t]);
 
   React.useEffect(() => {
     if (phase !== 'ready') return;
-    api<Dashboard>('dashboard').then(setDashboard)
-      .catch(failure => setError((failure as Error).message));
+    api<Dashboard>('dashboard')
+      .then(setDashboard)
+      .catch((failure) => setError((failure as Error).message));
   }, [phase]);
 
   function authenticated(current: Account) {
@@ -76,15 +81,30 @@ function App() {
     setPhase('login');
   }
 
-  if (phase === 'loading') return <div className="loading-page"><span className="spinner" /> {t('loading')}</div>;
+  if (phase === 'loading')
+    return (
+      <div className="loading-page">
+        <span className="spinner" /> {t('loading')}
+      </div>
+    );
   if (phase !== 'ready') return <AuthScreen mode={phase} invite={invite} onDone={authenticated} />;
   if (!account) return null;
   return (
-    <ClanDashboard user={account} data={dashboard} onChange={setDashboard}
-      onLogout={logout} onLocaleChange={saveLanguage} error={error} />
+    <ClanDashboard
+      user={account}
+      data={dashboard}
+      onChange={setDashboard}
+      onLogout={logout}
+      onLocaleChange={saveLanguage}
+      error={error}
+    />
   );
 }
 
 createRoot(document.getElementById('root')!).render(
-  <React.StrictMode><LanguageProvider><App /></LanguageProvider></React.StrictMode>,
+  <React.StrictMode>
+    <LanguageProvider>
+      <App />
+    </LanguageProvider>
+  </React.StrictMode>,
 );

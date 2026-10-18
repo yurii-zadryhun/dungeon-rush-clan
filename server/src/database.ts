@@ -16,7 +16,7 @@ export interface Tables {
     password_hash: string;
     locale: 'uk' | 'en';
     active: number;
-    created_at: number
+    created_at: number;
   };
   sessions: { token_hash: string; account_id: number; expires_at: number; extended_at: number };
   invites: {
@@ -26,7 +26,7 @@ export interface Tables {
     role: 'admin' | 'member';
     expires_at: number;
     used_at: number | null;
-    created_by: number
+    created_by: number;
   };
   clans: { id: Generated<number>; name: string; normalized_name: string };
   wars: {
@@ -37,11 +37,23 @@ export interface Tables {
     opponent_score: number | null;
     ranking_imported_at: number | null;
     result_imported_at: number | null;
-    created_at: number
+    created_at: number;
   };
-  players: { id: Generated<number>; name: string; normalized_name: string; active: number; created_at: number };
+  players: {
+    id: Generated<number>;
+    name: string;
+    normalized_name: string;
+    active: number;
+    created_at: number;
+  };
   player_scores: { war_id: number; player_id: number; position: number; points: number };
-  war_days: { war_id: number; day_number: number; points: number; winner: 'ours' | 'opponent'; mvp: string };
+  war_days: {
+    war_id: number;
+    day_number: number;
+    points: number;
+    winner: 'ours' | 'opponent';
+    mvp: string;
+  };
 }
 
 @Injectable()
@@ -73,7 +85,7 @@ export class Db implements OnModuleDestroy {
     // Existing installations used TOTP. Rebuild tables once to remove secrets entirely
     // while preserving account IDs, password hashes, sessions and invitations.
     const accountColumns = this.connection.pragma('table_info(accounts)') as { name: string }[];
-    if (accountColumns.some(column => column.name === 'totp_secret')) {
+    if (accountColumns.some((column) => column.name === 'totp_secret')) {
       this.connection.transaction(() => {
         this.connection.exec(`
           CREATE TABLE accounts_new (
@@ -89,7 +101,7 @@ export class Db implements OnModuleDestroy {
       })();
     }
     const invitationColumns = this.connection.pragma('table_info(invites)') as { name: string }[];
-    if (invitationColumns.some(column => column.name === 'setup_secret')) {
+    if (invitationColumns.some((column) => column.name === 'setup_secret')) {
       this.connection.transaction(() => {
         this.connection.exec(`
           CREATE TABLE invites_new (
@@ -112,7 +124,11 @@ export class Db implements OnModuleDestroy {
     this.query = new Kysely<Tables>({ dialect: new SqliteDialect({ database: this.connection }) });
   }
 
-  async onModuleDestroy() { await this.query.destroy(); }
+  async onModuleDestroy() {
+    await this.query.destroy();
+  }
 }
 
-export function normalizeName(name: string): string { return name.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase(); }
+export function normalizeName(name: string): string {
+  return name.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+}

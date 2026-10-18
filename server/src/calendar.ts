@@ -13,7 +13,10 @@ export function shiftWar(start: string, weeks: number): string {
   return date.toISOString().slice(0, 10);
 }
 
-export function importPermission(start: string, now = new Date()): { ranking: boolean; result: boolean } {
+export function importPermission(
+  start: string,
+  now = new Date(),
+): { ranking: boolean; result: boolean } {
   const sunday = new Date(start + 'T00:00:00Z');
   sunday.setUTCDate(sunday.getUTCDate() + 5);
   const monday = new Date(sunday);

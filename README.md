@@ -8,7 +8,7 @@ Private, lightweight clan-war dashboard. **NestJS + Fastify, React + Vite, SQLit
 - Separate rankings (from Sunday 00:00 UTC) and **final** war results (from Monday 00:00 UTC).
 - Cloud Vision OCR for up to 10 weekly leaderboard screenshots + one final-result screenshot.
 - Editable review of ranks, names, points, opponent, six daily winners and MVPs; duplicate ranks reconciled.
-- Player entry/exit detection based on the latest *chronological* imported weekly ranking (including 0-point members).
+- Player entry/exit detection based on the latest _chronological_ imported weekly ranking (including 0-point members).
 - Rolling weighted leaderboard (75/25 by default), configurable minimum points, all-time average and latest-war widgets.
 - Individual username/password accounts, owner-managed single-use invitation links, roles, revocation and server-side rolling sessions.
 - SQLite WAL, transactional imports, bounded OCR requests, local OCR cache; no Redis or runtime frontend build.
@@ -33,19 +33,17 @@ npm run build
 npm start
 ```
 
-
-
 Do not commit `.env`, `data`, screenshot uploads, service keys or real password-only link codes. Secrets and invitations should only be shared privately.
 
 For local frontend hot reload, use `npm run dev`; Vite proxies API traffic to the NestJS process. Set `APP_ORIGIN` appropriately for the production origin, without a trailing slash. Enable HTTPS and `NODE_ENV=production` in production, and set `TRUST_PROXY=1` only behind a trusted reverse proxy that overwrites proxy headers. Cookies are HttpOnly + SameSite Strict + Secure in production.
 
 ## Roles
 
-| Role | View | Import/settings | Invite/revoke |
-| --- | --- | --- | --- |
-| Owner | Yes | Yes | Yes |
-| Admin | Yes | Yes | No |
-| Member | Yes | No | No |
+| Role   | View | Import/settings | Invite/revoke |
+| ------ | ---- | --------------- | ------------- |
+| Owner  | Yes  | Yes             | Yes           |
+| Admin  | Yes  | Yes             | No            |
+| Member | Yes  | No              | No            |
 
 Invitations expire after 7 days, are single-use links, and grant roles stored on the server. The invited member chooses their own username and password. Revoking an account also revokes its sessions.
 

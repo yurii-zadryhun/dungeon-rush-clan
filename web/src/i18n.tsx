@@ -124,7 +124,8 @@ const en = {
   selectWinner: 'Select winner',
   finalResult: 'Final result',
   calculatedFromDays: 'Day totals',
-  ocrPermission: 'Google Cloud Vision rejected the request (403). Check API activation, billing and API key restrictions.',
+  ocrPermission:
+    'Google Cloud Vision rejected the request (403). Check API activation, billing and API key restrictions.',
   ocrNoKey: 'Google Cloud Vision API key is not configured.',
   invalidCredentials: 'Invalid username or password.',
   invalidSetupToken: 'Invalid setup token.',
@@ -276,7 +277,8 @@ const uk: Record<MessageKey, string> = {
   selectWinner: 'Виберіть переможця',
   finalResult: 'Підсумок війни',
   calculatedFromDays: 'За днями',
-  ocrPermission: 'Google Cloud Vision відхилив запит (403). Перевірте активацію API, білінг і обмеження API-ключа.',
+  ocrPermission:
+    'Google Cloud Vision відхилив запит (403). Перевірте активацію API, білінг і обмеження API-ключа.',
   ocrNoKey: 'Не налаштовано API-ключ Google Cloud Vision.',
   invalidCredentials: "Неправильне ім'я користувача або пароль.",
   invalidSetupToken: 'Невірний код налаштування.',
@@ -326,11 +328,17 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_KEY, next);
     document.documentElement.lang = next;
   }, []);
-  React.useEffect(() => { document.documentElement.lang = locale; }, [locale]);
-  const t = React.useCallback((key: MessageKey, params: Interpolations = {}) => {
-    return dictionaries[locale][key].replace(/\{(\w+)\}/g,
-      (_, name: string) => String(params[name] ?? '{' + name + '}'));
+  React.useEffect(() => {
+    document.documentElement.lang = locale;
   }, [locale]);
+  const t = React.useCallback(
+    (key: MessageKey, params: Interpolations = {}) => {
+      return dictionaries[locale][key].replace(/\{(\w+)\}/g, (_, name: string) =>
+        String(params[name] ?? '{' + name + '}'),
+      );
+    },
+    [locale],
+  );
   const value = React.useMemo(() => ({ locale, setLocale, t }), [locale, setLocale, t]);
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
@@ -343,17 +351,28 @@ export function useI18n() {
 
 export function LanguagePicker({ onSelect }: { onSelect?: (locale: Locale) => void }) {
   const { locale, setLocale, t } = useI18n();
-  return <div className="language-picker" role="group" aria-label={t('language')}>
-    {([
-      { code: 'uk' as const, flag: '🇺🇦', name: 'UA' },
-      { code: 'en' as const, flag: '🇬🇧', name: 'EN' },
-    ]).map(option => <button key={option.code} type="button"
-      className={'language-choice' + (locale === option.code ? ' selected' : '')}
-      aria-pressed={locale === option.code} title={option.name}
-      onClick={() => { setLocale(option.code); onSelect?.(option.code); }}>
-      <span aria-hidden="true">{option.flag}</span> {option.name}
-    </button>)}
-  </div>;
+  return (
+    <div className="language-picker" role="group" aria-label={t('language')}>
+      {[
+        { code: 'uk' as const, flag: '🇺🇦', name: 'UA' },
+        { code: 'en' as const, flag: '🇬🇧', name: 'EN' },
+      ].map((option) => (
+        <button
+          key={option.code}
+          type="button"
+          className={'language-choice' + (locale === option.code ? ' selected' : '')}
+          aria-pressed={locale === option.code}
+          title={option.name}
+          onClick={() => {
+            setLocale(option.code);
+            onSelect?.(option.code);
+          }}
+        >
+          <span aria-hidden="true">{option.flag}</span> {option.name}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 const serverMessages: Record<string, MessageKey> = {
@@ -364,8 +383,8 @@ const serverMessages: Record<string, MessageKey> = {
   'Username already exists': 'accountExists',
   'Invitation expired or revoked': 'invitationExpired',
   'Invitation already used': 'invitationUsed',
-  'Forbidden': 'forbidden',
-  'Unauthorized': 'unauthorized',
+  Forbidden: 'forbidden',
+  Unauthorized: 'unauthorized',
   'GOOGLE_VISION_API_KEY is not configured': 'ocrNoKey',
 };
 export function localizeError(raw: string, locale: Locale, status?: number): string {
@@ -398,8 +417,11 @@ export function localizeOcrWarning(message: string, locale: Locale): string {
   if (missingDays) translated = template('ocrMissingDays', { count: missingDays[1] });
   if (duplicatedRank) translated = template('ocrDuplicateRank', { position: duplicatedRank[1] });
   if (duplicatedName) translated = template('ocrDuplicateName', { name: duplicatedName[1] });
-  if (warning.startsWith('Could not confidently find ranking rows')) translated = dictionary.ocrMissingRows;
+  if (warning.startsWith('Could not confidently find ranking rows'))
+    translated = dictionary.ocrMissingRows;
   if (warning === 'Final score not recognized.') translated = dictionary.ocrMissingScore;
   if (warning === 'Verify opponent clan name.') translated = dictionary.ocrOpponentCheck;
-  return imagePrefix ? (locale === 'uk' ? 'Зображення ' : 'Image ') + imagePrefix[1] + ': ' + translated : translated;
+  return imagePrefix
+    ? (locale === 'uk' ? 'Зображення ' : 'Image ') + imagePrefix[1] + ': ' + translated
+    : translated;
 }

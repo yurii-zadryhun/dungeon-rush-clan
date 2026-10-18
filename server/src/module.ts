@@ -8,6 +8,16 @@ import { ImportController, ImportService } from './import';
 
 @Module({
   controllers: [AuthController, WarsController, OcrController, ImportController],
-  providers: [Db, AccountsService, SessionGuard, AdminGuard, OwnerGuard, RankingService, WarsService, VisionService, ImportService],
+  providers: [
+    Db,
+    AccountsService,
+    SessionGuard,
+    AdminGuard,
+    OwnerGuard,
+    RankingService,
+    WarsService,
+    VisionService,
+    ImportService,
+  ],
 })
 export class AppModule {}

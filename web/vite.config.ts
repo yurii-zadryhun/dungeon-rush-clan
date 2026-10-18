@@ -5,5 +5,5 @@ export default defineConfig({
   plugins: [react()],
   base: '/',
   server: { port: 5173, proxy: { '/api': 'http://localhost:3000' } },
-  build: { outDir: 'dist', emptyOutDir: true, cssCodeSplit: true, sourcemap: false }
+  build: { outDir: 'dist', emptyOutDir: true, cssCodeSplit: true, sourcemap: false },
 });

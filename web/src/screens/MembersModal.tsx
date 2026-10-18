@@ -45,15 +45,17 @@ export function MembersModal({ onClose }: { onClose: () => void }) {
   }
 
   React.useEffect(() => {
-    void refresh().catch(failure => setError((failure as Error).message));
+    void refresh().catch((failure) => setError((failure as Error).message));
   }, []);
 
   async function createInvitation() {
     setBusy(true);
     setError('');
     try {
-      const invitation = await api<CreatedInvitation>('auth/invites',
-        json('POST', { label: displayName, role }));
+      const invitation = await api<CreatedInvitation>(
+        'auth/invites',
+        json('POST', { label: displayName, role }),
+      );
       setCreated(invitation);
       setCopied(false);
       setDisplayName('');
@@ -93,26 +95,50 @@ export function MembersModal({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
-      <section className="panel modal members-modal" role="dialog" aria-modal="true" aria-label={t('manageAccess')}>
+    <div
+      className="modal-backdrop"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <section
+        className="panel modal members-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label={t('manageAccess')}
+      >
         <header className="modal-header">
-          <h2><Users /> {t('manageAccess')}</h2>
-          <button className="close-button" aria-label={t('close')} onClick={onClose}><X /></button>
+          <h2>
+            <Users /> {t('manageAccess')}
+          </h2>
+          <button className="close-button" aria-label={t('close')} onClick={onClose}>
+            <X />
+          </button>
         </header>
         <div className="modal-content">
           <h3>{t('newInvitation')}</h3>
           <div className="invite-form">
-            <label>{t('displayName')}
-              <input value={displayName} onChange={event => setDisplayName(event.target.value)} />
+            <label>
+              {t('displayName')}
+              <input value={displayName} onChange={(event) => setDisplayName(event.target.value)} />
             </label>
-            <label>{t('role')}
-              <select value={role} onChange={event => setRole(event.target.value as 'member' | 'admin')}>
+            <label>
+              {t('role')}
+              <select
+                value={role}
+                onChange={(event) => setRole(event.target.value as 'member' | 'admin')}
+              >
                 <option value="member">{t('roleMemberDescription')}</option>
                 <option value="admin">{t('roleAdminDescription')}</option>
               </select>
             </label>
-            <button className="game-button blue" disabled={busy || displayName.trim().length < 2}
-              onClick={createInvitation}><UserPlus size={16} /> {t('create')}</button>
+            <button
+              className="game-button blue"
+              disabled={busy || displayName.trim().length < 2}
+              onClick={createInvitation}
+            >
+              <UserPlus size={16} /> {t('create')}
+            </button>
           </div>
           {created && (
             <div className="created-invite">
@@ -125,16 +151,22 @@ export function MembersModal({ onClose }: { onClose: () => void }) {
           )}
           <h3>{t('accounts')}</h3>
           <div className="accounts-list">
-            {members.map(member => (
+            {members.map((member) => (
               <div className={'account-row' + (!member.active ? ' inactive' : '')} key={member.id}>
                 <div>
                   <strong>{member.display_name}</strong>
-                  <small>{member.username} · {roleLabel(member.role)}
-                    {!member.active && ' · ' + t('revoked')}</small>
+                  <small>
+                    {member.username} · {roleLabel(member.role)}
+                    {!member.active && ' · ' + t('revoked')}
+                  </small>
                 </div>
                 {member.role !== 'owner' && !!member.active && (
-                  <button className="icon-button danger" aria-label={t('revokeAccount')}
-                    title={t('revokeAccount')} onClick={() => revoke('auth/accounts/' + member.id)}>
+                  <button
+                    className="icon-button danger"
+                    aria-label={t('revokeAccount')}
+                    title={t('revokeAccount')}
+                    onClick={() => revoke('auth/accounts/' + member.id)}
+                  >
                     <ShieldOff size={18} />
                   </button>
                 )}
@@ -143,24 +175,39 @@ export function MembersModal({ onClose }: { onClose: () => void }) {
           </div>
           <h3>{t('pendingInvites')}</h3>
           <div className="accounts-list">
-            {invitations.filter(invite => !invite.used_at && invite.expires_at > Date.now())
-              .map(invite => (
+            {invitations
+              .filter((invite) => !invite.used_at && invite.expires_at > Date.now())
+              .map((invite) => (
                 <div className="account-row" key={invite.id}>
                   <div>
                     <strong>{invite.label}</strong>
-                    <small>{roleLabel(invite.role)} · {t('expires', {
-                      date: new Date(invite.expires_at).toLocaleDateString(locale),
-                    })}</small>
+                    <small>
+                      {roleLabel(invite.role)} ·{' '}
+                      {t('expires', {
+                        date: new Date(invite.expires_at).toLocaleDateString(locale),
+                      })}
+                    </small>
                   </div>
-                  <button className="icon-button danger" aria-label={t('revokeInvite')}
-                    onClick={() => revoke('auth/invites/' + invite.id)}><X size={18} /></button>
+                  <button
+                    className="icon-button danger"
+                    aria-label={t('revokeInvite')}
+                    onClick={() => revoke('auth/invites/' + invite.id)}
+                  >
+                    <X size={18} />
+                  </button>
                 </div>
               ))}
           </div>
         </div>
-        {error && <div className="error-strip" role="alert">{error}</div>}
+        {error && (
+          <div className="error-strip" role="alert">
+            {error}
+          </div>
+        )}
         <footer className="modal-actions">
-          <button className="game-button blue" onClick={onClose}>{t('done')}</button>
+          <button className="game-button blue" onClick={onClose}>
+            {t('done')}
+          </button>
         </footer>
       </section>
     </div>

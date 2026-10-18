@@ -17,20 +17,32 @@ export class RankingService {
   constructor(private readonly db: Db) {}
 
   async compute() {
-    const settings = await this.db.query.selectFrom('settings').selectAll().where('id', '=', 1).executeTakeFirstOrThrow();
+    const settings = await this.db.query
+      .selectFrom('settings')
+      .selectAll()
+      .where('id', '=', 1)
+      .executeTakeFirstOrThrow();
     const weights = JSON.parse(settings.weights_json) as number[];
     // The newest eligible week is the newest *imported* ranking, not a calendar placeholder.
-    const recent = await this.db.query.selectFrom('wars').select(['id', 'start_date'])
-      .where('ranking_imported_at', 'is not', null).orderBy('start_date', 'desc').limit(weights.length).execute();
+    const recent = await this.db.query
+      .selectFrom('wars')
+      .select(['id', 'start_date'])
+      .where('ranking_imported_at', 'is not', null)
+      .orderBy('start_date', 'desc')
+      .limit(weights.length)
+      .execute();
     const players = await this.db.query.selectFrom('players').selectAll().execute();
-    const scores = await this.db.query.selectFrom('player_scores').innerJoin('wars', 'wars.id', 'player_scores.war_id')
-      .select(['player_scores.player_id', 'player_scores.points', 'player_scores.war_id']).execute();
+    const scores = await this.db.query
+      .selectFrom('player_scores')
+      .innerJoin('wars', 'wars.id', 'player_scores.war_id')
+      .select(['player_scores.player_id', 'player_scores.points', 'player_scores.war_id'])
+      .execute();
     const perPlayer = new Map<number, { war_id: number; points: number }[]>();
     for (const s of scores) perPlayer.set(s.player_id, [...(perPlayer.get(s.player_id) || []), s]);
     const latestId = recent[0]?.id;
-    const ranking: RankedPlayer[] = players.map(p => {
+    const ranking: RankedPlayer[] = players.map((p) => {
       const entries = perPlayer.get(p.id) || [];
-      const lookup = new Map(entries.map(e => [e.war_id, e.points]));
+      const lookup = new Map(entries.map((e) => [e.war_id, e.points]));
       let total = 0;
       let applied = 0;
       recent.forEach((war, i) => {
@@ -39,18 +51,27 @@ export class RankingService {
         applied += weights[i];
       });
       const score = applied > 0 ? Math.round(total / applied) : 0;
-      const average = entries.length ? Math.round(entries.reduce((sum, e) => sum + e.points, 0) / entries.length) : 0;
+      const average = entries.length
+        ? Math.round(entries.reduce((sum, e) => sum + e.points, 0) / entries.length)
+        : 0;
       return {
-        id: p.id, name: p.name, active: !!p.active, score, average,
-        appearances: entries.length, lastPoints: latestId ? lookup.get(latestId) ?? null : null,
-        belowRequirement: score < settings.minimum_points
+        id: p.id,
+        name: p.name,
+        active: !!p.active,
+        score,
+        average,
+        appearances: entries.length,
+        lastPoints: latestId ? (lookup.get(latestId) ?? null) : null,
+        belowRequirement: score < settings.minimum_points,
       };
     });
     return {
       settings: { clanName: settings.clan_name, minimumPoints: settings.minimum_points, weights },
       calculated: ranking.slice().sort((a, b) => b.score - a.score),
       allTime: ranking.slice().sort((a, b) => b.average - a.average || b.appearances - a.appearances),
-      latest: ranking.filter(p => p.lastPoints !== null).sort((a, b) => (b.lastPoints || 0) - (a.lastPoints || 0)),
+      latest: ranking
+        .filter((p) => p.lastPoints !== null)
+        .sort((a, b) => (b.lastPoints || 0) - (a.lastPoints || 0)),
       latestWarStart: recent[0]?.start_date || null,
     };
   }

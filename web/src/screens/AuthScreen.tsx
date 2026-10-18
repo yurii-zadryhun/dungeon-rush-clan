@@ -10,7 +10,9 @@ function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <main className="auth-shell">
       <div className="panel auth-card">
-        <div className="auth-language"><LanguagePicker /></div>
+        <div className="auth-language">
+          <LanguagePicker />
+        </div>
         <h1>Dungeon Rush</h1>
         <h2>{t('appTitle')}</h2>
         {children}
@@ -57,16 +59,33 @@ function CredentialsForm({
   return (
     <form onSubmit={submit}>
       {extra}
-      <label>{t('username')}
-        <input autoComplete="username" value={name} maxLength={50}
-          onChange={event => setName(event.target.value)} required />
+      <label>
+        {t('username')}
+        <input
+          autoComplete="username"
+          value={name}
+          maxLength={50}
+          onChange={(event) => setName(event.target.value)}
+          required
+        />
       </label>
-      <label>{t('password')}
-        <input type="password" autoComplete={title === t('login') ? 'current-password' : 'new-password'}
-          value={password} minLength={12} maxLength={200}
-          onChange={event => setPassword(event.target.value)} required />
+      <label>
+        {t('password')}
+        <input
+          type="password"
+          autoComplete={title === t('login') ? 'current-password' : 'new-password'}
+          value={password}
+          minLength={12}
+          maxLength={200}
+          onChange={(event) => setPassword(event.target.value)}
+          required
+        />
       </label>
-      {error && <div className="error-strip" role="alert">{error}</div>}
+      {error && (
+        <div className="error-strip" role="alert">
+          {error}
+        </div>
+      )}
       <button className="game-button blue full" disabled={busy}>
         {busy ? t('pleaseWait') : title} <ArrowRight size={17} />
       </button>
@@ -76,8 +95,13 @@ function CredentialsForm({
 
 function LoginScreen({ onDone }: { onDone: (account: Account) => void }) {
   const { t } = useI18n();
-  return <CredentialsForm title={t('login')} onDone={onDone}
-    onSubmit={credentials => api<Account>('auth/login', json('POST', credentials))} />;
+  return (
+    <CredentialsForm
+      title={t('login')}
+      onDone={onDone}
+      onSubmit={(credentials) => api<Account>('auth/login', json('POST', credentials))}
+    />
+  );
 }
 
 function OwnerSetupScreen({ onDone }: { onDone: (account: Account) => void }) {
@@ -86,35 +110,45 @@ function OwnerSetupScreen({ onDone }: { onDone: (account: Account) => void }) {
   return (
     <>
       <p className="muted">{t('setupTitle')}</p>
-      <CredentialsForm title={t('createAccount')} onDone={onDone}
+      <CredentialsForm
+        title={t('createAccount')}
+        onDone={onDone}
         extra={
-          <label>{t('setupToken')}
-            <input type="password" autoComplete="off" value={bootstrapToken}
-              onChange={event => setBootstrapToken(event.target.value)} required />
+          <label>
+            {t('setupToken')}
+            <input
+              type="password"
+              autoComplete="off"
+              value={bootstrapToken}
+              onChange={(event) => setBootstrapToken(event.target.value)}
+              required
+            />
           </label>
         }
-        onSubmit={credentials => api<Account>('auth/bootstrap',
-          json('POST', { ...credentials, bootstrapToken }))} />
+        onSubmit={(credentials) =>
+          api<Account>('auth/bootstrap', json('POST', { ...credentials, bootstrapToken }))
+        }
+      />
     </>
   );
 }
 
-function InvitationScreen({
-  token,
-  onDone,
-}: {
-  token: string;
-  onDone: (account: Account) => void;
-}) {
+function InvitationScreen({ token, onDone }: { token: string; onDone: (account: Account) => void }) {
   const { t } = useI18n();
   const [invitation, setInvitation] = React.useState<{ label: string; role: string } | null>(null);
   const [error, setError] = React.useState('');
   React.useEffect(() => {
     let active = true;
     api<{ label: string; role: string }>('auth/invite/' + encodeURIComponent(token))
-      .then(info => { if (active) setInvitation(info); })
-      .catch(failure => { if (active) setError((failure as Error).message); });
-    return () => { active = false; };
+      .then((info) => {
+        if (active) setInvitation(info);
+      })
+      .catch((failure) => {
+        if (active) setError((failure as Error).message);
+      });
+    return () => {
+      active = false;
+    };
   }, [token]);
 
   if (error) return <div className="error-strip">{error}</div>;
@@ -122,33 +156,48 @@ function InvitationScreen({
   return (
     <>
       <p className="muted">{t('invitationFor', { name: invitation.label })}</p>
-      <CredentialsForm title={t('createAccount')} username={invitation.label}
-        onDone={onDone} onSubmit={credentials => api<Account>(
-          'auth/invite/' + encodeURIComponent(token) + '/register',
-          json('POST', credentials),
-        )} />
+      <CredentialsForm
+        title={t('createAccount')}
+        username={invitation.label}
+        onDone={onDone}
+        onSubmit={(credentials) =>
+          api<Account>(
+            'auth/invite/' + encodeURIComponent(token) + '/register',
+            json('POST', credentials),
+          )
+        }
+      />
     </>
   );
 }
 
 export type AuthMode = 'login' | 'setup' | 'invite';
 
-const authScreens: Record<AuthMode, React.ComponentType<{
-  onDone: (account: Account) => void;
-  token: string;
-}>> = {
+const authScreens: Record<
+  AuthMode,
+  React.ComponentType<{
+    onDone: (account: Account) => void;
+    token: string;
+  }>
+> = {
   login: ({ onDone }) => <LoginScreen onDone={onDone} />,
   setup: ({ onDone }) => <OwnerSetupScreen onDone={onDone} />,
   invite: ({ onDone, token }) => <InvitationScreen token={token} onDone={onDone} />,
 };
 
 export function AuthScreen({
-  mode, invite, onDone,
+  mode,
+  invite,
+  onDone,
 }: {
   mode: AuthMode;
   invite: string | null;
   onDone: (account: Account) => void;
 }) {
   const Screen = authScreens[mode];
-  return <AuthLayout><Screen onDone={onDone} token={invite ?? ''} /></AuthLayout>;
+  return (
+    <AuthLayout>
+      <Screen onDone={onDone} token={invite ?? ''} />
+    </AuthLayout>
+  );
 }

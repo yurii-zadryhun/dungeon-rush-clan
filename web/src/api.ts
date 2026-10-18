@@ -17,7 +17,7 @@ export interface Player {
   average: number;
   appearances: number;
   lastPoints: number | null;
-  belowRequirement: boolean
+  belowRequirement: boolean;
 }
 
 export interface PlayerScore {
@@ -25,14 +25,14 @@ export interface PlayerScore {
   name: string;
   active: boolean;
   points: number;
-  position: number
+  position: number;
 }
 
 export interface Day {
   day: number;
   points: number;
   winner: 'ours' | 'opponent';
-  mvp: string
+  mvp: string;
 }
 
 export interface Week {
@@ -47,18 +47,21 @@ export interface Week {
   rankingImported: boolean;
   resultImported: boolean;
   days: Day[];
-  players: PlayerScore[]
+  players: PlayerScore[];
 }
 
 export interface Dashboard {
   weeks: Week[];
   rankings: {
     settings: { clanName: string; minimumPoints: number; weights: number[] };
-    calculated: Player[]; allTime: Player[]; latest: Player[]; latestWarStart: string | null
+    calculated: Player[];
+    allTime: Player[];
+    latest: Player[];
+    latestWarStart: string | null;
   };
   record: { wins: number; losses: number };
   currentStart: string;
-  serverNow: string
+  serverNow: string;
 }
 
 export interface OcrPlayer {
@@ -66,7 +69,7 @@ export interface OcrPlayer {
   name: string;
   points: number;
   source: number;
-  playerId?: number | null
+  playerId?: number | null;
 }
 
 export interface OcrResult {
@@ -74,26 +77,31 @@ export interface OcrResult {
   ourScore: number | null;
   opponentScore: number | null;
   days: { day: number; points: number; winner: 'ours' | 'opponent' | null; mvp: string }[];
-  warnings: string[]
+  warnings: string[];
 }
 
 export interface OcrResponse {
   players: OcrPlayer[];
   result: OcrResult | null;
-  warnings: string[]
+  warnings: string[];
 }
 
 export interface Roster {
   previousStart: string | null;
   previous: { id: number; name: string; points: number }[];
-  all: { id: number; name: string; active: number }[]
+  all: { id: number; name: string; active: number }[];
 }
 
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers = new Headers(options.headers);
   headers.set('X-Requested-With', 'clan-stats');
-  if (options.body && !(options.body instanceof FormData)) headers.set('Content-Type', 'application/json');
-  const response = await fetch('/api/' + path.replace(/^\//, ''), { ...options, credentials: 'same-origin', headers });
+  if (options.body && !(options.body instanceof FormData))
+    headers.set('Content-Type', 'application/json');
+  const response = await fetch('/api/' + path.replace(/^\//, ''), {
+    ...options,
+    credentials: 'same-origin',
+    headers,
+  });
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
     const message = Array.isArray(data.message) ? data.message.join('; ') : data.message;
@@ -101,25 +109,30 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     const locale: Locale = chosen === 'en' ? 'en' : 'uk';
     throw new Error(localizeError(String(message || 'Request failed'), locale, response.status));
   }
-  return await response.json() as T;
+  return (await response.json()) as T;
 }
 
 export function json(method: 'POST' | 'PATCH', value: unknown): RequestInit {
   return {
     method,
-    body: JSON.stringify(value)
+    body: JSON.stringify(value),
   };
 }
 
-export function number(value: number): string {return new Intl.NumberFormat('en-US').format(value);}
+export function number(value: number): string {
+  return new Intl.NumberFormat('en-US').format(value);
+}
 
 export function shortNumber(value: number): string {
-  if (value >= 1_000_000) return (value / 1_000_000).toFixed(2).replace(/0+$/, '').replace(/\.$/, '') + 'm';
+  if (value >= 1_000_000)
+    return (value / 1_000_000).toFixed(2).replace(/0+$/, '').replace(/\.$/, '') + 'm';
   if (value >= 1000) return (value / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
   return String(value);
 }
 
-export function normalizeName(s: string) {return s.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase();}
+export function normalizeName(s: string) {
+  return s.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+}
 
 export function previousTuesday(start: string): string {
   const date = new Date(start + 'T00:00:00Z');
