@@ -28,6 +28,7 @@ jobs:
           for i in $(seq 1 30); do
             if curl -fsS http://localhost:3128/api/auth/setup-state | grep -q '"initialized":false'; then
               curl -fsS http://localhost:3128/ | grep -q 'Dungeon Rush'
+              node scripts/smoke.mjs
               exit 0
             fi
             sleep 1
