@@ -40,15 +40,32 @@ async function run() {
 
     const service = new Db();
     const sql = service.connection;
-    const account = sql.prepare('SELECT id, username, role, password_hash, locale FROM accounts WHERE id=42').get();
-    assert.deepEqual(account, { id: 42, username: 'owner', role: 'owner', password_hash: 'salt:hash', locale: 'uk' });
+    const account = sql
+      .prepare('SELECT id, username, role, password_hash, locale FROM accounts WHERE id=42')
+      .get();
+    assert.deepEqual(account, {
+      id: 42,
+      username: 'owner',
+      role: 'owner',
+      password_hash: 'salt:hash',
+      locale: 'uk',
+    });
     const session = sql.prepare('SELECT token_hash, account_id FROM sessions').get();
     assert.deepEqual(session, { token_hash: 'session-hash', account_id: 42 });
     const invitation = sql.prepare('SELECT token_hash, created_by FROM invites').get();
     assert.deepEqual(invitation, { token_hash: 'invite-token-hash', created_by: 42 });
-    assert.equal(sql.pragma('table_info(accounts)').some(column => column.name === 'totp_secret'), false);
-    assert.equal(sql.pragma('table_info(invites)').some(column => column.name === 'setup_secret'), false);
-    assert.equal(sql.prepare("SELECT count(*) AS count FROM sqlite_master WHERE name='bootstrap'").get().count, 0);
+    assert.equal(
+      sql.pragma('table_info(accounts)').some((column) => column.name === 'totp_secret'),
+      false,
+    );
+    assert.equal(
+      sql.pragma('table_info(invites)').some((column) => column.name === 'setup_secret'),
+      false,
+    );
+    assert.equal(
+      sql.prepare("SELECT count(*) AS count FROM sqlite_master WHERE name='bootstrap'").get().count,
+      0,
+    );
     assert.deepEqual(sql.pragma('foreign_key_check'), []);
     await service.onModuleDestroy();
     console.log('Legacy SQLite migration passed');
@@ -57,7 +74,7 @@ async function run() {
   }
 }
 
-run().catch(error => {
+run().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });
