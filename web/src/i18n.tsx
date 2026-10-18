@@ -142,6 +142,15 @@ const en = {
   removeRow: 'Remove row',
   pickExisting: 'Existing player',
   languageSaveFailed: 'Could not save language preference.',
+  ocrRowCheck: 'Check rank {position}: {details}',
+  ocrMissingRows: 'Could not find ranking rows. Enter players manually.',
+  ocrMissingScore: 'Final score not recognized.',
+  ocrOpponentCheck: 'Check opponent name.',
+  ocrChooseWinner: 'Day {day}: select winner.',
+  ocrMissingMvp: 'Day {day}: MVP not recognized.',
+  ocrMissingDays: 'Detected {count} of 6 days. Complete the rest manually.',
+  ocrDuplicateRank: 'Duplicate rank #{position}. Check the entries.',
+  ocrDuplicateName: 'Duplicate name: {name}.',
 } as const;
 
 type MessageKey = keyof typeof en;
@@ -285,6 +294,15 @@ const uk: Record<MessageKey, string> = {
   removeRow: 'Видалити рядок',
   pickExisting: 'Наявний гравець',
   languageSaveFailed: 'Не вдалося зберегти мову.',
+  ocrRowCheck: 'Перевірте місце {position}: {details}',
+  ocrMissingRows: 'Не вдалося знайти рядки рейтингу. Додайте гравців вручну.',
+  ocrMissingScore: 'Не розпізнано підсумковий рахунок.',
+  ocrOpponentCheck: 'Перевірте назву суперника.',
+  ocrChooseWinner: 'День {day}: виберіть переможця.',
+  ocrMissingMvp: 'День {day}: не розпізнано MVP.',
+  ocrMissingDays: 'Розпізнано {count} із 6 днів. Заповніть решту.',
+  ocrDuplicateRank: 'Повторне місце #{position}. Перевірте записи.',
+  ocrDuplicateName: "Повторне ім'я: {name}.",
 };
 
 type Interpolations = Record<string, string | number>;
@@ -359,4 +377,29 @@ export function localizeError(raw: string, locale: Locale, status?: number): str
   if (status === 403) return dictionaries[locale].forbidden;
   if (status === 401) return dictionaries[locale].unauthorized;
   return raw;
+}
+
+export function localizeOcrWarning(message: string, locale: Locale): string {
+  const imagePrefix = message.match(/^Image (\d+): (.*)$/);
+  const warning = imagePrefix ? imagePrefix[2] : message;
+  const dictionary = dictionaries[locale];
+  const template = (key: MessageKey, values: Interpolations = {}) =>
+    dictionary[key].replace(/\{(\w+)\}/g, (_, name: string) => String(values[name] ?? ''));
+  let translated = warning;
+  const rank = warning.match(/^Rank (\d+): (?:points not recognized|check)\s*(.*)$/);
+  const dayWinner = warning.match(/^Day (\d+): choose winner manually\.$/);
+  const dayMvp = warning.match(/^Day (\d+): MVP was not recognized\.$/);
+  const missingDays = warning.match(/^Found (\d+)\/6 days\./);
+  const duplicatedRank = warning.match(/^Conflicting duplicated rank #(\d+)/);
+  const duplicatedName = warning.match(/^Duplicate name (.*?) found at multiple ranks\.$/);
+  if (rank) translated = template('ocrRowCheck', { position: rank[1], details: rank[2] });
+  if (dayWinner) translated = template('ocrChooseWinner', { day: dayWinner[1] });
+  if (dayMvp) translated = template('ocrMissingMvp', { day: dayMvp[1] });
+  if (missingDays) translated = template('ocrMissingDays', { count: missingDays[1] });
+  if (duplicatedRank) translated = template('ocrDuplicateRank', { position: duplicatedRank[1] });
+  if (duplicatedName) translated = template('ocrDuplicateName', { name: duplicatedName[1] });
+  if (warning.startsWith('Could not confidently find ranking rows')) translated = dictionary.ocrMissingRows;
+  if (warning === 'Final score not recognized.') translated = dictionary.ocrMissingScore;
+  if (warning === 'Verify opponent clan name.') translated = dictionary.ocrOpponentCheck;
+  return imagePrefix ? (locale === 'uk' ? 'Зображення ' : 'Image ') + imagePrefix[1] + ': ' + translated : translated;
 }
