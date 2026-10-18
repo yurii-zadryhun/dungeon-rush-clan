@@ -99,3 +99,6 @@ h2{font-size:19px}h3{font-size:14px}strong,b{font-weight:950}
 .review-day{grid-template-columns:64px 1fr 1fr;gap:6px}.result-fields{grid-template-columns:1fr 1fr}.result-fields label:first-child{grid-column:span 2}.invite-form{grid-template-columns:1fr 1fr}.invite-form button{grid-column:span 2}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+.leader-score{text-align:right;display:grid;gap:2px}.leader-score small{display:block;color:#a8a2a4;font-size:9px;font-weight:850}.leader-row.below .leader-score small{color:#ffa3aa}
+.war-player.below{box-shadow:inset 3px 0 var(--red);background:#322528}
