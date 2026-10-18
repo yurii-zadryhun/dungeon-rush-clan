@@ -1,0 +1,14 @@
+{
+  "name": "dungeon-rush-clan-stats",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": ["server", "web"],
+  "scripts": {
+    "dev": "concurrently -k \"npm run dev -w server\" \"npm run dev -w web\"",
+    "build": "npm run build -w web && npm run build -w server",
+    "start": "node server/dist/main.js",
+    "check": "npm run typecheck -w server && npm run typecheck -w web",
+    "test": "npm run test -w server"
+  },
+  "devDependencies": {"concurrently": "^9.2.1", "typescript": "^5.9.3"}
+}
