@@ -2,6 +2,8 @@ name: Check
 on:
   push:
     branches: [master]
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -11,6 +13,18 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-audit --no-fund
+      - name: Apply Prettier
+        run: npm run format
+      - name: Commit formatting to master
+        run: |
+          if ! git diff --quiet; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add -A
+            git commit -m "style: apply Prettier formatting"
+            git push origin HEAD:master
+          fi
+      - run: npm run format:check
       - run: npm run check
       - run: npm test
       - run: npm run build
@@ -18,7 +32,6 @@ jobs:
         run: |
           export NODE_ENV=production
           export APP_ORIGIN=https://clan.example.com
-          export AUTH_ENCRYPTION_KEY=$(openssl rand -hex 32)
           export BOOTSTRAP_TOKEN=$(openssl rand -hex 24)
           export DATA_DIR=$(mktemp -d)
           export PORT=3128
