@@ -102,3 +102,7 @@ h2{font-size:19px}h3{font-size:14px}strong,b{font-weight:950}
 
 .leader-score{text-align:right;display:grid;gap:2px}.leader-score small{display:block;color:#a8a2a4;font-size:9px;font-weight:850}.leader-row.below .leader-score small{color:#ffa3aa}
 .war-player.below{box-shadow:inset 3px 0 var(--red);background:#322528}
+
+.day-table-header,.day-row{grid-template-columns:43px 19px minmax(0,1fr) minmax(0,.85fr);column-gap:4px}
+.day-table-header{display:grid;padding:0 8px;color:#9d9699;font-size:8px;font-weight:950}
+.day-winner{color:#ddd;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:900;text-align:left}

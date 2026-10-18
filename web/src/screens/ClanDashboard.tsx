@@ -17,14 +17,17 @@ function Leaders({title,players,metric}:{title:string;players:Player[];metric:'a
     </div>}
   </section>;
 }
-function DayTable({week}:{week:Week}) {
+function DayTable({week,clanName}:{week:Week;clanName:string}) {
   return <div className="day-table">
+    <div className="day-table-header"><span>DAY</span><span>PTS</span><span>WINNER</span><span>MVP</span></div>
     {week.days.map(d=><div className={'day-row '+d.winner} key={d.day}>
-      <span>Day {d.day}</span><b>{d.points}</b><span className="daily-mvp" title={d.mvp}>{d.mvp}</span>
+      <span>Day {d.day}</span><b>{d.points}</b>
+      <span className="day-winner" title={d.winner==='ours'?clanName:week.opponent||''}>{d.winner==='ours'?clanName:week.opponent||'Opponent'}</span>
+      <span className="daily-mvp" title={d.mvp}>{d.mvp}</span>
     </div>)}
   </div>;
 }
-function WarColumn({week,onImport,calculated}:{week:Week;onImport:(w:Week)=>void;calculated:Map<number,Player>}) {
+function WarColumn({week,onImport,calculated,clanName}:{week:Week;onImport:(w:Week)=>void;calculated:Map<number,Player>;clanName:string}) {
   const finished=week.resultImported;
   const isWin=finished&&week.ourScore!>week.opponentScore!;
   const isLoss=finished&&week.ourScore!<week.opponentScore!;
@@ -39,7 +42,7 @@ function WarColumn({week,onImport,calculated}:{week:Week;onImport:(w:Week)=>void
     <div className="war-content">
       {week.opponent?<><span className="muted tiny">VS</span><div className="opponent">{week.opponent}</div></>:<div className="opponent muted">Unknown opponent</div>}
       <div className="war-score">{finished?<><span className="friendly">{week.ourScore}</span><span className="colon">:</span><span className="enemy">{week.opponentScore}</span></>:<span className="placeholder">— : —</span>}</div>
-      {finished?<><h3>Daily scores</h3><DayTable week={week}/></>:<div className="war-placeholder">{week.resultImported?'':'Final result pending'}</div>}
+      {finished?<><h3>Daily scores</h3><DayTable week={week} clanName={clanName}/></>:<div className="war-placeholder">{week.resultImported?'':'Final result pending'}</div>}
       <div className="war-roster-head"><h3>Players</h3>{week.rankingImported&&<span className="tiny muted">{week.players.length}</span>}</div>
       {week.rankingImported?<div className="war-player-list">{week.players.map(p=><div className={'war-player '+(!p.active?'inactive':'')+(calculated.get(p.id)?.belowRequirement?' below':'')} title={'Calculated score: '+number(calculated.get(p.id)?.score||0)} key={p.id}>
         <span className="rank-number">{p.position}</span><span title={p.name} className="roster-name">{p.name}</span><b>{shortNumber(p.points)}</b>
@@ -106,7 +109,7 @@ export function ClanDashboard({user,data,onChange,onLogout,error}:{user:Account;
       <section className="panel history-widget">
         <header className="widget-head timeline-heading"><div><h2><History size={20}/> War history</h2><p className="muted tiny">Tuesday–Sunday · Monday break · all times UTC</p></div>
           <button onClick={moreHistory} disabled={loadingOlder} className="game-button secondary"><ChevronLeft size={17}/> {loadingOlder?'Loading...':'Older wars'}</button></header>
-        <div className="timeline-scroll" ref={track}><div className="timeline-track">{weeks.map(w=><WarColumn key={w.start} week={w} onImport={setImportWeek} calculated={new Map(data.rankings.calculated.map(p=>[p.id,p]))}/>)}</div></div>
+        <div className="timeline-scroll" ref={track}><div className="timeline-track">{weeks.map(w=><WarColumn key={w.start} week={w} onImport={setImportWeek} calculated={new Map(data.rankings.calculated.map(p=>[p.id,p]))} clanName={data.rankings.settings.clanName}/>)}</div></div>
       </section>
       <footer>Records from imported screenshots · Missing weeks remain visible · <Trophy size={13}/> Dungeon Rush</footer>
     </main>
