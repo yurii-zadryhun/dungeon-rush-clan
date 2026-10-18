@@ -398,7 +398,8 @@ const backendErrors: Record<string, string> = {
   'Unexpected image field': 'Непідтримуваний тип вкладення.',
   'PNG, JPEG or WebP required': 'Підтримуються PNG, JPEG та WebP.',
   'Image exceeds 6 MB': 'Розмір зображення перевищує 6 МБ.',
-  'Maximum 10 ranking screenshots and one result': 'Дозволено до 10 скриншотів рейтингу й один підсумковий.',
+  'Maximum 10 ranking screenshots and one result':
+    'Дозволено до 10 скриншотів рейтингу й один підсумковий.',
   'Invalid image count': 'Невірна кількість зображень.',
 };
 
@@ -425,7 +426,7 @@ export function localizeError(raw: string, locale: Locale, status?: number): str
   if (locale === 'uk' && invalidDay) return 'Невірна кількість очок за день ' + invalidDay[1];
   const unknownPlayer = raw.match(/^Unknown player ID (\d+)$/);
   if (locale === 'uk' && unknownPlayer) return 'Невідомий гравець #' + unknownPlayer[1];
-    if (status === 403) return dictionaries[locale].forbidden;
+  if (status === 403) return dictionaries[locale].forbidden;
   if (status === 401) return dictionaries[locale].unauthorized;
   return raw;
 }
