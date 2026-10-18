@@ -1,79 +1,154 @@
 import React from 'react';
-import { ArrowRight, ShieldCheck } from 'lucide-react';
-import { Account, api, json } from '../api';
+import { ArrowRight } from 'lucide-react';
+import { api, json, type Account } from '../api';
+import { LanguagePicker, useI18n } from '../i18n';
 
-export function AuthScreen({ mode, invite, onDone }: {
-  mode: string;
-  invite: string | null;
-  onDone: (user: Account) => void
+type Credentials = { username: string; password: string };
+
+function AuthLayout({ children }: { children: React.ReactNode }) {
+  const { t } = useI18n();
+  return (
+    <main className="auth-shell">
+      <div className="panel auth-card">
+        <div className="auth-language"><LanguagePicker /></div>
+        <h1>Dungeon Rush</h1>
+        <h2>{t('appTitle')}</h2>
+        {children}
+      </div>
+    </main>
+  );
+}
+
+function CredentialsForm({
+  title,
+  username = '',
+  extra,
+  onSubmit,
+  onDone,
+}: {
+  title: string;
+  username?: string;
+  extra?: React.ReactNode;
+  onSubmit: (credentials: Credentials) => Promise<Account>;
+  onDone: (account: Account) => void;
 }) {
-  const [username, setUsername] = React.useState('');
+  const { t } = useI18n();
+  const [name, setName] = React.useState(username);
   const [password, setPassword] = React.useState('');
-  const [otp, setOtp] = React.useState('');
-  const [bootstrap, setBootstrap] = React.useState('');
-  const [step, setStep] = React.useState(0);
-  const [qr, setQr] = React.useState('');
-  const [info, setInfo] = React.useState('');
-  const [error, setError] = React.useState('');
   const [busy, setBusy] = React.useState(false);
-  React.useEffect(() => {
-    if (mode === 'invite' && invite) api<{ label: string; role: string }>('auth/invite/' + encodeURIComponent(invite))
-      .then(x => setInfo(x.label + ' · ' + x.role)).catch(e => setError((e as Error).message));
-  }, [mode, invite]);
-  const setup = mode === 'setup', inviting = mode === 'invite', login = mode === 'login';
+  const [error, setError] = React.useState('');
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
+  React.useEffect(() => setName(username), [username]);
+
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     setBusy(true);
     setError('');
     try {
-      if (login) {
-        onDone(await api<Account>('auth/login', json('POST', { username, password, code: otp })));
-      } else if (step === 0) {
-        const url = setup ? 'auth/bootstrap/start' : 'auth/invite/' + encodeURIComponent(invite || '') + '/start';
-        const result = await api<{ qr: string }>(url, json('POST', setup ? { bootstrapToken: bootstrap } : {}));
-        setQr(result.qr);
-        setStep(1);
-      } else {
-        const url = setup ? 'auth/bootstrap/finish' : 'auth/invite/' + encodeURIComponent(invite || '') + '/finish';
-        onDone(await api<Account>(url, json('POST', {
-          username,
-          password,
-          code: otp, ...(setup ? { bootstrapToken: bootstrap } : {})
-        })));
-      }
-    } catch (e) {setError((e as Error).message);} finally {setBusy(false);}
+      const account = await onSubmit({ username: name, password });
+      onDone(account);
+    } catch (failure) {
+      setError((failure as Error).message);
+    } finally {
+      setBusy(false);
+    }
   }
 
-  return <main className="auth-shell">
-    <div className="panel auth-card">
-      <div className="eyebrow"><ShieldCheck size={16}/> PRIVATE CLAN AREA</div>
-      <h1>Dungeon Rush</h1><h2>Clan War Archive</h2>
-      <p
-        className="muted">{setup ? 'Create your owner account' : inviting ? 'Accept your personal invitation' : 'Sign in with your password and authenticator code'}</p>
-      {info && <div className="info-strip">{info}</div>}
-      <form onSubmit={submit}>
-        {setup && <label>Setup token<input type="password" autoComplete="off" value={bootstrap}
-                                           onChange={e => setBootstrap(e.target.value)} required/></label>}
-        {(!login && step === 1) &&
-            <div className="qr-box"><img src={qr} alt="Authenticator enrollment QR"/><p>Scan in your authenticator app,
-                then enter its six-digit code below.</p></div>}
-        {(login || step === 1) && <>
-            <label>Username<input autoComplete="username" value={username} maxLength={50}
-                                  onChange={e => setUsername(e.target.value)} required/></label>
-            <label>Password<input type="password" autoComplete={login ? 'current-password' : 'new-password'}
-                                  value={password} onChange={e => setPassword(e.target.value)}
-                                  minLength={login ? undefined : 8} required/></label>
-            <label>Authenticator code<input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}"
-                                            maxLength={6} value={otp}
-                                            onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
-                                            placeholder="000000" required/></label>
-        </>}
-        {error && <div role="alert" className="error-strip">{error}</div>}
-        <button className="game-button blue full"
-                disabled={busy}>{busy ? 'Please wait...' : login ? 'Sign in' : step === 0 ? 'Get authenticator QR' : 'Finish setup'}
-          <ArrowRight size={17}/></button>
-      </form>
-    </div>
-  </main>;
+  return (
+    <form onSubmit={submit}>
+      {extra}
+      <label>{t('username')}
+        <input autoComplete="username" value={name} maxLength={50}
+          onChange={event => setName(event.target.value)} required />
+      </label>
+      <label>{t('password')}
+        <input type="password" autoComplete={title === t('login') ? 'current-password' : 'new-password'}
+          value={password} minLength={12} maxLength={200}
+          onChange={event => setPassword(event.target.value)} required />
+      </label>
+      {error && <div className="error-strip" role="alert">{error}</div>}
+      <button className="game-button blue full" disabled={busy}>
+        {busy ? t('pleaseWait') : title} <ArrowRight size={17} />
+      </button>
+    </form>
+  );
+}
+
+function LoginScreen({ onDone }: { onDone: (account: Account) => void }) {
+  const { t } = useI18n();
+  return <CredentialsForm title={t('login')} onDone={onDone}
+    onSubmit={credentials => api<Account>('auth/login', json('POST', credentials))} />;
+}
+
+function OwnerSetupScreen({ onDone }: { onDone: (account: Account) => void }) {
+  const { t } = useI18n();
+  const [bootstrapToken, setBootstrapToken] = React.useState('');
+  return (
+    <>
+      <p className="muted">{t('setupTitle')}</p>
+      <CredentialsForm title={t('createAccount')} onDone={onDone}
+        extra={
+          <label>{t('setupToken')}
+            <input type="password" autoComplete="off" value={bootstrapToken}
+              onChange={event => setBootstrapToken(event.target.value)} required />
+          </label>
+        }
+        onSubmit={credentials => api<Account>('auth/bootstrap',
+          json('POST', { ...credentials, bootstrapToken }))} />
+    </>
+  );
+}
+
+function InvitationScreen({
+  token,
+  onDone,
+}: {
+  token: string;
+  onDone: (account: Account) => void;
+}) {
+  const { t } = useI18n();
+  const [invitation, setInvitation] = React.useState<{ label: string; role: string } | null>(null);
+  const [error, setError] = React.useState('');
+  React.useEffect(() => {
+    let active = true;
+    api<{ label: string; role: string }>('auth/invite/' + encodeURIComponent(token))
+      .then(info => { if (active) setInvitation(info); })
+      .catch(failure => { if (active) setError((failure as Error).message); });
+    return () => { active = false; };
+  }, [token]);
+
+  if (error) return <div className="error-strip">{error}</div>;
+  if (!invitation) return <p className="muted">{t('loading')}</p>;
+  return (
+    <>
+      <p className="muted">{t('invitationFor', { name: invitation.label })}</p>
+      <CredentialsForm title={t('createAccount')} username={invitation.label}
+        onDone={onDone} onSubmit={credentials => api<Account>(
+          'auth/invite/' + encodeURIComponent(token) + '/register',
+          json('POST', credentials),
+        )} />
+    </>
+  );
+}
+
+export type AuthMode = 'login' | 'setup' | 'invite';
+
+const authScreens: Record<AuthMode, React.ComponentType<{
+  onDone: (account: Account) => void;
+  token: string;
+}>> = {
+  login: ({ onDone }) => <LoginScreen onDone={onDone} />,
+  setup: ({ onDone }) => <OwnerSetupScreen onDone={onDone} />,
+  invite: ({ onDone, token }) => <InvitationScreen token={token} onDone={onDone} />,
+};
+
+export function AuthScreen({
+  mode, invite, onDone,
+}: {
+  mode: AuthMode;
+  invite: string | null;
+  onDone: (account: Account) => void;
+}) {
+  const Screen = authScreens[mode];
+  return <AuthLayout><Screen onDone={onDone} token={invite ?? ''} /></AuthLayout>;
 }

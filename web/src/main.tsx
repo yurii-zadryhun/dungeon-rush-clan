@@ -1,58 +1,88 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { Account, api, Dashboard } from './api';
-import { AuthScreen } from './screens/AuthScreen';
+import { Account, api, Dashboard, json } from './api';
+import { LanguageProvider, useI18n, type Locale } from './i18n';
+import { AuthScreen, type AuthMode } from './screens/AuthScreen';
 import { ClanDashboard } from './screens/ClanDashboard';
 import './styles.css';
 
+type AppPhase = 'loading' | 'ready' | AuthMode;
+
 function App() {
-  const [state, setState] = React.useState<'loading' | 'setup' | 'invite' | 'login' | 'ready'>('loading');
+  const { locale, setLocale, t } = useI18n();
+  const [phase, setPhase] = React.useState<AppPhase>('loading');
   const [account, setAccount] = React.useState<Account | null>(null);
   const [dashboard, setDashboard] = React.useState<Dashboard | null>(null);
   const [error, setError] = React.useState('');
   const invite = new URLSearchParams(location.search).get('invite');
+
   React.useEffect(() => {
-    let alive = true;
-    (async () => {
+    let mounted = true;
+    async function restore() {
       try {
-        const user = await api<Account>('auth/me');
-        if (!alive) return;
-        setAccount(user);
-        setState('ready');
+        const current = await api<Account>('auth/me');
+        if (!mounted) return;
+        setAccount(current);
+        setLocale(current.locale);
+        setPhase('ready');
       } catch {
         try {
           const status = await api<{ initialized: boolean }>('auth/setup-state');
-          if (alive) setState(!status.initialized ? 'setup' : invite ? 'invite' : 'login');
-        } catch (e) {
-          if (alive) {
-            setError((e as Error).message);
-            setState('login');
-          }
+          if (!mounted) return;
+          if (!status.initialized) setPhase('setup');
+          else setPhase(invite ? 'invite' : 'login');
+        } catch (failure) {
+          if (!mounted) return;
+          setError((failure as Error).message);
+          setPhase('login');
         }
       }
-    })();
-    return () => {alive = false;};
+    }
+    void restore();
+    return () => { mounted = false; };
   }, []);
+
   React.useEffect(() => {
-    if (state !== 'ready') return;
-    api<Dashboard>('dashboard').then(setDashboard).catch(e => setError((e as Error).message));
-  }, [state]);
-  const authenticated = (user: Account) => {
-    setAccount(user);
-    setState('ready');
+    if (phase !== 'ready') return;
+    api<Dashboard>('dashboard').then(setDashboard)
+      .catch(failure => setError((failure as Error).message));
+  }, [phase]);
+
+  function authenticated(current: Account) {
+    setAccount(current);
+    setLocale(current.locale);
+    setPhase('ready');
     setError('');
     history.replaceState(null, '', location.pathname);
-  };
-  const logout = async () => {
+  }
+
+  async function saveLanguage(next: Locale) {
+    if (!account || next === account.locale) return;
+    try {
+      await api('auth/locale', json('PATCH', { locale: next }));
+      setAccount({ ...account, locale: next });
+    } catch (failure) {
+      setError((failure as Error).message);
+      setLocale(account.locale);
+    }
+  }
+
+  async function logout() {
     await api('auth/logout', { method: 'POST' });
     setAccount(null);
     setDashboard(null);
-    setState('login');
-  };
-  if (state === 'loading') return <div className="loading-page"><span className="spinner"/> Loading clan...</div>;
-  if (state !== 'ready') return <AuthScreen mode={state} invite={invite} onDone={authenticated}/>;
+    setPhase('login');
+  }
+
+  if (phase === 'loading') return <div className="loading-page"><span className="spinner" /> {t('loading')}</div>;
+  if (phase !== 'ready') return <AuthScreen mode={phase} invite={invite} onDone={authenticated} />;
   if (!account) return null;
-  return <ClanDashboard user={account} data={dashboard} onChange={setDashboard} onLogout={logout} error={error}/>;
+  return (
+    <ClanDashboard user={account} data={dashboard} onChange={setDashboard}
+      onLogout={logout} onLocaleChange={saveLanguage} error={error} />
+  );
 }
 
-createRoot(document.getElementById('root')!).render(<React.StrictMode><App/></React.StrictMode>);
+createRoot(document.getElementById('root')!).render(
+  <React.StrictMode><LanguageProvider><App /></LanguageProvider></React.StrictMode>,
+);

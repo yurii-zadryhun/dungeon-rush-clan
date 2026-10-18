@@ -1,10 +1,12 @@
+import { localizeError, type Locale } from './i18n';
 export type Role = 'owner' | 'admin' | 'member';
 
 export interface Account {
   id: number;
   username: string;
   displayName: string;
-  role: Role
+  role: Role;
+  locale: Locale;
 }
 
 export interface Player {
@@ -95,7 +97,9 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
     const message = Array.isArray(data.message) ? data.message.join('; ') : data.message;
-    throw new Error(String(message || ('Request failed (' + response.status + ')')));
+    const chosen = localStorage.getItem('clan.language');
+    const locale: Locale = chosen === 'en' ? 'en' : 'uk';
+    throw new Error(localizeError(String(message || 'Request failed'), locale, response.status));
   }
   return await response.json() as T;
 }
