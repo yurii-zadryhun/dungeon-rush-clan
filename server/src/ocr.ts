@@ -5,7 +5,7 @@ import { resolve, join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { AdminGuard, SessionGuard } from './auth';
 import { DAY_POINTS } from './calendar';
-import { normalizeName } from './database';
+import { Db, normalizeName } from './database';
 
 export interface Word { text:string; x:number; y:number }
 export interface VisionText { words:Word[]; raw:string; width:number; height:number }
@@ -156,7 +156,7 @@ export class VisionService {
 @Controller('api/ocr')
 @UseGuards(SessionGuard,AdminGuard)
 export class OcrController {
-  constructor(private readonly vision:VisionService,private readonly db: import('./database').Db) {}
+  constructor(private readonly vision:VisionService,private readonly db: Db) {}
   @Post()
   async process(@Req() req:FastifyRequest) {
     const files:{type:'ranking'|'result';buffer:Buffer}[]=[];
