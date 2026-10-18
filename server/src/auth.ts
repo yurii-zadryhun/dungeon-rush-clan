@@ -150,7 +150,7 @@ export class AccountsService {
     const account=await this.db.query.selectFrom('accounts').select(['id','username','display_name','role']).where('id','=',accountId).executeTakeFirstOrThrow();
     return {id:account.id,username:account.username,displayName:account.display_name,role:account.role};
   }
-  async resolveSession(raw?:string):Promise<SafeAccount|null> {
+  async resolveSession(raw?:string,reply?:FastifyReply):Promise<SafeAccount|null> {
     if(!raw) return null;
     const session=await this.db.query.selectFrom('sessions').innerJoin('accounts','accounts.id','sessions.account_id')
       .select(['sessions.expires_at','sessions.extended_at','accounts.id','accounts.username','accounts.display_name','accounts.role','accounts.active'])
@@ -159,6 +159,7 @@ export class AccountsService {
     if(Date.now()-session.extended_at>=24*3600_000) {
       await this.db.query.updateTable('sessions').set({expires_at:Date.now()+WEEK,extended_at:Date.now()})
         .where('token_hash','=',hash(raw)).execute();
+      if(reply) sendSession(reply,raw);
     }
     return {id:session.id,username:session.username,displayName:session.display_name,role:session.role};
   }
@@ -236,7 +237,7 @@ export class SessionGuard implements CanActivate {
   async canActivate(context:ExecutionContext) {
     const req=context.switchToHttp().getRequest<RequestWithAccount>();
     const value=(req as any).cookies?.clan_session as string|undefined;
-    req.account=await this.accounts.resolveSession(value) || undefined;
+    req.account=await this.accounts.resolveSession(value,context.switchToHttp().getResponse<FastifyReply>()) || undefined;
     if(!req.account) throw new UnauthorizedException();
     return true;
   }
