@@ -28,6 +28,7 @@ jobs:
       - run: npm run check
       - run: npm test
       - run: npm run build
+      - run: node scripts/migrate-check.mjs
       - name: Production server smoke test
         run: |
           export NODE_ENV=production

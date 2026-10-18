@@ -33,7 +33,9 @@ npm run build
 npm start
 ```
 
-Do not commit `.env`, `data`, screenshot uploads, service keys or real password-only link codes. Secrets and invitations should only be shared privately.
+Open the application and enter the one-time setup token to create your owner account. After setup, remove `BOOTSTRAP_TOKEN` from the server environment and restart. Back up `data/clan.sqlite` before upgrades. Legacy TOTP secrets are removed by an automatic migration; existing passwords and sessions are retained.
+
+Do not commit `.env`, `data`, API keys or invitation links. Secrets and invitations should only be shared privately.
 
 For local frontend hot reload, use `npm run dev`; Vite proxies API traffic to the NestJS process. Set `APP_ORIGIN` appropriately for the production origin, without a trailing slash. Enable HTTPS and `NODE_ENV=production` in production, and set `TRUST_PROXY=1` only behind a trusted reverse proxy that overwrites proxy headers. Cookies are HttpOnly + SameSite Strict + Secure in production.
 
@@ -63,7 +65,7 @@ Invitations expire after 7 days, are single-use links, and grant roles stored on
 ```text
 server/src/
   database.ts       SQLite schema and Kysely wiring
-  auth.ts           password-only, passwords, sessions, owner access management
+  auth.ts           Password authentication, sessions, owner access management
   calendar.ts       Pure UTC calendar logic
   ranking.ts        Weighted and all-time ranking calculations
   wars.ts           Dashboard and settings API
@@ -71,10 +73,15 @@ server/src/
   import.ts         Atomic imports, roster reconciliation
   main.ts           Single Fastify/NestJS server and static assets
 web/src/
+  i18n.tsx          Typed Ukrainian/English translations, locale preference UI
   main.tsx          Authentication boundary and app state
   screens/          Auth, dashboard, import, settings, members
   styles.css        Game-inspired responsive widget styles
 ```
+
+## Cloud Vision 403
+
+If an import fails with Google Cloud Vision HTTP 403, the API now includes the original Google error reason in the response (never the API key). Verify the Cloud Vision API is enabled in the Google Cloud project, billing is active if required, and the API key is allowed to call Cloud Vision from the **backend**. Browser HTTP referrer restrictions are unsuitable for a server-to-server API key; use Cloud Vision API restrictions and an appropriate server IP restriction when possible. Do not publish the key in frontend code.
 
 ## Future MySQL migration
 
@@ -83,9 +90,11 @@ Keep business logic in NestJS services and SQL access in DB/repositories. The Ky
 ## Validation
 
 ```sh
+npm run format    # Safe Prettier formatting (also available via PhpStorm)
+npm run format:check # Verify formatting
 npm run check     # TypeScript backend + frontend
 npm test          # offline parser/calendar tests
 npm run build     # optimized React assets + compiled NestJS server
 ```
 
-GitHub Actions checks all three on every push to `master`.
+GitHub Actions runs Prettier, TypeScript checks, tests and a production HTTP smoke test on `master`.

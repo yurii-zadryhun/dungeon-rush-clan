@@ -119,6 +119,7 @@ export class Db implements OnModuleDestroy {
     // Clear old enrollment secrets, then enforce FK constraints again.
     this.connection.exec('DROP TABLE IF EXISTS bootstrap');
     this.connection.pragma('foreign_keys = ON');
+    this.connection.exec("CREATE UNIQUE INDEX IF NOT EXISTS account_single_owner ON accounts(role) WHERE role = 'owner'");
     const integrity = this.connection.pragma('foreign_key_check') as unknown[];
     if (integrity.length) throw new Error('SQLite foreign key validation failed after migration');
     this.query = new Kysely<Tables>({ dialect: new SqliteDialect({ database: this.connection }) });
