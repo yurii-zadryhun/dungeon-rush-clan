@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, History, LogOut, Medal, Settings, Swords, Users } from 'lucide-react';
+import { ChevronsLeft, History, Medal, Swords } from 'lucide-react';
 import {
   api,
   number,
@@ -11,9 +11,10 @@ import {
   type Week,
   normalizeName,
 } from '../api';
-import { LanguagePicker, useI18n, type Locale } from '../i18n';
+import { useI18n, type Locale } from '../i18n';
 import { ImportModal } from './ImportModal';
-import { MembersModal } from './MembersModal';
+import { UsersScreen } from './UsersScreen';
+import { SiteHeader } from './SiteHeader';
 import { SettingsModal } from './SettingsModal';
 import { ProfileModal } from './ProfileModal';
 import { WikiScreen } from '../wiki/WikiScreen';
@@ -292,22 +293,36 @@ export function ClanDashboard({
   onProfileChange: (account: Account) => Promise<void>;
   error: string;
 }) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const [route, setRoute] = React.useState(() => window.location.hash);
   const wikiMatch = route.match(/^#\/wiki(?:\/([a-z0-9-]+))?\/?$/);
   const isWiki = Boolean(wikiMatch);
+  const isUsers = route === '#/users' && user.role !== 'member';
   const wikiArticleId = wikiMatch?.[1];
-  const [dialog, setDialog] = React.useState<'settings' | 'members' | 'profile' | null>(null);
+  const [dialog, setDialog] = React.useState<'settings' | 'profile' | null>(null);
   const [importWeek, setImportWeek] = React.useState<Week | null>(null);
   const [loadingOlder, setLoadingOlder] = React.useState(false);
   const [weeks, setWeeks] = React.useState<Week[]>([]);
   const track = React.useRef<HTMLDivElement>(null);
   const positioned = React.useRef(false);
+  const restore = React.useRef<{ width: number; left: number } | null>(null);
+  const gesture = React.useRef<{ x: number; atStart: boolean } | null>(null);
   const canEdit = user.role !== 'member';
   const calculated = React.useMemo(
     () => new Map(data?.rankings.calculated.map((player) => [player.id, player]) ?? []),
     [data?.rankings.calculated],
   );
+  const visibleWeeks = React.useMemo(() => {
+    if (!data) return [];
+    const imported = weeks.filter((week) => week.rankingImported || week.resultImported);
+    const oldest = imported[0]?.start ?? data.currentStart;
+    const blankBefore = previousTuesday(oldest);
+    return weeks.filter((week) =>
+      week.rankingImported || week.resultImported ||
+      week.start === blankBefore || week.start === data.currentStart ||
+      week.state === 'future',
+    );
+  }, [data?.currentStart, weeks]);
 
   React.useEffect(() => {
     const syncRoute = () => setRoute(window.location.hash);
@@ -325,12 +340,12 @@ export function ClanDashboard({
   }, [data]);
 
   React.useEffect(() => {
-    if (isWiki) positioned.current = false;
-  }, [isWiki]);
+    if (isWiki || isUsers) positioned.current = false;
+  }, [isWiki, isUsers]);
 
   React.useLayoutEffect(() => {
-    if (!data || isWiki || positioned.current) return;
-    if (!weeks.some((week) => week.start === data.currentStart)) return;
+    if (!data || isWiki || isUsers || positioned.current) return;
+    if (!visibleWeeks.some((week) => week.start === data.currentStart)) return;
     const container = track.current;
     const selected = [...(container?.querySelectorAll<HTMLElement>('.war-column') ?? [])].find(
       (element) => element.dataset.start === data.currentStart,
@@ -339,28 +354,45 @@ export function ClanDashboard({
     const relativeLeft = selected.getBoundingClientRect().left - container.getBoundingClientRect().left;
     container.scrollLeft += relativeLeft - (container.clientWidth - selected.clientWidth) / 2;
     positioned.current = true;
-  }, [data?.currentStart, weeks, isWiki]);
+  }, [data?.currentStart, visibleWeeks, isWiki, isUsers]);
+
+  React.useLayoutEffect(() => {
+    const container = track.current;
+    const snapshot = restore.current;
+    if (!container || !snapshot || isWiki || isUsers) return;
+    // Keep the same card under the pointer when older data is prepended.
+    container.scrollLeft = snapshot.left + container.scrollWidth - snapshot.width;
+    restore.current = null;
+  }, [weeks, isWiki, isUsers]);
 
   async function loadOlder() {
     if (!weeks.length || loadingOlder) return;
     setLoadingOlder(true);
     try {
       const container = track.current;
-      const previousWidth = container?.scrollWidth ?? 0;
+      if (container) restore.current = { left: container.scrollLeft, width: container.scrollWidth };
       const anchor = previousTuesday(weeks[0].start);
-      const next = await api<Dashboard>('dashboard?anchor=' + encodeURIComponent(anchor) + '&count=10');
-      setWeeks((previous) => [
-        ...next.weeks.filter((week) => !previous.some((existing) => existing.start === week.start)),
-        ...previous,
-      ]);
-      requestAnimationFrame(() => {
-        if (container) container.scrollLeft += container.scrollWidth - previousWidth;
-      });
+      const next = await api<Dashboard>('dashboard?anchor=' + encodeURIComponent(anchor) + '&count=2');
+      const older = next.weeks.filter((week) => !weeks.some((existing) => existing.start === week.start));
+      setWeeks((previous) => [...older, ...previous]);
     } catch (failure) {
+      restore.current = null;
       alert((failure as Error).message);
     } finally {
       setLoadingOlder(false);
     }
+  }
+
+  function touchStart(event: React.TouchEvent<HTMLDivElement>) {
+    gesture.current = { x: event.touches[0]?.clientX ?? 0, atStart: event.currentTarget.scrollLeft <= 3 };
+  }
+
+  function touchEnd(event: React.TouchEvent<HTMLDivElement>) {
+    const start = gesture.current;
+    gesture.current = null;
+    if (!start?.atStart || loadingOlder) return;
+    const displacement = (event.changedTouches[0]?.clientX ?? 0) - start.x;
+    if (displacement > 75) void loadOlder();
   }
 
   if (!data)
@@ -371,80 +403,15 @@ export function ClanDashboard({
     );
   return (
     <div className="page">
-      <header className="site-header">
-        <div className="brand">
-          <span className="brand-mark">
-            <Swords size={26} />
-          </span>
-          <div>
-            <strong>DUNGEON RUSH</strong>
-            <small>{t('appTitle').toUpperCase()}</small>
-          </div>
-        </div>
-        <nav className="top-navigation" aria-label={locale === 'uk' ? 'Навігація' : 'Navigation'}>
-          <a
-            href="#/archive"
-            className={!isWiki ? 'active' : ''}
-            aria-current={!isWiki ? 'page' : undefined}
-          >
-            <History size={17} />
-            <span>{locale === 'uk' ? 'Архів' : 'Archive'}</span>
-          </a>
-          <a href="#/wiki" className={isWiki ? 'active' : ''} aria-current={isWiki ? 'page' : undefined}>
-            <BookOpen size={17} />
-            <span>{locale === 'uk' ? 'База знань' : 'Wiki'}</span>
-          </a>
-        </nav>
-        <div className="header-actions">
-          <LanguagePicker onSelect={onLocaleChange} />
-          <button
-            className="current-user profile-shortcut"
-            title={t('profile')}
-            onClick={() => setDialog('profile')}
-          >
-            {user.displayName}
-          </button>
-          <button
-            className="icon-button"
-            aria-label={t('profile')}
-            title={t('profile')}
-            onClick={() => setDialog('profile')}
-          >
-            <Users size={19} />
-          </button>
-          {canEdit && (
-            <button
-              aria-label={t('settings')}
-              title={t('settings')}
-              className="icon-button"
-              onClick={() => setDialog('settings')}
-            >
-              <Settings size={19} />
-            </button>
-          )}
-          {user.role === 'owner' && (
-            <button
-              aria-label={t('members')}
-              title={t('members')}
-              className="icon-button"
-              onClick={() => setDialog('members')}
-            >
-              <Users size={19} />
-            </button>
-          )}
-          <button
-            aria-label={t('logout')}
-            title={t('logout')}
-            className="icon-button"
-            onClick={onLogout}
-          >
-            <LogOut size={19} />
-          </button>
-        </div>
-      </header>
+      <SiteHeader user={user} isWiki={isWiki} isUsers={isUsers}
+        onSettings={() => setDialog('settings')}
+        onProfile={() => setDialog('profile')}
+        onLogout={onLogout} onLocaleChange={onLocaleChange} />
 
       {isWiki ? (
         <WikiScreen articleId={wikiArticleId} />
+      ) : isUsers ? (
+        <UsersScreen account={user} />
       ) : (
         <main className="dashboard">
           {error && <div className="error-strip">{error}</div>}
@@ -469,16 +436,14 @@ export function ClanDashboard({
                 <History size={20} /> {t('warHistory')}
               </h2>
             </header>
-            <div className="timeline-scroll" ref={track}>
+            <div className="timeline-scroll" ref={track} onTouchStart={touchStart}
+              onTouchEnd={touchEnd}>
               <div className="timeline-track">
-                <button
-                  className="game-button secondary load-more-wars"
-                  disabled={loadingOlder}
-                  onClick={loadOlder}
-                >
-                  {loadingOlder ? t('loading') : t('loadMore')}
+                <button className="war-load-control" disabled={loadingOlder}
+                  title={t('pullOlder')} aria-label={t('pullOlder')} onClick={loadOlder}>
+                  <ChevronsLeft size={32} />
                 </button>
-                {weeks.map((week) => (
+                {visibleWeeks.map((week) => (
                   <WarColumn
                     key={week.start}
                     week={week}
@@ -517,7 +482,6 @@ export function ClanDashboard({
           }}
         />
       )}
-      {dialog === 'members' && user.role === 'owner' && <MembersModal onClose={() => setDialog(null)} />}
       {dialog === 'profile' && (
         <ProfileModal account={user} onClose={() => setDialog(null)} onSaved={onProfileChange} />
       )}
