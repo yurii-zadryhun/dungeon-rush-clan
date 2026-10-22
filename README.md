@@ -4,6 +4,10 @@ Private, lightweight clan-war dashboard. **NestJS + Fastify, React + Vite, SQLit
 
 ## Features
 
+- Integrated **Clan Wiki** with 29 original Ukrainian/English guides covering onboarding, six-day war strategy, builds, equipment, progression and research.
+- Responsive wiki reader with section navigation, full-text search, category filtering, local bookmarks, related articles and shareable hash URLs (e.g. `#/wiki/war-calendar`).
+- Wiki content is versioned in `web/src/wiki/data/` and requires no additional server schema, third-party renderer or database migration. Clan member accounts use their existing saved language preference.
+
 - Fully generated Tuesday–Sunday UTC war timeline; Mondays have no war.
 - Separate rankings (from Sunday 00:00 UTC) and **final** war results (from Monday 00:00 UTC).
 - Cloud Vision OCR for up to 10 weekly leaderboard screenshots + one final-result screenshot.
@@ -77,6 +81,7 @@ web/src/
   main.tsx          Authentication boundary and app state
   screens/          Auth, dashboard, import, settings, members
   styles.css        Game-inspired responsive widget styles
+  wiki/             Localized guide content, safe renderer, index and UI
 ```
 
 ## Cloud Vision 403
@@ -92,6 +97,7 @@ Keep business logic in NestJS services and SQL access in DB/repositories. The Ky
 ```sh
 npm run format    # Safe Prettier formatting (also available via PhpStorm)
 npm run format:check # Verify formatting
+npm run wiki:check   # Validate bilingual wiki content, IDs and links
 npm run check     # TypeScript backend + frontend
 npm test          # offline parser/calendar tests
 npm run build     # optimized React assets + compiled NestJS server
