@@ -201,3 +201,34 @@
     min-width: 38px;
   }
 }
+
+.shell-menu-language { padding: 8px 10px; display: flex; align-items: center; }
+.shell-menu-language .language-toggle { width: 100%; display: flex; min-height: 40px; }
+.mobile-bottom-navigation { display: none; }
+@media (max-width: 950px) {
+  .site-header.shell-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: 58px;
+    height: 60px; min-height: 60px;
+    padding: 0 12px; gap: 8px;
+  }
+  .shell-header .shell-navigation { display: none; }
+  .shell-header .shell-tools { grid-column: 2; grid-row: 1; }
+  .mobile-bottom-navigation {
+    display: flex;
+    position: fixed; inset-inline: 0; bottom: 0; z-index: 210;
+    min-height: calc(58px + env(safe-area-inset-bottom));
+    padding: 5px 7px calc(5px + env(safe-area-inset-bottom));
+    background: #171719; border-top: 3px solid #080808;
+    justify-content: center; gap: 4px;
+  }
+  .mobile-bottom-navigation a {
+    min-width: 0; flex: 1 1 0; display: grid; justify-items: center; align-content: center;
+    color: #aaa7ae; text-decoration: none; gap: 2px; border-radius: 9px;
+    font-size: 10px; font-weight: 900; min-height: 46px;
+  }
+  .mobile-bottom-navigation a.active { color: #fff; background: #365f83; }
+  .mobile-bottom-navigation a:focus-visible { outline: 2px solid #f6c759; }
+  .site-header.shell-header .brand-caption strong { font-size: 13px; }
+}

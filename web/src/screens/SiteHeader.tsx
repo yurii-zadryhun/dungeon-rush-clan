@@ -58,6 +58,7 @@ export function SiteHeader({
     setMenuOpen(false);
   }
   return (
+    <>
     <header className="site-header shell-header">
       <a className="brand shell-brand" href="#/archive">
         <span className="brand-mark">
@@ -86,7 +87,6 @@ export function SiteHeader({
         </a>
       </nav>
       <div className="shell-tools">
-        <LanguagePicker onSelect={onLocaleChange} />
         <div className="shell-menu-container" ref={dropdown}>
           <button
             type="button"
@@ -138,6 +138,9 @@ export function SiteHeader({
                   <Settings size={18} /> {t('clanSettings')}
                 </button>
               )}
+              <div className="shell-menu-language">
+                <LanguagePicker onSelect={onLocaleChange} />
+              </div>
               <div className="shell-menu-separator" />
               <button
                 role="menuitem"
@@ -153,5 +156,22 @@ export function SiteHeader({
         </div>
       </div>
     </header>
+    <nav className="mobile-bottom-navigation" aria-label={t('navigation')}>
+      <a href="#/archive" className={!isWiki && !isUsers ? 'active' : ''}
+        aria-current={!isWiki && !isUsers ? 'page' : undefined}>
+        <History size={22} /><span>{t('historyTab')}</span>
+      </a>
+      <a href="#/wiki" className={isWiki ? 'active' : ''}
+        aria-current={isWiki ? 'page' : undefined}>
+        <BookOpen size={22} /><span>{t('wikiTab')}</span>
+      </a>
+      {canManage && (
+        <a href="#/users" className={isUsers ? 'active' : ''}
+          aria-current={isUsers ? 'page' : undefined}>
+          <UsersRound size={22} /><span>{t('userManagement')}</span>
+        </a>
+      )}
+    </nav>
+    </>
   );
 }
