@@ -57,7 +57,7 @@ async function run() {
     });
     const player = sql.prepare('SELECT id, account_id FROM players WHERE id = 8').get();
     assert.deepEqual(player, { id: 8, account_id: 42 }, 'Legacy player linked to owner');
-        const session = sql.prepare('SELECT token_hash, account_id FROM sessions').get();
+    const session = sql.prepare('SELECT token_hash, account_id FROM sessions').get();
     assert.deepEqual(session, { token_hash: 'session-hash', account_id: 42 });
     const invitation = sql.prepare('SELECT token_hash, created_by FROM invites').get();
     assert.deepEqual(invitation, { token_hash: 'invite-token-hash', created_by: 42 });
