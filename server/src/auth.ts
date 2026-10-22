@@ -280,14 +280,17 @@ export class AccountsService {
       .execute();
   }
 
-  async createInvite(input: unknown, ownerId: number) {
+  async createInvite(input: unknown, inviter: AuthenticatedAccount) {
     const { label, role } = validate(
       z.object({
         label: usernameSchema,
-        role: z.enum(['admin', 'member']),
+        role: z.enum(['owner', 'admin', 'member']),
       }),
       input,
     );
+    if (inviter.role === 'member' || (inviter.role === 'admin' && role !== 'member')) {
+      throw new ForbiddenException('Cannot invite this role');
+    }
     const raw = randomToken();
     const created = await this.db.query
       .insertInto('invites')
@@ -297,7 +300,7 @@ export class AccountsService {
         token_hash: digest(raw),
         expires_at: Date.now() + INVITATION_TTL,
         used_at: null,
-        created_by: ownerId,
+        created_by: inviter.id,
       })
       .returning('id')
       .executeTakeFirstOrThrow();
@@ -368,7 +371,7 @@ export class AccountsService {
     const data = validate(
       z.object({
         username: usernameSchema,
-        currentPassword: z.string().min(1),
+        currentPassword: z.string().min(1).optional(),
         newPassword: passwordSchema.optional(),
       }),
       input,
@@ -381,7 +384,7 @@ export class AccountsService {
           .selectAll()
           .where('id', '=', accountId)
           .executeTakeFirstOrThrow();
-        if (!verifyPassword(data.currentPassword, account.password_hash)) {
+        if (data.newPassword && (!data.currentPassword || !verifyPassword(data.currentPassword, account.password_hash))) {
           throw new UnauthorizedException('Invalid username or password');
         }
         const duplicate = await trx
@@ -551,7 +554,11 @@ export class AccountsService {
       .select('role')
       .where('id', '=', id)
       .executeTakeFirst();
-    if (account?.role === 'owner') throw new ForbiddenException('Cannot revoke owner');
+    if (account?.role === 'owner') {
+      const remainingOwners = await this.db.query.selectFrom('accounts')
+        .select('id').where('role', '=', 'owner').where('active', '=', 1).execute();
+      if (remainingOwners.length <= 1) throw new ForbiddenException('Cannot revoke last owner');
+    }
     await this.db.query.transaction().execute(async (transaction) => {
       await transaction.updateTable('accounts').set({ active: 0 }).where('id', '=', id).execute();
       await transaction.deleteFrom('sessions').where('account_id', '=', id).execute();
@@ -559,12 +566,14 @@ export class AccountsService {
     return { ok: true };
   }
 
-  async revokeInvite(id: number) {
-    await this.db.query
-      .deleteFrom('invites')
-      .where('id', '=', id)
-      .where('used_at', 'is', null)
-      .execute();
+  async revokeInvite(id: number, requester: AuthenticatedAccount) {
+    const invite = await this.db.query.selectFrom('invites')
+      .select(['role', 'created_by']).where('id', '=', id).executeTakeFirst();
+    if (requester.role !== 'owner' && (!invite || invite.role !== 'member' || invite.created_by !== requester.id)) {
+      throw new ForbiddenException('Cannot revoke this invitation');
+    }
+    await this.db.query.deleteFrom('invites')
+      .where('id', '=', id).where('used_at', 'is', null).execute();
     return { ok: true };
   }
 }
@@ -669,40 +678,40 @@ export class AuthController {
     return this.auth.registerInvite(token, body, reply);
   }
 
-  @UseGuards(SessionGuard, OwnerGuard)
+  @UseGuards(SessionGuard, AdminGuard)
   @Get('shared-invite')
   sharedInvite() {
     return this.auth.sharedInviteStatus();
   }
 
-  @UseGuards(SessionGuard, OwnerGuard)
+  @UseGuards(SessionGuard, AdminGuard)
   @Post('shared-invite')
   createShared(@Req() request: AuthenticatedRequest) {
     return this.auth.createSharedInvite(request.account!.id);
   }
 
-  @UseGuards(SessionGuard, OwnerGuard)
+  @UseGuards(SessionGuard, AdminGuard)
   @Delete('shared-invite')
   revokeShared() {
     return this.auth.revokeSharedInvite();
   }
 
-  @UseGuards(SessionGuard, OwnerGuard)
+  @UseGuards(SessionGuard, AdminGuard)
   @Get('accounts')
   accounts() {
     return this.auth.listAccounts();
   }
 
-  @UseGuards(SessionGuard, OwnerGuard)
+  @UseGuards(SessionGuard, AdminGuard)
   @Get('invites')
   invites() {
     return this.auth.listInvites();
   }
 
-  @UseGuards(SessionGuard, OwnerGuard)
+  @UseGuards(SessionGuard, AdminGuard)
   @Post('invites')
   createInvite(@Body() body: unknown, @Req() request: AuthenticatedRequest) {
-    return this.auth.createInvite(body, request.account!.id);
+    return this.auth.createInvite(body, request.account!);
   }
 
   @UseGuards(SessionGuard, OwnerGuard)
@@ -711,9 +720,9 @@ export class AuthController {
     return this.auth.revokeAccount(Number(id), request.account!.id);
   }
 
-  @UseGuards(SessionGuard, OwnerGuard)
+  @UseGuards(SessionGuard, AdminGuard)
   @Delete('invites/:id')
-  revokeInvite(@Param('id') id: string) {
-    return this.auth.revokeInvite(Number(id));
+  revokeInvite(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
+    return this.auth.revokeInvite(Number(id), request.account!);
   }
 }
