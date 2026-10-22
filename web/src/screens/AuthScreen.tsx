@@ -105,7 +105,7 @@ function LoginScreen({ onDone }: { onDone: (account: Account) => void }) {
 }
 
 function OwnerSetupScreen({ onDone }: { onDone: (account: Account) => void }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [bootstrapToken, setBootstrapToken] = React.useState('');
   return (
     <>
@@ -126,7 +126,7 @@ function OwnerSetupScreen({ onDone }: { onDone: (account: Account) => void }) {
           </label>
         }
         onSubmit={(credentials) =>
-          api<Account>('auth/bootstrap', json('POST', { ...credentials, bootstrapToken }))
+          api<Account>('auth/bootstrap', json('POST', { ...credentials, bootstrapToken, locale }))
         }
       />
     </>
@@ -134,7 +134,7 @@ function OwnerSetupScreen({ onDone }: { onDone: (account: Account) => void }) {
 }
 
 function InvitationScreen({ token, onDone }: { token: string; onDone: (account: Account) => void }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [invitation, setInvitation] = React.useState<{
     label: string;
     role: string;
@@ -169,7 +169,7 @@ function InvitationScreen({ token, onDone }: { token: string; onDone: (account: 
         onSubmit={(credentials) =>
           api<Account>(
             'auth/invite/' + encodeURIComponent(token) + '/register',
-            json('POST', credentials),
+            json('POST', { ...credentials, locale }),
           )
         }
       />

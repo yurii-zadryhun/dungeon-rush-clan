@@ -103,6 +103,7 @@ export class AccountsService {
         bootstrapToken: z.string().min(1),
         username: usernameSchema,
         password: passwordSchema,
+        locale: localeSchema.default('uk'),
       }),
       input,
     );
@@ -121,7 +122,7 @@ export class AccountsService {
             display_name: data.username,
             role: 'owner',
             password_hash: hashPassword(data.password),
-            locale: 'uk',
+            locale: data.locale,
             active: 1,
             created_at: Date.now(),
           })
@@ -486,10 +487,11 @@ export class AccountsService {
   }
 
   async registerInvite(raw: string, input: unknown, reply: FastifyReply) {
-    const { username, password } = validate(
+    const { username, password, locale } = validate(
       z.object({
         username: usernameSchema,
         password: passwordSchema,
+        locale: localeSchema.default('uk'),
       }),
       input,
     );
@@ -523,7 +525,7 @@ export class AccountsService {
             display_name: username.trim(),
             role: invitation.role,
             password_hash: hashPassword(password),
-            locale: 'uk',
+            locale,
             active: 1,
             created_at: Date.now(),
           })
