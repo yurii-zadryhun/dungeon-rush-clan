@@ -1966,3 +1966,7 @@ b {
 .language-toggle .locale-option span {
   font-size: 14px;
 }
+
+.user-actions { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+.user-edit-modal { width: min(440px, 100%); }
+.user-edit-modal .modal-content { display: grid; gap: 14px; }

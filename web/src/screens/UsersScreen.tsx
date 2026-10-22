@@ -1,5 +1,5 @@
 import React from 'react';
-import { Copy, Link2, ShieldOff, UserPlus, Users, X } from 'lucide-react';
+import { Copy, Link2, Pencil, Trash2, UserPlus, Users, X } from 'lucide-react';
 import { api, json, type Account, type Role } from '../api';
 import { useI18n } from '../i18n';
 
@@ -45,6 +45,9 @@ export function UsersScreen({ account }: { account: Account }) {
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState('');
   const [groupExpanded, setGroupExpanded] = React.useState(false);
+  const [editing, setEditing] = React.useState<ManagedAccount | null>(null);
+  const [editName, setEditName] = React.useState('');
+  const [editRole, setEditRole] = React.useState<Role>('member');
   const owner = account.role === 'owner';
 
   const refresh = React.useCallback(async () => {
@@ -107,10 +110,28 @@ export function UsersScreen({ account }: { account: Account }) {
     });
   }
 
-  function revokeAccount(person: ManagedAccount) {
-    if (!window.confirm(t('confirmRevoke'))) return;
+  function deleteAccount(person: ManagedAccount) {
+    if (!window.confirm(t('confirmDeleteUser'))) return;
     void perform(async () => {
       await api('auth/accounts/' + person.id, { method: 'DELETE' });
+      await refresh();
+    });
+  }
+
+  function openEditor(person: ManagedAccount) {
+    setEditing(person);
+    setEditName(person.display_name);
+    setEditRole(person.role);
+  }
+
+  function saveUser(event: React.FormEvent) {
+    event.preventDefault();
+    if (!editing) return;
+    void perform(async () => {
+      await api('auth/accounts/' + editing.id, json('PATCH', {
+        username: editName, role: editRole,
+      }));
+      setEditing(null);
       await refresh();
     });
   }
@@ -247,16 +268,17 @@ export function UsersScreen({ account }: { account: Account }) {
                       {roleLabel(person.role)} {!person.active && '· ' + t('revoked')}
                     </small>
                   </div>
-                  {owner && !!person.active && person.id !== account.id && (
-                    <button
-                      className="icon-button danger"
-                      aria-label={t('revokeAccount')}
-                      title={t('revokeAccount')}
-                      disabled={busy}
-                      onClick={() => revokeAccount(person)}
-                    >
-                      <ShieldOff size={18} />
-                    </button>
+                  {person.id !== account.id && (owner || person.role === 'member') && (
+                    <div className="user-actions">
+                      <button className="icon-button" aria-label={t('editUser')}
+                        title={t('editUser')} disabled={busy} onClick={() => openEditor(person)}>
+                        <Pencil size={17} />
+                      </button>
+                      <button className="icon-button danger" aria-label={t('deleteUser')}
+                        title={t('deleteUser')} disabled={busy} onClick={() => deleteAccount(person)}>
+                        <Trash2 size={17} />
+                      </button>
+                    </div>
                   )}
                 </div>
               ))}
@@ -295,6 +317,43 @@ export function UsersScreen({ account }: { account: Account }) {
           </section>
         </div>
       </div>
+      {editing && (
+        <div className="modal-backdrop" onMouseDown={(event) => {
+          if (event.target === event.currentTarget) setEditing(null);
+        }}>
+          <section className="panel modal user-edit-modal" role="dialog" aria-modal="true"
+            aria-label={t('editUser')}>
+            <header className="modal-header">
+              <h2><Pencil size={19} /> {t('editUser')}</h2>
+              <button type="button" className="close-button" aria-label={t('close')}
+                onClick={() => setEditing(null)}><X /></button>
+            </header>
+            <form onSubmit={saveUser}>
+              <div className="modal-content">
+                <label>{t('username')}
+                  <input value={editName} minLength={2} maxLength={50} required
+                    onChange={(event) => setEditName(event.target.value)} />
+                </label>
+                <label>{t('role')}
+                  <select value={editRole} onChange={(event) => setEditRole(event.target.value as Role)}>
+                    <option value="member">{t('memberRole')}</option>
+                    {owner && <option value="admin">{t('adminRole')}</option>}
+                    {owner && <option value="owner">{t('ownerRole')}</option>}
+                  </select>
+                </label>
+              </div>
+              {error && <div className="error-strip" role="alert">{error}</div>}
+              <footer className="modal-actions">
+                <button type="button" className="game-button secondary"
+                  onClick={() => setEditing(null)}>{t('cancel')}</button>
+                <button className="game-button blue" type="submit" disabled={busy}>
+                  {t('save')}
+                </button>
+              </footer>
+            </form>
+          </section>
+        </div>
+      )}
     </main>
   );
 }
