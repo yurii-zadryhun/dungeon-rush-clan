@@ -20,12 +20,11 @@ export interface WikiSource {
 
 const sections: WikiSection[] = index as WikiSection[];
 const stop = new Set(
-  'a an and are as at be by can could do does for from how i in is it me my of on or our please should so the this to us we what when where which why with you your ' +
+  ('a an and are as at be by can could do does for from how i in is it me my of on or our please should so the this to us we what when where which why with you your ' +
     'а але бо був бути в від де до за з і із й на не по про та те то у це чи що як яка який яких якщо ' +
     'для або мене мені мій моя мого наш наша своє свій там тут треба можна краще більше менш після перед ' +
     'как где для его её или мне мой мои надо нас не но оно они по при про что это если когда лучше можно нужно ' +
-    'game clan player players dungeon rush гра клан клана клану клани'
-      .split(/\s+/),
+    'game clan player players dungeon rush гра клан клана клану клани').split(/\s+/),
 );
 
 function canonical(token: string): string {
