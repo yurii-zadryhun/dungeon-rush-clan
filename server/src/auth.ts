@@ -275,7 +275,7 @@ export class AccountsService {
   listInvites() {
     return this.db.query
       .selectFrom('invites')
-      .select(['id', 'label', 'role', 'expires_at', 'used_at'])
+      .select(['id', 'label', 'role', 'created_by', 'expires_at', 'used_at'])
       .orderBy('id', 'desc')
       .execute();
   }
