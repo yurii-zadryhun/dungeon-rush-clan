@@ -46,7 +46,14 @@ function Leaders({
         {(expanded ? players : players.slice(0, 6)).map((player, index) => (
           <div
             key={player.id}
-            className={['leader-row', !player.active && 'inactive', player.belowRequirement && 'below', (account.playerId === player.id || (!account.playerId && normalizeName(player.name) === normalizeName(account.username))) && 'is-me']
+            className={[
+              'leader-row',
+              !player.active && 'inactive',
+              player.belowRequirement && 'below',
+              (account.playerId === player.id ||
+                (!account.playerId && normalizeName(player.name) === normalizeName(account.username))) &&
+                'is-me',
+            ]
               .filter(Boolean)
               .join(' ')}
           >
@@ -69,10 +76,14 @@ function Leaders({
           </div>
         ))}
       </div>
-      {players.length > 6 && <button className="game-button secondary leader-expand"
-        onClick={() => setExpanded((value) => !value)}>
-        {t(expanded ? 'showLess' : 'showAll')} ({players.length})
-      </button>}
+      {players.length > 6 && (
+        <button
+          className="game-button secondary leader-expand"
+          onClick={() => setExpanded((value) => !value)}
+        >
+          {t(expanded ? 'showLess' : 'showAll')} ({players.length})
+        </button>
+      )}
     </section>
   );
 }
@@ -206,7 +217,10 @@ function WarColumn({
                     'war-player',
                     !player.active && 'inactive',
                     ranking?.belowRequirement && 'below',
-                    (account.playerId === player.id || (!account.playerId && normalizeName(player.name) === normalizeName(account.username))) && 'is-me',
+                    (account.playerId === player.id ||
+                      (!account.playerId &&
+                        normalizeName(player.name) === normalizeName(account.username))) &&
+                      'is-me',
                   ]
                     .filter(Boolean)
                     .join(' ')}
@@ -376,10 +390,21 @@ export function ClanDashboard({
         </nav>
         <div className="header-actions">
           <LanguagePicker onSelect={onLocaleChange} />
-          <button className="current-user profile-shortcut" title={t('profile')}
-            onClick={() => setDialog('profile')}>{user.displayName}</button>
-          <button className="icon-button" aria-label={t('profile')} title={t('profile')}
-            onClick={() => setDialog('profile')}><Users size={19} /></button>
+          <button
+            className="current-user profile-shortcut"
+            title={t('profile')}
+            onClick={() => setDialog('profile')}
+          >
+            {user.displayName}
+          </button>
+          <button
+            className="icon-button"
+            aria-label={t('profile')}
+            title={t('profile')}
+            onClick={() => setDialog('profile')}
+          >
+            <Users size={19} />
+          </button>
           {canEdit && (
             <button
               aria-label={t('settings')}
@@ -418,15 +443,34 @@ export function ClanDashboard({
           {error && <div className="error-strip">{error}</div>}
           <div className="dashboard-top">
             <ClanOverview data={data} />
-            <Leaders title={t('allTimeLeaders')} players={data.rankings.allTime} metric="average" account={user} />
-            <Leaders title={t('latestLeaders')} players={data.rankings.latest} metric="lastPoints" account={user} />
+            <Leaders
+              title={t('allTimeLeaders')}
+              players={data.rankings.allTime}
+              metric="average"
+              account={user}
+            />
+            <Leaders
+              title={t('latestLeaders')}
+              players={data.rankings.latest}
+              metric="lastPoints"
+              account={user}
+            />
           </div>
           <section className="panel history-widget">
-            <header className="widget-head timeline-heading"><h2><History size={20} /> {t('warHistory')}</h2></header>
+            <header className="widget-head timeline-heading">
+              <h2>
+                <History size={20} /> {t('warHistory')}
+              </h2>
+            </header>
             <div className="timeline-scroll" ref={track}>
               <div className="timeline-track">
-                <button className="game-button secondary load-more-wars" disabled={loadingOlder}
-                  onClick={loadOlder}>{loadingOlder ? t('loading') : t('loadMore')}</button>
+                <button
+                  className="game-button secondary load-more-wars"
+                  disabled={loadingOlder}
+                  onClick={loadOlder}
+                >
+                  {loadingOlder ? t('loading') : t('loadMore')}
+                </button>
                 {weeks.map((week) => (
                   <WarColumn
                     key={week.start}
@@ -467,7 +511,9 @@ export function ClanDashboard({
         />
       )}
       {dialog === 'members' && user.role === 'owner' && <MembersModal onClose={() => setDialog(null)} />}
-      {dialog === 'profile' && <ProfileModal account={user} onClose={() => setDialog(null)} onSaved={onProfileChange} />}
+      {dialog === 'profile' && (
+        <ProfileModal account={user} onClose={() => setDialog(null)} onSaved={onProfileChange} />
+      )}
     </div>
   );
 }

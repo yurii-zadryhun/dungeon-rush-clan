@@ -55,7 +55,8 @@ export function MembersModal({ onClose }: { onClose: () => void }) {
   }
 
   React.useEffect(() => {
-    void refresh().catch((failure) => setError((failure as Error).message))
+    void refresh()
+      .catch((failure) => setError((failure as Error).message))
       .finally(() => setLoading(false));
   }, []);
 
@@ -168,18 +169,31 @@ export function MembersModal({ onClose }: { onClose: () => void }) {
           <div className="shared-invite-box">
             <h3>{t('sharedInviteTitle')}</h3>
             <p className="tiny muted">{t('sharedInviteInfo')}</p>
-            <span className="tiny muted">{shared?.active ? t('sharedInviteActive') : t('sharedInviteDisabled')}</span>
-            {sharedUrl && <input aria-label={t('copyInvite')} readOnly value={sharedUrl}
-              onFocus={(event) => event.currentTarget.select()} />}
+            <span className="tiny muted">
+              {shared?.active ? t('sharedInviteActive') : t('sharedInviteDisabled')}
+            </span>
+            {sharedUrl && (
+              <input
+                aria-label={t('copyInvite')}
+                readOnly
+                value={sharedUrl}
+                onFocus={(event) => event.currentTarget.select()}
+              />
+            )}
             <div className="shared-invite-actions">
               <button className="game-button blue" disabled={busy || loading} onClick={issueShared}>
                 {shared?.active ? t('reissueSharedInvite') : t('createSharedInvite')}
               </button>
-              {sharedUrl && <button className="game-button secondary" onClick={copyShared}>
-                <Copy size={15} /> {copied ? t('copied') : t('copyInvite')}
-              </button>}
-              {shared?.active && <button className="game-button secondary" disabled={busy}
-                onClick={revokeShared}>{t('revokeSharedInvite')}</button>}
+              {sharedUrl && (
+                <button className="game-button secondary" onClick={copyShared}>
+                  <Copy size={15} /> {copied ? t('copied') : t('copyInvite')}
+                </button>
+              )}
+              {shared?.active && (
+                <button className="game-button secondary" disabled={busy} onClick={revokeShared}>
+                  {t('revokeSharedInvite')}
+                </button>
+              )}
             </div>
           </div>
           <h3>{t('newInvitation')}</h3>

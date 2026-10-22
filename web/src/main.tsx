@@ -30,7 +30,10 @@ function App() {
           const status = await api<{ initialized: boolean }>('auth/setup-state');
           if (!mounted) return;
           if (!status.initialized) setPhase('setup');
-          else setPhase(invite && new URLSearchParams(location.search).get('login') !== '1' ? 'invite' : 'login');
+          else
+            setPhase(
+              invite && new URLSearchParams(location.search).get('login') !== '1' ? 'invite' : 'login',
+            );
         } catch (failure) {
           if (!mounted) return;
           setError((failure as Error).message);

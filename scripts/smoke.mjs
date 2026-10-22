@@ -184,64 +184,155 @@ async function run() {
   const shared = await request('auth/shared-invite', 'POST', {}, ownerCookie);
   ensure(shared.status, 201, 'Owner can issue group invite');
   const groupToken = new URL(shared.body.url).searchParams.get('invite');
-  ensure((await request('auth/invite/' + groupToken)).body.shared, true, 'Reusable invitation advertised');
+  ensure(
+    (await request('auth/invite/' + groupToken)).body.shared,
+    true,
+    'Reusable invitation advertised',
+  );
   const groupFirst = await request('auth/invite/' + groupToken + '/register', 'POST', {
-    username: 'NewPerson', password: 'newperson-password-1234',
+    username: 'NewPerson',
+    password: 'newperson-password-1234',
   });
   ensure(groupFirst.status, 201, 'First group member registered');
   ensure(groupFirst.body.role, 'member', 'Reusable invitation is always member');
   ensure(groupFirst.body.playerId, newcomer.id, 'Existing player history linked to account');
   const groupSecond = await request('auth/invite/' + groupToken + '/register', 'POST', {
-    username: 'OtherMember', password: 'othermember-password-1234',
+    username: 'OtherMember',
+    password: 'othermember-password-1234',
   });
   ensure(groupSecond.status, 201, 'Second group member registered with same link');
-  ensure((await request('auth/invite/' + groupToken + '/register', 'POST', {
-    username: 'owner', password: 'unimportant-password-1234',
-  })).status, 400, 'Cannot register duplicate in-game name');
+  ensure(
+    (
+      await request('auth/invite/' + groupToken + '/register', 'POST', {
+        username: 'owner',
+        password: 'unimportant-password-1234',
+      })
+    ).status,
+    400,
+    'Cannot register duplicate in-game name',
+  );
 
-  const lastResult = await request('import/confirm', 'POST', {
-    start: recent,
-    result: { opponent: 'poorplay', ourScore: 11, opponentScore: 2,
-      days: dayPoints.map((points, index) => ({
-        day: index + 1, points, winner: index === 1 ? 'opponent' : 'ours',
-        mvp: index === 1 ? 'enemy' : 'NewPerson',
-      })),
+  const lastResult = await request(
+    'import/confirm',
+    'POST',
+    {
+      start: recent,
+      result: {
+        opponent: 'poorplay',
+        ourScore: 11,
+        opponentScore: 2,
+        days: dayPoints.map((points, index) => ({
+          day: index + 1,
+          points,
+          winner: index === 1 ? 'opponent' : 'ours',
+          mvp: index === 1 ? 'enemy' : 'NewPerson',
+        })),
+      },
     },
-  }, ownerCookie);
+    ownerCookie,
+  );
   ensure(lastResult.status, 201, 'War result imported for nickname migration');
-  ensure((await request('auth/profile', 'PATCH', {
-    username: 'FreshNick', currentPassword: 'wrong-password',
-  }, groupFirst.cookie)).status, 401, 'Profile requires current password');
-  ensure((await request('auth/profile', 'PATCH', {
-    username: 'КРОСТ', currentPassword: 'newperson-password-1234',
-  }, groupFirst.cookie)).status, 400, 'Cannot claim another historical player name');
-  const renamed = await request('auth/profile', 'PATCH', {
-    username: 'FreshNick', currentPassword: 'newperson-password-1234',
-    newPassword: 'fresh-password-5678',
-  }, groupFirst.cookie);
+  ensure(
+    (
+      await request(
+        'auth/profile',
+        'PATCH',
+        {
+          username: 'FreshNick',
+          currentPassword: 'wrong-password',
+        },
+        groupFirst.cookie,
+      )
+    ).status,
+    401,
+    'Profile requires current password',
+  );
+  ensure(
+    (
+      await request(
+        'auth/profile',
+        'PATCH',
+        {
+          username: 'КРОСТ',
+          currentPassword: 'newperson-password-1234',
+        },
+        groupFirst.cookie,
+      )
+    ).status,
+    400,
+    'Cannot claim another historical player name',
+  );
+  const renamed = await request(
+    'auth/profile',
+    'PATCH',
+    {
+      username: 'FreshNick',
+      currentPassword: 'newperson-password-1234',
+      newPassword: 'fresh-password-5678',
+    },
+    groupFirst.cookie,
+  );
   ensure(renamed.status, 200, 'Change nickname and password');
   ensure(renamed.body.playerId, newcomer.id, 'Stable player identity retained');
-  ensure((await request('auth/login', 'POST', {
-    username: 'NewPerson', password: 'newperson-password-1234',
-  })).status, 401, 'Old login no longer works');
-  ensure((await request('auth/login', 'POST', {
-    username: 'FreshNick', password: 'fresh-password-5678',
-  })).status, 201, 'New login works');
+  ensure(
+    (
+      await request('auth/login', 'POST', {
+        username: 'NewPerson',
+        password: 'newperson-password-1234',
+      })
+    ).status,
+    401,
+    'Old login no longer works',
+  );
+  ensure(
+    (
+      await request('auth/login', 'POST', {
+        username: 'FreshNick',
+        password: 'fresh-password-5678',
+      })
+    ).status,
+    201,
+    'New login works',
+  );
   const renamedDashboard = await request('dashboard', 'GET', null, groupFirst.cookie);
-  ensure(renamedDashboard.body.rankings.calculated.some(p => p.id === newcomer.id && p.name === 'FreshNick'),
-    true, 'Historical ranking uses updated player name');
-  const renamedWeek = renamedDashboard.body.weeks.find(w => w.start === recent);
-  ensure(renamedWeek.players.some(p => p.id === newcomer.id && p.name === 'FreshNick'),
-    true, 'War log uses updated name');
-  ensure(renamedWeek.days.some(day => day.mvp === 'FreshNick'),
-    true, 'Historical MVP text updated too');
-  ensure((await request('auth/shared-invite', 'DELETE', null, ownerCookie)).status,
-    200, 'Owner disables group invite');
-  ensure((await request('auth/invite/' + groupToken + '/register', 'POST', {
-    username: 'AnotherMember', password: 'another-password-1234',
-  })).status, 400, 'Disabled group invite rejects new signups');
-  ensure((await request('dashboard', 'GET', null, groupSecond.cookie)).status, 200,
-    'Existing accounts remain active after disabling invitation');
+  ensure(
+    renamedDashboard.body.rankings.calculated.some(
+      (p) => p.id === newcomer.id && p.name === 'FreshNick',
+    ),
+    true,
+    'Historical ranking uses updated player name',
+  );
+  const renamedWeek = renamedDashboard.body.weeks.find((w) => w.start === recent);
+  ensure(
+    renamedWeek.players.some((p) => p.id === newcomer.id && p.name === 'FreshNick'),
+    true,
+    'War log uses updated name',
+  );
+  ensure(
+    renamedWeek.days.some((day) => day.mvp === 'FreshNick'),
+    true,
+    'Historical MVP text updated too',
+  );
+  ensure(
+    (await request('auth/shared-invite', 'DELETE', null, ownerCookie)).status,
+    200,
+    'Owner disables group invite',
+  );
+  ensure(
+    (
+      await request('auth/invite/' + groupToken + '/register', 'POST', {
+        username: 'AnotherMember',
+        password: 'another-password-1234',
+      })
+    ).status,
+    400,
+    'Disabled group invite rejects new signups',
+  );
+  ensure(
+    (await request('dashboard', 'GET', null, groupSecond.cookie)).status,
+    200,
+    'Existing accounts remain active after disabling invitation',
+  );
 
   console.log('Production integration smoke tests passed');
 }

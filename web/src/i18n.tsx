@@ -147,7 +147,8 @@ const en = {
   nicknameTaken: 'This in-game name is already used',
   sharedInviteDisabled: 'No active group invitation',
   sharedInviteActive: 'Group invitation active',
-  sharedInviteInfo: 'Anyone with this link can create a Member account. Regenerating disables the previous link.',
+  sharedInviteInfo:
+    'Anyone with this link can create a Member account. Regenerating disables the previous link.',
   revokeSharedInvite: 'Disable link',
   reissueSharedInvite: 'Regenerate link',
   createSharedInvite: 'Generate group link',
@@ -319,7 +320,8 @@ const uk: Record<MessageKey, string> = {
   nicknameTaken: 'Цей ігровий нік уже зайнятий',
   sharedInviteDisabled: 'Немає активного групового посилання',
   sharedInviteActive: 'Групове посилання активне',
-  sharedInviteInfo: 'Кожен за цим посиланням може створити акаунт учасника. Перевипуск вимикає попереднє посилання.',
+  sharedInviteInfo:
+    'Кожен за цим посиланням може створити акаунт учасника. Перевипуск вимикає попереднє посилання.',
   revokeSharedInvite: 'Вимкнути посилання',
   reissueSharedInvite: 'Перевипустити посилання',
   createSharedInvite: 'Створити групове посилання',
@@ -390,14 +392,21 @@ export function useI18n() {
 export function LanguagePicker({ onSelect }: { onSelect?: (locale: Locale) => void }) {
   const { locale, setLocale, t } = useI18n();
   const next = locale === 'uk' ? 'en' : 'uk';
-  return <button type="button" className="language-picker language-toggle"
-    title={t('language')} aria-label={t('language')} onClick={() => {
-      setLocale(next);
-      onSelect?.(next);
-    }}>
-    <span aria-hidden="true">{locale === 'uk' ? '🇺🇦' : '🇬🇧'}</span>
-    <strong>{locale === 'uk' ? 'UA' : 'EN'}</strong>
-  </button>;
+  return (
+    <button
+      type="button"
+      className="language-picker language-toggle"
+      title={t('language')}
+      aria-label={t('language')}
+      onClick={() => {
+        setLocale(next);
+        onSelect?.(next);
+      }}
+    >
+      <span aria-hidden="true">{locale === 'uk' ? '🇺🇦' : '🇬🇧'}</span>
+      <strong>{locale === 'uk' ? 'UA' : 'EN'}</strong>
+    </button>
+  );
 }
 
 const backendErrors: Record<string, string> = {

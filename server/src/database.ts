@@ -18,7 +18,13 @@ export interface Tables {
     active: number;
     created_at: number;
   };
-  shared_invites: { id: number; token_hash: string; created_by: number; active: number; created_at: number };
+  shared_invites: {
+    id: number;
+    token_hash: string;
+    created_by: number;
+    active: number;
+    created_at: number;
+  };
   sessions: { token_hash: string; account_id: number; expires_at: number; extended_at: number };
   invites: {
     id: Generated<number>;
@@ -122,7 +128,9 @@ export class Db implements OnModuleDestroy {
     const playerColumns = this.connection.pragma('table_info(players)') as { name: string }[];
     if (!playerColumns.some((column) => column.name === 'account_id')) {
       this.connection.exec('ALTER TABLE players ADD COLUMN account_id INTEGER REFERENCES accounts(id)');
-      this.connection.exec('CREATE UNIQUE INDEX IF NOT EXISTS players_account_unique ON players(account_id)');
+      this.connection.exec(
+        'CREATE UNIQUE INDEX IF NOT EXISTS players_account_unique ON players(account_id)',
+      );
       // Existing users retain ownership of their historical player, matched by in-game name.
       this.connection.exec(`
         UPDATE players SET account_id = (
