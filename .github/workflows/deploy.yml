@@ -135,6 +135,7 @@ jobs:
           test -s "$stage/gemini-key.env"
           env_tmp=$(mktemp "$app/.env.XXXXXXXX")
           grep -v '^GEMINI_API_KEY=' "$app/.env" > "$env_tmp" || true
+          printf '\n' >> "$env_tmp"
           cat "$stage/gemini-key.env" >> "$env_tmp"
           chmod 600 "$env_tmp"
           mv -f "$env_tmp" "$app/.env"
