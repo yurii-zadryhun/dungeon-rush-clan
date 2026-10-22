@@ -19,7 +19,7 @@ import {
 import { createHash, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
-import { Db, type Role } from './database';
+import { Db, normalizeName, type Role } from './database';
 
 const SESSION_TTL = 7 * 24 * 60 * 60 * 1000;
 const SESSION_RENEWAL_INTERVAL = 24 * 60 * 60 * 1000;
@@ -34,6 +34,7 @@ export interface AuthenticatedAccount {
   displayName: string;
   role: Role;
   locale: 'uk' | 'en';
+  playerId: number | null;
 }
 export type AuthenticatedRequest = FastifyRequest & { account?: AuthenticatedAccount };
 
@@ -115,7 +116,7 @@ export class AccountsService {
         const created = await transaction
           .insertInto('accounts')
           .values({
-            username: data.username.toLowerCase(),
+            username: normalizeName(data.username),
             display_name: data.username,
             role: 'owner',
             password_hash: hashPassword(data.password),
@@ -157,7 +158,7 @@ export class AccountsService {
       }),
       input,
     );
-    const username = data.username.toLowerCase();
+    const username = normalizeName(data.username);
     const attemptKey = ip + ':' + username;
     this.limitAttempts(attemptKey);
     const account = await this.db.query
@@ -190,12 +191,15 @@ export class AccountsService {
       .select(['id', 'username', 'display_name', 'role', 'locale'])
       .where('id', '=', accountId)
       .executeTakeFirstOrThrow();
+    const player = await this.db.query.selectFrom('players').select('id')
+      .where('account_id', '=', accountId).executeTakeFirst();
     return {
       id: account.id,
       username: account.username,
       displayName: account.display_name,
       role: account.role,
       locale: account.locale,
+      playerId: player?.id ?? null,
     };
   }
 
@@ -232,12 +236,15 @@ export class AccountsService {
         .execute();
       sessionCookie(reply, raw);
     }
+    const player = await this.db.query.selectFrom('players').select('id')
+      .where('account_id', '=', session.id).executeTakeFirst();
     return {
       id: session.id,
       username: session.username,
       displayName: session.display_name,
       role: session.role,
       locale: session.locale,
+      playerId: player?.id ?? null,
     };
   }
 
@@ -295,62 +302,144 @@ export class AccountsService {
     return { id: created.id, url, label, role };
   }
 
-  private async validInvite(raw: string) {
-    const invite = await this.db.query
-      .selectFrom('invites')
-      .selectAll()
-      .where('token_hash', '=', digest(raw))
-      .executeTakeFirst();
-    if (!invite || invite.used_at || invite.expires_at <= Date.now()) {
-      throw new BadRequestException('Invitation expired or revoked');
+  async sharedInviteStatus() {
+    const shared = await this.db.query.selectFrom('shared_invites')
+      .select(['active', 'created_at']).where('id', '=', 1).executeTakeFirst();
+    return { active: !!shared?.active, createdAt: shared?.created_at ?? null };
+  }
+
+  async createSharedInvite(ownerId: number) {
+    const raw = randomToken();
+    const createdAt = Date.now();
+    await this.db.query.insertInto('shared_invites')
+      .values({ id: 1, token_hash: digest(raw), created_by: ownerId, active: 1, created_at: createdAt })
+      .onConflict((conflict) => conflict.column('id').doUpdateSet({
+        token_hash: digest(raw), created_by: ownerId, active: 1, created_at: createdAt,
+      })).execute();
+    const url = new URL('/?invite=' + encodeURIComponent(raw),
+      process.env.APP_ORIGIN || 'http://localhost:5173').toString();
+    return { url, active: true, createdAt };
+  }
+
+  async revokeSharedInvite() {
+    await this.db.query.updateTable('shared_invites').set({ active: 0 })
+      .where('id', '=', 1).execute();
+    return { active: false };
+  }
+
+  private async resolveInvite(raw: string) {
+    const individual = await this.db.query.selectFrom('invites').selectAll()
+      .where('token_hash', '=', digest(raw)).executeTakeFirst();
+    if (individual) {
+      if (individual.used_at || individual.expires_at <= Date.now())
+        throw new BadRequestException('Invitation expired or revoked');
+      return { individual, label: individual.label, role: individual.role, shared: false };
     }
-    return invite;
+    const shared = await this.db.query.selectFrom('shared_invites').select(['active'])
+      .where('token_hash', '=', digest(raw)).executeTakeFirst();
+    if (!shared?.active) throw new BadRequestException('Invitation expired or revoked');
+    return { individual: null, label: '', role: 'member' as const, shared: true };
+  }
+
+  async updateProfile(accountId: number, input: unknown): Promise<AuthenticatedAccount> {
+    const data = validate(z.object({
+      username: usernameSchema,
+      currentPassword: z.string().min(1),
+      newPassword: passwordSchema.optional(),
+    }), input);
+    const normalized = normalizeName(data.username);
+    try {
+      await this.db.query.transaction().execute(async (trx) => {
+        const account = await trx.selectFrom('accounts').selectAll()
+          .where('id', '=', accountId).executeTakeFirstOrThrow();
+        if (!verifyPassword(data.currentPassword, account.password_hash)) {
+          throw new UnauthorizedException('Invalid username or password');
+        }
+        const duplicate = await trx.selectFrom('accounts').select('id')
+          .where('username', '=', normalized).where('id', '!=', accountId).executeTakeFirst();
+        if (duplicate) throw new BadRequestException('Username already exists');
+        const player = await trx.selectFrom('players').selectAll()
+          .where('account_id', '=', accountId).executeTakeFirst();
+        const oldName = normalizeName(account.username);
+        const legacyPlayer = player || await trx.selectFrom('players').selectAll()
+          .where('normalized_name', '=', oldName).where('account_id', 'is', null)
+          .executeTakeFirst();
+        const existing = await trx.selectFrom('players').select(['id', 'account_id'])
+          .where('normalized_name', '=', normalized).executeTakeFirst();
+        if (existing && existing.id !== legacyPlayer?.id) {
+          throw new BadRequestException('Player name already exists');
+        }
+        if (legacyPlayer) {
+          await trx.updateTable('players').set({
+            name: data.username.trim(), normalized_name: normalized, account_id: accountId,
+          }).where('id', '=', legacyPlayer.id).execute();
+          // MVP is stored as text; ranked war scores already reference immutable player IDs.
+          const days = await trx.selectFrom('war_days')
+            .select(['war_id', 'day_number', 'mvp']).execute();
+          for (const day of days) {
+            if (normalizeName(day.mvp) !== normalizeName(legacyPlayer.name)) continue;
+            await trx.updateTable('war_days').set({ mvp: data.username.trim() })
+              .where('war_id', '=', day.war_id).where('day_number', '=', day.day_number).execute();
+          }
+        }
+        await trx.updateTable('accounts').set({
+          username: normalized, display_name: data.username.trim(),
+          ...(data.newPassword ? { password_hash: hashPassword(data.newPassword) } : {}),
+        }).where('id', '=', accountId).execute();
+      });
+    } catch (error) {
+      if ((error as Error).message.includes('UNIQUE'))
+        throw new BadRequestException('Username already exists');
+      throw error;
+    }
+    const updated = await this.db.query.selectFrom('accounts').selectAll()
+      .where('id', '=', accountId).executeTakeFirstOrThrow();
+    const player = await this.db.query.selectFrom('players').select('id')
+      .where('account_id', '=', accountId).executeTakeFirst();
+    return { id: updated.id, username: updated.username, displayName: updated.display_name,
+      role: updated.role, locale: updated.locale, playerId: player?.id ?? null };
   }
 
   async inviteInfo(raw: string) {
-    const invite = await this.validInvite(raw);
-    return { label: invite.label, role: invite.role };
+    const invitation = await this.resolveInvite(raw);
+    return { label: invitation.label, role: invitation.role, shared: invitation.shared };
   }
 
   async registerInvite(raw: string, input: unknown, reply: FastifyReply) {
-    const { username, password } = validate(
-      z.object({
-        username: usernameSchema,
-        password: passwordSchema,
-      }),
-      input,
-    );
-    const invite = await this.validInvite(raw);
+    const { username, password } = validate(z.object({
+      username: usernameSchema, password: passwordSchema,
+    }), input);
+    const invitation = await this.resolveInvite(raw);
+    const normalized = normalizeName(username);
     let accountId: number;
     try {
       accountId = await this.db.query.transaction().execute(async (transaction) => {
-        const claimed = await transaction
-          .updateTable('invites')
-          .set({ used_at: Date.now() })
-          .where('id', '=', invite.id)
-          .where('used_at', 'is', null)
-          .returning('id')
-          .executeTakeFirst();
-        if (!claimed) throw new BadRequestException('Invitation already used');
-        const created = await transaction
-          .insertInto('accounts')
-          .values({
-            username: username.toLowerCase(),
-            display_name: invite.label,
-            role: invite.role,
-            password_hash: hashPassword(password),
-            locale: 'uk',
-            active: 1,
-            created_at: Date.now(),
-          })
-          .returning('id')
-          .executeTakeFirstOrThrow();
+        if (invitation.individual) {
+          const claimed = await transaction.updateTable('invites')
+            .set({ used_at: Date.now() }).where('id', '=', invitation.individual.id)
+            .where('used_at', 'is', null).where('expires_at', '>', Date.now())
+            .returning('id').executeTakeFirst();
+          if (!claimed) throw new BadRequestException('Invitation already used');
+        } else {
+          const active = await transaction.selectFrom('shared_invites')
+            .select('active').where('token_hash', '=', digest(raw)).executeTakeFirst();
+          if (!active?.active) throw new BadRequestException('Invitation expired or revoked');
+        }
+        const created = await transaction.insertInto('accounts').values({
+          username: normalized, display_name: username.trim(), role: invitation.role,
+          password_hash: hashPassword(password), locale: 'uk', active: 1, created_at: Date.now(),
+        }).returning('id').executeTakeFirstOrThrow();
+        const historic = await transaction.selectFrom('players').select(['id', 'account_id'])
+          .where('normalized_name', '=', normalized).executeTakeFirst();
+        if (historic && !historic.account_id) {
+          await transaction.updateTable('players').set({ account_id: created.id })
+            .where('id', '=', historic.id).execute();
+        }
         return created.id;
       });
     } catch (error) {
-      if ((error as Error).message.includes('UNIQUE')) {
+      if ((error as Error).message.includes('UNIQUE'))
         throw new BadRequestException('Username already exists');
-      }
       throw error;
     }
     return this.createSession(accountId, reply);
@@ -446,6 +535,12 @@ export class AuthController {
   }
 
   @UseGuards(SessionGuard)
+  @Patch('profile')
+  profile(@Body() body: unknown, @Req() request: AuthenticatedRequest) {
+    return this.auth.updateProfile(request.account!.id, body);
+  }
+
+  @UseGuards(SessionGuard)
   @Patch('locale')
   locale(@Body() body: unknown, @Req() request: AuthenticatedRequest) {
     return this.auth.setLocale(request.account!.id, body);
@@ -474,6 +569,20 @@ export class AuthController {
   ) {
     return this.auth.registerInvite(token, body, reply);
   }
+
+  @UseGuards(SessionGuard, OwnerGuard)
+  @Get('shared-invite')
+  sharedInvite() { return this.auth.sharedInviteStatus(); }
+
+  @UseGuards(SessionGuard, OwnerGuard)
+  @Post('shared-invite')
+  createShared(@Req() request: AuthenticatedRequest) {
+    return this.auth.createSharedInvite(request.account!.id);
+  }
+
+  @UseGuards(SessionGuard, OwnerGuard)
+  @Delete('shared-invite')
+  revokeShared() { return this.auth.revokeSharedInvite(); }
 
   @UseGuards(SessionGuard, OwnerGuard)
   @Get('accounts')
