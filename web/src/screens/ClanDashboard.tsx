@@ -329,7 +329,8 @@ export function ClanDashboard({
   }, [isWiki]);
 
   React.useLayoutEffect(() => {
-    if (!data || isWiki || positioned.current || !weeks.some((week) => week.start === data.currentStart)) return;
+    if (!data || isWiki || positioned.current) return;
+    if (!weeks.some((week) => week.start === data.currentStart)) return;
     const container = track.current;
     const selected = [...(container?.querySelectorAll<HTMLElement>('.war-column') ?? [])].find(
       (element) => element.dataset.start === data.currentStart,
