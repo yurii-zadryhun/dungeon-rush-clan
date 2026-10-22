@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, ChevronLeft, History, LogOut, Medal, Settings, Swords, Users } from 'lucide-react';
+import { BookOpen, History, LogOut, Medal, Settings, Swords, Users } from 'lucide-react';
 import {
   api,
   number,
@@ -28,6 +28,7 @@ function Leaders({
   metric: PlayerMetric;
 }) {
   const { t } = useI18n();
+  const [expanded, setExpanded] = React.useState(false);
   return (
     <section className="panel leaders-widget">
       <header className="widget-head">
@@ -38,7 +39,7 @@ function Leaders({
       </header>
       {players.length === 0 && <p className="empty">{t('noLeaders')}</p>}
       <div className="leader-list">
-        {players.slice(0, 6).map((player, index) => (
+        {(expanded ? players : players.slice(0, 6)).map((player, index) => (
           <div
             key={player.id}
             className={['leader-row', !player.active && 'inactive', player.belowRequirement && 'below']
@@ -64,6 +65,10 @@ function Leaders({
           </div>
         ))}
       </div>
+      {players.length > 6 && <button className="game-button secondary leader-expand"
+        onClick={() => setExpanded((value) => !value)}>
+        {t(expanded ? 'showLess' : 'showAll')} ({players.length})
+      </button>}
     </section>
   );
 }
@@ -274,7 +279,6 @@ export function ClanDashboard({
   const [loadingOlder, setLoadingOlder] = React.useState(false);
   const [weeks, setWeeks] = React.useState<Week[]>([]);
   const track = React.useRef<HTMLDivElement>(null);
-  const positioned = React.useRef(false);
   const canEdit = user.role !== 'member';
   const calculated = React.useMemo(
     () => new Map(data?.rankings.calculated.map((player) => [player.id, player]) ?? []),
@@ -297,7 +301,7 @@ export function ClanDashboard({
   }, [data]);
 
   React.useLayoutEffect(() => {
-    if (!data || positioned.current || !weeks.some((week) => week.start === data.currentStart)) return;
+    if (!data || isWiki || !weeks.some((week) => week.start === data.currentStart)) return;
     const container = track.current;
     const selected = [...(container?.querySelectorAll<HTMLElement>('.war-column') ?? [])].find(
       (element) => element.dataset.start === data.currentStart,
@@ -305,8 +309,7 @@ export function ClanDashboard({
     if (!container || !selected) return;
     const relativeLeft = selected.getBoundingClientRect().left - container.getBoundingClientRect().left;
     container.scrollLeft += relativeLeft - (container.clientWidth - selected.clientWidth) / 2;
-    positioned.current = true;
-  }, [data, weeks]);
+  }, [data?.currentStart, weeks, isWiki]);
 
   async function loadOlder() {
     if (!weeks.length || loadingOlder) return;
@@ -407,16 +410,11 @@ export function ClanDashboard({
             <Leaders title={t('latestLeaders')} players={data.rankings.latest} metric="lastPoints" />
           </div>
           <section className="panel history-widget">
-            <header className="widget-head timeline-heading">
-              <h2>
-                <History size={20} /> {t('warHistory')}
-              </h2>
-              <button className="game-button secondary" disabled={loadingOlder} onClick={loadOlder}>
-                <ChevronLeft size={17} /> {loadingOlder ? t('loading') : t('olderWars')}
-              </button>
-            </header>
+            <header className="widget-head timeline-heading"><h2><History size={20} /> {t('warHistory')}</h2></header>
             <div className="timeline-scroll" ref={track}>
               <div className="timeline-track">
+                <button className="game-button secondary load-more-wars" disabled={loadingOlder}
+                  onClick={loadOlder}>{loadingOlder ? t('loading') : t('loadMore')}</button>
                 {weeks.map((week) => (
                   <WarColumn
                     key={week.start}

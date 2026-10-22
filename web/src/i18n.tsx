@@ -143,6 +143,9 @@ const en = {
   removeRow: 'Remove row',
   pickExisting: 'Existing player',
   languageSaveFailed: 'Could not save language preference.',
+  loadMore: 'Load more',
+  showLess: 'Show less',
+  showAll: 'Show all',
   ocrRowCheck: 'Check rank {position}: {details}',
   ocrMissingRows: 'Could not find ranking rows. Enter players manually.',
   ocrMissingScore: 'Final score not recognized.',
@@ -296,6 +299,9 @@ const uk: Record<MessageKey, string> = {
   removeRow: 'Видалити рядок',
   pickExisting: 'Наявний гравець',
   languageSaveFailed: 'Не вдалося зберегти мову.',
+  loadMore: 'Завантажити ще',
+  showLess: 'Згорнути',
+  showAll: 'Показати всіх',
   ocrRowCheck: 'Перевірте місце {position}: {details}',
   ocrMissingRows: 'Не вдалося знайти рядки рейтингу. Додайте гравців вручну.',
   ocrMissingScore: 'Не розпізнано підсумковий рахунок.',
@@ -351,28 +357,15 @@ export function useI18n() {
 
 export function LanguagePicker({ onSelect }: { onSelect?: (locale: Locale) => void }) {
   const { locale, setLocale, t } = useI18n();
-  return (
-    <div className="language-picker" role="group" aria-label={t('language')}>
-      {[
-        { code: 'uk' as const, flag: '🇺🇦', name: 'UA' },
-        { code: 'en' as const, flag: '🇬🇧', name: 'EN' },
-      ].map((option) => (
-        <button
-          key={option.code}
-          type="button"
-          className={'language-choice' + (locale === option.code ? ' selected' : '')}
-          aria-pressed={locale === option.code}
-          title={option.name}
-          onClick={() => {
-            setLocale(option.code);
-            onSelect?.(option.code);
-          }}
-        >
-          <span aria-hidden="true">{option.flag}</span> {option.name}
-        </button>
-      ))}
-    </div>
-  );
+  const next = locale === 'uk' ? 'en' : 'uk';
+  return <button type="button" className="language-picker language-toggle"
+    title={t('language')} aria-label={t('language')} onClick={() => {
+      setLocale(next);
+      onSelect?.(next);
+    }}>
+    <span aria-hidden="true">{locale === 'uk' ? '🇺🇦' : '🇬🇧'}</span>
+    <strong>{locale === 'uk' ? 'UA' : 'EN'}</strong>
+  </button>;
 }
 
 const backendErrors: Record<string, string> = {
