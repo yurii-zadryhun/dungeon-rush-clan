@@ -43,7 +43,7 @@ export function SiteHeader({
     <header className="site-header shell-header">
       <a className="brand shell-brand" href="#/archive">
         <span className="brand-mark"><Swords size={25} /></span>
-        <span className="brand-caption"><strong>DUNGEON RUSH</strong><small>{t('appTitle').toUpperCase()}</small></span>
+        <span className="brand-caption"><strong>DUNGEON RUSH</strong></span>
       </a>
       <nav className="top-navigation shell-navigation" aria-label={t('navigation')}>
         <a href="#/archive" className={!isWiki && !isUsers ? 'active' : ''}

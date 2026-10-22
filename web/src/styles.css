@@ -1786,3 +1786,10 @@ b {
   .war-load-control { min-height: 340px; width: 52px; flex-basis: 52px; }
   .timeline-scroll { scroll-padding-inline: max(11px, calc((100% - 270px) / 2)); }
 }
+
+.leaders-widget.expanded .leader-list {
+  max-height: 440px;
+  overflow-y: auto;
+  overscroll-behavior-y: auto;
+  scrollbar-width: thin;
+}
