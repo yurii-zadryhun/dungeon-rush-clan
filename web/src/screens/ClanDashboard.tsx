@@ -302,6 +302,7 @@ export function ClanDashboard({
   const [loadingOlder, setLoadingOlder] = React.useState(false);
   const [weeks, setWeeks] = React.useState<Week[]>([]);
   const track = React.useRef<HTMLDivElement>(null);
+  const positioned = React.useRef(false);
   const canEdit = user.role !== 'member';
   const calculated = React.useMemo(
     () => new Map(data?.rankings.calculated.map((player) => [player.id, player]) ?? []),
@@ -323,8 +324,12 @@ export function ClanDashboard({
     });
   }, [data]);
 
+  React.useEffect(() => {
+    if (isWiki) positioned.current = false;
+  }, [isWiki]);
+
   React.useLayoutEffect(() => {
-    if (!data || isWiki || !weeks.some((week) => week.start === data.currentStart)) return;
+    if (!data || isWiki || positioned.current || !weeks.some((week) => week.start === data.currentStart)) return;
     const container = track.current;
     const selected = [...(container?.querySelectorAll<HTMLElement>('.war-column') ?? [])].find(
       (element) => element.dataset.start === data.currentStart,
@@ -332,6 +337,7 @@ export function ClanDashboard({
     if (!container || !selected) return;
     const relativeLeft = selected.getBoundingClientRect().left - container.getBoundingClientRect().left;
     container.scrollLeft += relativeLeft - (container.clientWidth - selected.clientWidth) / 2;
+    positioned.current = true;
   }, [data?.currentStart, weeks, isWiki]);
 
   async function loadOlder() {
