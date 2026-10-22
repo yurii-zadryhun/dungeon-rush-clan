@@ -44,7 +44,7 @@ interface AiResult {
   cached: boolean;
 }
 
-const MODEL = 'gemma-4-31b-it';
+const MODEL = process.env.WIKI_AI_MODEL || 'gemma-4-26b-a4b-it';
 const PROVIDER_URL =
   'https://generativelanguage.googleapis.com/v1beta/models/' + MODEL + ':generateContent';
 const CACHE_TTL = 6 * 60 * 60 * 1000;
@@ -56,38 +56,47 @@ export class WikiAiService {
   private readonly pending = new Map<string, Promise<AiResult>>();
 
   status(): { enabled: boolean; model: string } {
-    return { enabled: !!process.env.GEMINI_API_KEY, model: 'Gemma 4 31B' };
+    return { enabled: !!process.env.GEMINI_API_KEY, model: MODEL };
   }
 
   private async generate(prompt: { system: string; user: string }): Promise<string> {
     const key = process.env.GEMINI_API_KEY;
     if (!key) throw new ServiceUnavailableException('AI_UNAVAILABLE');
 
-    let response: Response;
-    try {
-      response = await fetch(PROVIDER_URL, {
-        method: 'POST',
-        signal: AbortSignal.timeout(30_000),
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': key,
-        },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: prompt.system }] },
-          contents: [{ role: 'user', parts: [{ text: prompt.user }] }],
-          generationConfig: {
-            temperature: 0.2,
-            maxOutputTokens: 384,
-            thinkingConfig: { thinkingLevel: 'minimal' },
-          },
-        }),
-      });
-    } catch {
+    const payload = JSON.stringify({
+      systemInstruction: { role: 'system', parts: [{ text: prompt.system }] },
+      contents: [{ role: 'user', parts: [{ text: prompt.user }] }],
+      generationConfig: {
+        temperature: 0.35,
+        maxOutputTokens: 480,
+        thinkingConfig: { thinkingLevel: 'minimal' },
+      },
+    });
+    let response: Response | null = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        response = await fetch(PROVIDER_URL.replace('gemma-4-31b-it', MODEL), {
+          method: 'POST',
+          signal: AbortSignal.timeout(22_000),
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+          body: payload,
+        });
+      } catch {
+        if (attempt === 0) {
+          await new Promise((resolve) => setTimeout(resolve, 350));
+          continue;
+        }
+        throw new ServiceUnavailableException('AI_PROVIDER_ERROR');
+      }
+      if (response.status === 429) throw new HttpException('AI_PROVIDER_LIMIT', 429);
+      if (response.ok) break;
+      if (attempt === 0 && [500, 502, 503, 504].includes(response.status)) {
+        await new Promise((resolve) => setTimeout(resolve, 350));
+        continue;
+      }
       throw new ServiceUnavailableException('AI_PROVIDER_ERROR');
     }
-
-    if (response.status === 429) throw new HttpException('AI_PROVIDER_LIMIT', 429);
-    if (!response.ok) throw new ServiceUnavailableException('AI_PROVIDER_ERROR');
+    if (!response?.ok) throw new ServiceUnavailableException('AI_PROVIDER_ERROR');
     let payload: unknown;
     try {
       payload = await response.json();
@@ -103,7 +112,10 @@ export class WikiAiService {
       .join('\n')
       .trim();
     if (!text) throw new ServiceUnavailableException('AI_PROVIDER_ERROR');
-    return text.slice(0, 1800);
+    return text
+      .replace(/^(?:Based on (?:the )?(?:provided )?(?:extracts|sources|wiki)[^:]*:|Згідно з наданими (?:уривками|матеріалами):)\s*/i, '')
+      .replace(/^(?:The (?:provided )?wiki (?:says|states) that\s*)/i, '')
+      .trim().slice(0, 1800);
   }
 
   async ask(input: unknown, accountId: number): Promise<AiResult> {
@@ -127,7 +139,7 @@ export class WikiAiService {
     const prompt = createWikiPrompt(question, locale as AiLocale, relevant, previous);
     const sources = sourcesFor(relevant, locale as AiLocale);
     const signature = createHash('sha256')
-      .update(JSON.stringify([MODEL, parsed.data]))
+      .update(JSON.stringify([MODEL, 'chat-v2', parsed.data]))
       .digest('hex');
     const cached = this.cache.get(signature);
     if (cached && cached.expires > Date.now()) return { ...cached.result, cached: true };
