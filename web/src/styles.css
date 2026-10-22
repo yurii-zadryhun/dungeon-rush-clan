@@ -1949,3 +1949,18 @@ b {
   overscroll-behavior-y: auto;
   scrollbar-width: thin;
 }
+
+.language-toggle .locale-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 8px;
+  border-radius: 7px;
+  color: #9d99a1;
+  font-size: 11px;
+}
+.language-toggle .locale-option.active {
+  color: #fff;
+  background: #396e99;
+}
+.language-toggle .locale-option span { font-size: 14px; }

@@ -14,7 +14,9 @@ Private, lightweight clan-war dashboard. **NestJS + Fastify, React + Vite, SQLit
 - Editable review of ranks, names, points, opponent, six daily winners and MVPs; duplicate ranks reconciled.
 - Player entry/exit detection based on the latest _chronological_ imported weekly ranking (including 0-point members).
 - Rolling weighted leaderboard (75/25 by default), configurable minimum points, all-time average and latest-war widgets.
-- Individual username/password accounts, owner-managed single-use and reusable Member-only group invitations, roles, revocation and server-side rolling sessions.
+- Multiple owner accounts; owners can invite other owners or administrators. Administrators can invite **members only**, including through the reusable group link.
+- Account management lives at `#/users` for owners and administrators (no access for members).
+- Individual username/password accounts, single-use and reusable Member-only invitations, revocation and server-side rolling sessions.
 - Account profile with in-game nickname/password changes. A stable player link preserves historical rankings when a nickname changes; MVP texts are updated too.
 - Sticky mobile-safe header, full-player leaderboard expansion, and a horizontally paged war timeline.
 - SQLite WAL, transactional imports, bounded OCR requests, local OCR cache; no Redis or runtime frontend build.
@@ -62,13 +64,14 @@ For local frontend hot reload, use `npm run dev`; Vite proxies API traffic to th
 
 ## Roles
 
-| Role   | View | Import/settings | Invite/revoke |
-| ------ | ---- | --------------- | ------------- |
-| Owner  | Yes  | Yes             | Yes           |
-| Admin  | Yes  | Yes             | No            |
-| Member | Yes  | No              | No            |
+| Role | View | Import/settings | Invite | Revoke accounts |
+| --- | --- | --- | --- | --- |
+| Owner (multiple allowed) | Yes | Yes | Owner/Admin/Member | Yes, except themselves and the last owner |
+| Admin | Yes | Yes | Member only | No |
+| Member | Yes | No | No | No |
 
-Invitations expire after 7 days, are single-use links, and grant roles stored on the server. The invited member chooses their own username and password. Revoking an account also revokes its sessions.
+Owners and admins can manage the reusable Member-only group link. Password changes are separate from nickname edits and require the current password. Renaming preserves the historical player ID and updates MVP text.
+
 
 ## Business rules
 
