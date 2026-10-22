@@ -15,7 +15,7 @@ interface Reply {
   sources: Source[];
   cached: boolean;
 }
-interface Message {
+export interface WikiChatMessage {
   role: 'user' | 'assistant';
   text: string;
   sources?: Source[];
@@ -85,11 +85,16 @@ function errorText(message: string, locale: 'uk' | 'en'): string {
   return dictionary.limits[code] ?? dictionary.unknown;
 }
 
-export function WikiAssistant() {
+export function WikiAssistant({
+  messages,
+  setMessages,
+}: {
+  messages: WikiChatMessage[];
+  setMessages: React.Dispatch<React.SetStateAction<WikiChatMessage[]>>;
+}) {
   const { locale } = useI18n();
   const t = translations[locale];
   const [enabled, setEnabled] = React.useState<boolean | null>(null);
-  const [messages, setMessages] = React.useState<Message[]>([]);
   const [input, setInput] = React.useState('');
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState('');
@@ -133,6 +138,7 @@ export function WikiAssistant() {
         { role: 'assistant', text: result.answer, sources: result.sources },
       ]);
     } catch (failure) {
+      setMessages((current) => current.slice(0, -1));
       setError(errorText((failure as Error).message, locale));
       setInput(question);
     } finally {
