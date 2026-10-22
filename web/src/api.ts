@@ -7,6 +7,7 @@ export interface Account {
   displayName: string;
   role: Role;
   locale: Locale;
+  playerId: number | null;
 }
 
 export interface Player {

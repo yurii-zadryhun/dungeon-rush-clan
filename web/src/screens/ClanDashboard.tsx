@@ -9,11 +9,13 @@ import {
   type Dashboard,
   type Player,
   type Week,
+  normalizeName,
 } from '../api';
 import { LanguagePicker, useI18n, type Locale } from '../i18n';
 import { ImportModal } from './ImportModal';
 import { MembersModal } from './MembersModal';
 import { SettingsModal } from './SettingsModal';
+import { ProfileModal } from './ProfileModal';
 import { WikiScreen } from '../wiki/WikiScreen';
 
 type PlayerMetric = 'average' | 'lastPoints';
@@ -22,10 +24,12 @@ function Leaders({
   title,
   players,
   metric,
+  account,
 }: {
   title: string;
   players: Player[];
   metric: PlayerMetric;
+  account: Account;
 }) {
   const { t } = useI18n();
   const [expanded, setExpanded] = React.useState(false);
@@ -42,7 +46,7 @@ function Leaders({
         {(expanded ? players : players.slice(0, 6)).map((player, index) => (
           <div
             key={player.id}
-            className={['leader-row', !player.active && 'inactive', player.belowRequirement && 'below']
+            className={['leader-row', !player.active && 'inactive', player.belowRequirement && 'below', (account.playerId === player.id || (!account.playerId && normalizeName(player.name) === normalizeName(account.username))) && 'is-me']
               .filter(Boolean)
               .join(' ')}
           >
@@ -130,12 +134,14 @@ function WarColumn({
   calculated,
   clanName,
   canEdit,
+  account,
 }: {
   week: Week;
   onImport: (week: Week) => void;
   calculated: Map<number, Player>;
   clanName: string;
   canEdit: boolean;
+  account: Account;
 }) {
   const { t } = useI18n();
   const { status, importLabel } = useWarLabels();
@@ -200,6 +206,7 @@ function WarColumn({
                     'war-player',
                     !player.active && 'inactive',
                     ranking?.belowRequirement && 'below',
+                    (account.playerId === player.id || (!account.playerId && normalizeName(player.name) === normalizeName(account.username))) && 'is-me',
                   ]
                     .filter(Boolean)
                     .join(' ')}
@@ -260,6 +267,7 @@ export function ClanDashboard({
   onChange,
   onLogout,
   onLocaleChange,
+  onProfileChange,
   error,
 }: {
   user: Account;
@@ -267,6 +275,7 @@ export function ClanDashboard({
   onChange: (next: Dashboard) => void;
   onLogout: () => void;
   onLocaleChange: (locale: Locale) => void;
+  onProfileChange: (account: Account) => Promise<void>;
   error: string;
 }) {
   const { t, locale } = useI18n();
@@ -274,7 +283,7 @@ export function ClanDashboard({
   const wikiMatch = route.match(/^#\/wiki(?:\/([a-z0-9-]+))?\/?$/);
   const isWiki = Boolean(wikiMatch);
   const wikiArticleId = wikiMatch?.[1];
-  const [dialog, setDialog] = React.useState<'settings' | 'members' | null>(null);
+  const [dialog, setDialog] = React.useState<'settings' | 'members' | 'profile' | null>(null);
   const [importWeek, setImportWeek] = React.useState<Week | null>(null);
   const [loadingOlder, setLoadingOlder] = React.useState(false);
   const [weeks, setWeeks] = React.useState<Week[]>([]);
@@ -367,7 +376,10 @@ export function ClanDashboard({
         </nav>
         <div className="header-actions">
           <LanguagePicker onSelect={onLocaleChange} />
-          <span className="current-user">{user.displayName}</span>
+          <button className="current-user profile-shortcut" title={t('profile')}
+            onClick={() => setDialog('profile')}>{user.displayName}</button>
+          <button className="icon-button" aria-label={t('profile')} title={t('profile')}
+            onClick={() => setDialog('profile')}><Users size={19} /></button>
           {canEdit && (
             <button
               aria-label={t('settings')}
@@ -406,8 +418,8 @@ export function ClanDashboard({
           {error && <div className="error-strip">{error}</div>}
           <div className="dashboard-top">
             <ClanOverview data={data} />
-            <Leaders title={t('allTimeLeaders')} players={data.rankings.allTime} metric="average" />
-            <Leaders title={t('latestLeaders')} players={data.rankings.latest} metric="lastPoints" />
+            <Leaders title={t('allTimeLeaders')} players={data.rankings.allTime} metric="average" account={user} />
+            <Leaders title={t('latestLeaders')} players={data.rankings.latest} metric="lastPoints" account={user} />
           </div>
           <section className="panel history-widget">
             <header className="widget-head timeline-heading"><h2><History size={20} /> {t('warHistory')}</h2></header>
@@ -422,6 +434,7 @@ export function ClanDashboard({
                     onImport={setImportWeek}
                     calculated={calculated}
                     canEdit={canEdit}
+                    account={user}
                     clanName={data.rankings.settings.clanName}
                   />
                 ))}
@@ -454,6 +467,7 @@ export function ClanDashboard({
         />
       )}
       {dialog === 'members' && user.role === 'owner' && <MembersModal onClose={() => setDialog(null)} />}
+      {dialog === 'profile' && <ProfileModal account={user} onClose={() => setDialog(null)} onSaved={onProfileChange} />}
     </div>
   );
 }

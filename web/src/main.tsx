@@ -30,7 +30,7 @@ function App() {
           const status = await api<{ initialized: boolean }>('auth/setup-state');
           if (!mounted) return;
           if (!status.initialized) setPhase('setup');
-          else setPhase(invite ? 'invite' : 'login');
+          else setPhase(invite && new URLSearchParams(location.search).get('login') !== '1' ? 'invite' : 'login');
         } catch (failure) {
           if (!mounted) return;
           setError((failure as Error).message);
@@ -96,6 +96,11 @@ function App() {
       onChange={setDashboard}
       onLogout={logout}
       onLocaleChange={saveLanguage}
+      onProfileChange={async (updated) => {
+        setAccount(updated);
+        const refreshed = await api<Dashboard>('dashboard');
+        setDashboard(refreshed);
+      }}
       error={error}
     />
   );

@@ -135,11 +135,11 @@ function OwnerSetupScreen({ onDone }: { onDone: (account: Account) => void }) {
 
 function InvitationScreen({ token, onDone }: { token: string; onDone: (account: Account) => void }) {
   const { t } = useI18n();
-  const [invitation, setInvitation] = React.useState<{ label: string; role: string } | null>(null);
+  const [invitation, setInvitation] = React.useState<{ label: string; role: string; shared: boolean } | null>(null);
   const [error, setError] = React.useState('');
   React.useEffect(() => {
     let active = true;
-    api<{ label: string; role: string }>('auth/invite/' + encodeURIComponent(token))
+    api<{ label: string; role: string; shared: boolean }>('auth/invite/' + encodeURIComponent(token))
       .then((info) => {
         if (active) setInvitation(info);
       })
@@ -155,7 +155,7 @@ function InvitationScreen({ token, onDone }: { token: string; onDone: (account: 
   if (!invitation) return <p className="muted">{t('loading')}</p>;
   return (
     <>
-      <p className="muted">{t('invitationFor', { name: invitation.label })}</p>
+      <p className="muted">{invitation.shared ? t('sharedInviteTitle') : t('invitationFor', { name: invitation.label })}</p>
       <CredentialsForm
         title={t('createAccount')}
         username={invitation.label}
@@ -167,6 +167,7 @@ function InvitationScreen({ token, onDone }: { token: string; onDone: (account: 
           )
         }
       />
+      <a className="auth-login-link" href="?login=1">{t('alreadyHaveAccount')}</a>
     </>
   );
 }
