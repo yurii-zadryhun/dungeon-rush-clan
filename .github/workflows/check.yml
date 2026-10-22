@@ -2,6 +2,8 @@ name: Check
 on:
   push:
     branches: [master]
+  pull_request:
+    branches: [master]
 permissions:
   contents: read
 jobs:
@@ -14,6 +16,7 @@ jobs:
           node-version: '22'
       - run: npm install --no-audit --no-fund
       - run: npm run format:check
+      - run: npm run wiki:check
       - run: npm run check
       - run: npm test
       - run: npm run build
