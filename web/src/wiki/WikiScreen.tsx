@@ -19,6 +19,7 @@ import { articleById, wikiArticles } from './catalog';
 import { articleHeadings, WikiMarkdown } from './WikiMarkdown';
 import { wikiMessages } from './messages';
 import { wikiCategories, type WikiArticle, type WikiCategory, type WikiLocale } from './model';
+import './wiki.css';
 
 const categoryIcons: Record<WikiCategory, LucideIcon> = {
   start: Compass,
