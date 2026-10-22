@@ -1,0 +1,84 @@
+/* Stable, two-level shell: the primary row never competes with the mobile tab bar. */
+.site-header.shell-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-rows: 66px;
+  height: 70px;
+  min-height: 70px;
+  padding: 0 clamp(12px, 2.5vw, 32px);
+  gap: 0 12px;
+  align-items: center;
+  overflow: visible;
+  background: #171719;
+  z-index: 210;
+}
+.shell-header .shell-brand {
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+  gap: 10px;
+}
+.shell-header .brand-caption { min-width: 0; display: grid; gap: 4px; }
+.shell-header .brand-caption strong,
+.shell-header .brand-caption small {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.shell-header .shell-navigation { justify-self: center; }
+.shell-header .shell-tools {
+  display: flex; justify-content: flex-end; align-items: center; gap: 8px; min-width: 0;
+  grid-column: 3;
+}
+.shell-header .language-toggle {
+  min-height: 38px; width: 125px; gap: 0; padding: 3px; border-radius: 11px;
+}
+.shell-header .language-toggle .locale-option {
+  flex: 1; display: flex; justify-content: center; align-items: center; gap: 4px;
+  padding: 5px 7px; font-size: 11px; border-radius: 7px; color: #9d99a1;
+}
+.shell-header .language-toggle .locale-option.active { color: white; background: #396e99; }
+.shell-header .language-toggle .locale-option span { font-size: 14px; }
+.shell-menu-container { position: relative; }
+.shell-menu-button {
+  min-width: 43px; height: 42px; border: 2px solid #070708; background: #2d2b2e; color: white;
+  border-radius: 11px; display: flex; align-items: center; justify-content: center; gap: 3px; cursor: pointer;
+}
+.shell-menu-button:hover,.shell-menu-button[aria-expanded="true"] { background: #414045; }
+.shell-menu { position: absolute; right: 0; top: calc(100% + 9px); min-width: 218px;
+  max-width: calc(100vw - 25px); background: #2b292d; border: 3px solid #070708;
+  border-radius: 13px; padding: 6px; display: grid; gap: 2px; box-shadow: 0 12px 26px #000b; z-index: 260;
+}
+.shell-menu-user { padding: 10px 12px 11px; font-size: 13px; font-weight: 900;
+  overflow-wrap: anywhere; }
+.shell-menu-user small { display: block; font-size: 10px; color: #aaa3a8; margin-top: 4px; }
+.shell-menu button,.shell-menu a {
+  display: flex; align-items: center; gap: 10px; min-height: 42px; padding: 10px 12px;
+  border: 0; border-radius: 8px; text-decoration: none; color: #e7e3e7;
+  background: transparent; font-size: 12px; font-weight: 850; cursor: pointer;
+}
+.shell-menu button:hover,.shell-menu a:hover { background: #3c414d; color: white; }
+.shell-menu-separator { height: 1px; margin: 5px 6px; background: #535057; }
+@media (max-width: 950px) {
+  .site-header.shell-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: 57px 45px;
+    height: 106px; min-height: 106px;
+    gap: 0 8px; padding: 0 12px 4px;
+  }
+  .shell-header .shell-brand { grid-column: 1; grid-row: 1; }
+  .shell-header .shell-tools { grid-column: 2; grid-row: 1; }
+  .shell-header .shell-navigation {
+    grid-column: 1 / -1; grid-row: 2; width: 100%; justify-self: stretch;
+    order: initial; flex: initial; margin: 0; padding: 3px;
+  }
+  .shell-header .shell-navigation a { flex: 1 1 0; min-width: 0; padding: 8px; }
+}
+@media (max-width: 440px) {
+  .site-header.shell-header { padding-inline: 9px; column-gap: 6px; }
+  .shell-header .shell-brand { gap: 7px; }
+  .shell-header .brand-mark { width: 38px; height: 38px; flex: 0 0 38px; }
+  .shell-header .brand-caption strong { font-size: 12px; }
+  .shell-header .brand-caption small { font-size: 7px; letter-spacing: .5px; }
+  .shell-header .language-toggle { width: 116px; }
+  .shell-header .language-toggle .locale-option { padding: 5px 4px; }
+  .shell-menu-button { min-width: 38px; }
+}

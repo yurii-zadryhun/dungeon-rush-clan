@@ -164,6 +164,7 @@ const en = {
   newPasswordRequired: 'New password',
   navigation: 'Navigation',
   historyTab: 'History',
+  wikiTab: 'Wiki',
   userManagement: 'Users',
   inviteAsOwner: 'Owner · full access',
   inviteAsAdmin: 'Admin · manages wars',
@@ -351,6 +352,7 @@ const uk: Record<MessageKey, string> = {
   newPasswordRequired: 'Новий пароль',
   navigation: 'Навігація',
   historyTab: 'Історія',
+  wikiTab: 'База знань',
   userManagement: 'Користувачі',
   inviteAsOwner: 'Власник · повний доступ',
   inviteAsAdmin: 'Адмін · керує війнами',
@@ -419,20 +421,21 @@ export function useI18n() {
 
 export function LanguagePicker({ onSelect }: { onSelect?: (locale: Locale) => void }) {
   const { locale, setLocale, t } = useI18n();
-  const next = locale === 'uk' ? 'en' : 'uk';
+  function toggle() {
+    const next = locale === 'uk' ? 'en' : 'uk';
+    setLocale(next);
+    onSelect?.(next);
+  }
   return (
-    <button
-      type="button"
-      className="language-picker language-toggle"
-      title={t('language')}
-      aria-label={t('language')}
-      onClick={() => {
-        setLocale(next);
-        onSelect?.(next);
-      }}
-    >
-      <span aria-hidden="true">{locale === 'uk' ? '🇺🇦' : '🇬🇧'}</span>
-      <strong>{locale === 'uk' ? 'UA' : 'EN'}</strong>
+    <button className="language-picker language-toggle" type="button"
+      title={t('language')} aria-label={t('language')}
+      onClick={toggle}>
+      <span className={'locale-option' + (locale === 'uk' ? ' active' : '')}>
+        <span aria-hidden="true">🇺🇦</span> UA
+      </span>
+      <span className={'locale-option' + (locale === 'en' ? ' active' : '')}>
+        <span aria-hidden="true">🇬🇧</span> EN
+      </span>
     </button>
   );
 }
