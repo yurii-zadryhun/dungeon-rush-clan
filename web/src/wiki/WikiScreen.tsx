@@ -18,7 +18,7 @@ import {
 import { useI18n } from '../i18n';
 import { articleById, wikiArticles } from './catalog';
 import { articleHeadings, WikiMarkdown } from './WikiMarkdown';
-import { WikiAssistant } from './WikiAssistant';
+import { WikiAssistant, type WikiChatMessage } from './WikiAssistant';
 import { wikiMessages } from './messages';
 import { wikiCategories, type WikiArticle, type WikiCategory, type WikiLocale } from './model';
 import './wiki.css';
@@ -107,6 +107,7 @@ export function WikiScreen({ articleId }: { articleId?: string }) {
   const { locale } = useI18n();
   const m = wikiMessages(locale);
   const [query, setQuery] = React.useState('');
+  const [chatMessages, setChatMessages] = React.useState<WikiChatMessage[]>([]);
   const [category, setCategory] = React.useState<WikiCategory | 'all'>('all');
   const [savedOnly, setSavedOnly] = React.useState(false);
   const [saved, setSaved] = React.useState<string[]>(readSaved);
@@ -211,7 +212,7 @@ export function WikiScreen({ articleId }: { articleId?: string }) {
         </aside>
 
         {articleId === 'ask' ? (
-          <WikiAssistant />
+          <WikiAssistant messages={chatMessages} setMessages={setChatMessages} />
         ) : articleId ? (
           selectedArticle ? (
             <div className="wiki-article-layout">
