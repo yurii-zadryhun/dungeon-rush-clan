@@ -31,6 +31,11 @@ async function run() {
         expires_at INTEGER NOT NULL, extended_at INTEGER NOT NULL
       );
       CREATE TABLE bootstrap (id INTEGER PRIMARY KEY CHECK(id=1), secret TEXT NOT NULL, expires_at INTEGER NOT NULL);
+      CREATE TABLE players (
+        id INTEGER PRIMARY KEY, name TEXT NOT NULL, normalized_name TEXT UNIQUE NOT NULL,
+        active INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL
+      );
+      INSERT INTO players VALUES (8, 'owner', 'owner', 1, 111);
       INSERT INTO accounts VALUES (42, 'owner', 'Owner', 'owner', 'salt:hash', 'legacy-totp-secret', 21, 1, 111);
       INSERT INTO invites VALUES (7, 'invite-token-hash', 'Guest', 'member', 'legacy-setup-secret', 99999, NULL, 42);
       INSERT INTO sessions VALUES ('session-hash', 42, 99999, 100);
@@ -50,7 +55,9 @@ async function run() {
       password_hash: 'salt:hash',
       locale: 'uk',
     });
-    const session = sql.prepare('SELECT token_hash, account_id FROM sessions').get();
+    const player = sql.prepare('SELECT id, account_id FROM players WHERE id = 8').get();
+    assert.deepEqual(player, { id: 8, account_id: 42 }, 'Legacy player linked to owner');
+        const session = sql.prepare('SELECT token_hash, account_id FROM sessions').get();
     assert.deepEqual(session, { token_hash: 'session-hash', account_id: 42 });
     const invitation = sql.prepare('SELECT token_hash, created_by FROM invites').get();
     assert.deepEqual(invitation, { token_hash: 'invite-token-hash', created_by: 42 });

@@ -14,7 +14,9 @@ Private, lightweight clan-war dashboard. **NestJS + Fastify, React + Vite, SQLit
 - Editable review of ranks, names, points, opponent, six daily winners and MVPs; duplicate ranks reconciled.
 - Player entry/exit detection based on the latest _chronological_ imported weekly ranking (including 0-point members).
 - Rolling weighted leaderboard (75/25 by default), configurable minimum points, all-time average and latest-war widgets.
-- Individual username/password accounts, owner-managed single-use invitation links, roles, revocation and server-side rolling sessions.
+- Individual username/password accounts, owner-managed single-use and reusable Member-only group invitations, roles, revocation and server-side rolling sessions.
+- Account profile with in-game nickname/password changes. A stable player link preserves historical rankings when a nickname changes; MVP texts are updated too.
+- Sticky mobile-safe header, full-player leaderboard expansion, and a horizontally paged war timeline.
 - SQLite WAL, transactional imports, bounded OCR requests, local OCR cache; no Redis or runtime frontend build.
 
 ## Wiki AI assistant
