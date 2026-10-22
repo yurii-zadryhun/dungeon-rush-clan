@@ -3,7 +3,10 @@ import { WikiAiService } from './wiki-ai';
 import { AiQuota } from './quota';
 import { approximateInputTokens, createWikiPrompt, searchWiki, sourcesFor } from './wiki-search';
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+});
 
 describe('bilingual wiki retrieval', () => {
   it('locates matching subjects without using AI', () => {
