@@ -401,3 +401,20 @@
     height: 43px;
   }
 }
+
+.wiki-ai-thinking { min-height: 49px; display: flex; align-items: center; }
+.wiki-thinking-shimmer {
+  display: inline-block; font-weight: 850;
+  color: #b5adb9;
+  background: linear-gradient(110deg, #a39dac 22%, #f7edff 46%, #a39dac 70%);
+  background-size: 250% 100%; background-clip: text; -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: wiki-shimmer 1.7s ease-in-out infinite;
+}
+@keyframes wiki-shimmer {
+  0% { background-position: 110% 0; }
+  100% { background-position: -110% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiki-thinking-shimmer { animation: none; color: #d8cadc; -webkit-text-fill-color: currentColor; }
+}

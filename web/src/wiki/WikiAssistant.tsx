@@ -29,13 +29,13 @@ const translations = {
       'Став запитання про війну, білди, афікси та розвиток. Відповіді ґрунтуються на гайдах нашого клану.',
     placeholder: 'Наприклад: як захиститися від критів у PvP?',
     send: 'Надіслати',
-    thinking: 'Шукаю відповідь у wiki...',
+    thinking: ['Думаю...', 'Шукаю в нашій wiki...', 'Формулюю відповідь...'],
     suggestions: 'Із чого почати',
     examples: ['Як працює CDT -100%?', 'Коли варто витрачати кістки?', 'Як прокачати Divine до 130?'],
     sources: 'Матеріали wiki',
     note: 'Питання та релевантні уривки wiki надсилаються Google Gemma. Дані акаунта не передаються.',
     openWiki: 'До гайдів',
-    status: 'Gemma 4 31B · безкоштовний режим',
+    status: '',
     unavailable: 'AI поки не налаштовано. Гайди й пошук по wiki доступні як завжди.',
     unknown: 'Не вдалося отримати відповідь. Спробуй ще раз.',
     limits: {
@@ -54,7 +54,7 @@ const translations = {
     subtitle: 'Ask about wars, builds, affixes and progression. Answers come from our clan guides.',
     placeholder: 'For example: how do I counter critical hits in PvP?',
     send: 'Send',
-    thinking: 'Searching the wiki...',
+    thinking: ['Thinking...', 'Checking our wiki...', 'Putting it together...'],
     suggestions: 'Try asking',
     examples: [
       'How does CDT -100% work?',
@@ -64,7 +64,7 @@ const translations = {
     sources: 'Wiki sources',
     note: 'Your question and relevant wiki excerpts are sent to Google Gemma. Account details are not shared.',
     openWiki: 'Browse guides',
-    status: 'Gemma 4 31B · free-tier mode',
+    status: '',
     unavailable: 'AI is not configured yet. All wiki guides and search remain available.',
     unknown: 'Could not get an answer. Please try again.',
     limits: {
@@ -97,6 +97,7 @@ export function WikiAssistant({
   const [enabled, setEnabled] = React.useState<boolean | null>(null);
   const [input, setInput] = React.useState('');
   const [busy, setBusy] = React.useState(false);
+  const [thinkingStep, setThinkingStep] = React.useState(0);
   const [error, setError] = React.useState('');
   const bottom = React.useRef<HTMLDivElement>(null);
 
@@ -117,6 +118,13 @@ export function WikiAssistant({
   React.useEffect(() => {
     bottom.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [messages, busy]);
+  React.useEffect(() => {
+    if (!busy) { setThinkingStep(0); return; }
+    const interval = window.setInterval(() => {
+      setThinkingStep((step) => (step + 1) % t.thinking.length);
+    }, 2600);
+    return () => window.clearInterval(interval);
+  }, [busy, t]);
 
   async function ask(raw: string) {
     const question = raw.trim();
@@ -220,7 +228,9 @@ export function WikiAssistant({
                 <Sparkles size={16} />
               </span>
               <div className="wiki-ai-bubble wiki-ai-thinking">
-                <span className="spinner" /> {t.thinking}
+                <span className="wiki-thinking-shimmer" aria-live="polite" key={thinkingStep}>
+                  {t.thinking[thinkingStep]}
+                </span>
               </div>
             </div>
           )}
@@ -264,10 +274,7 @@ export function WikiAssistant({
               <Send size={19} />
             </button>
           </form>
-          <div className="wiki-ai-footer">
-            <span>{t.note}</span>
-            <span>{t.status}</span>
-          </div>
+          <div className="wiki-ai-footer"><span>{t.note}</span></div>
         </div>
       </div>
     </section>
