@@ -187,7 +187,7 @@ async function run() {
     'Admin can see accounts',
   );
   ensure(
-    (await request('auth/accounts/999', 'DELETE', null, administrator.cookie)).status,
+    (await request('auth/accounts/' + secondOwner.body.id, 'DELETE', null, administrator.cookie)).status,
     403,
     'Admin cannot revoke accounts',
   );
