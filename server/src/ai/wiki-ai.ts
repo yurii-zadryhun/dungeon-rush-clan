@@ -63,7 +63,7 @@ export class WikiAiService {
     const key = process.env.GEMINI_API_KEY;
     if (!key) throw new ServiceUnavailableException('AI_UNAVAILABLE');
 
-    const payload = JSON.stringify({
+    const requestBody = JSON.stringify({
       systemInstruction: { role: 'system', parts: [{ text: prompt.system }] },
       contents: [{ role: 'user', parts: [{ text: prompt.user }] }],
       generationConfig: {
@@ -79,7 +79,7 @@ export class WikiAiService {
           method: 'POST',
           signal: AbortSignal.timeout(22_000),
           headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-          body: payload,
+          body: requestBody,
         });
       } catch {
         if (attempt === 0) {
