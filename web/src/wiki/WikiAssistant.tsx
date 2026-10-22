@@ -25,7 +25,8 @@ const translations = {
   uk: {
     eyebrow: 'ПОРАДНИК КЛАНУ',
     title: 'Запитай у wiki',
-    subtitle: 'Став запитання про війну, білди, афікси та розвиток. Відповіді ґрунтуються на гайдах нашого клану.',
+    subtitle:
+      'Став запитання про війну, білди, афікси та розвиток. Відповіді ґрунтуються на гайдах нашого клану.',
     placeholder: 'Наприклад: як захиститися від критів у PvP?',
     send: 'Надіслати',
     thinking: 'Шукаю відповідь у wiki...',
@@ -55,7 +56,11 @@ const translations = {
     send: 'Send',
     thinking: 'Searching the wiki...',
     suggestions: 'Try asking',
-    examples: ['How does CDT -100% work?', 'When should I spend bones?', 'How do I level Divine gear to 130?'],
+    examples: [
+      'How does CDT -100% work?',
+      'When should I spend bones?',
+      'How do I level Divine gear to 130?',
+    ],
     sources: 'Wiki sources',
     note: 'Your question and relevant wiki excerpts are sent to Google Gemma. Account details are not shared.',
     openWiki: 'Browse guides',
@@ -93,9 +98,15 @@ export function WikiAssistant() {
   React.useEffect(() => {
     let active = true;
     api<{ enabled: boolean }>('wiki-ai/status')
-      .then((status) => { if (active) setEnabled(status.enabled); })
-      .catch(() => { if (active) setEnabled(false); });
-    return () => { active = false; };
+      .then((status) => {
+        if (active) setEnabled(status.enabled);
+      })
+      .catch(() => {
+        if (active) setEnabled(false);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   React.useEffect(() => {
@@ -131,9 +142,13 @@ export function WikiAssistant() {
 
   return (
     <section className="wiki-ai-page" aria-labelledby="wiki-ai-title">
-      <a className="wiki-back-link" href="#/wiki"><ArrowLeft size={17} /> {t.openWiki}</a>
+      <a className="wiki-back-link" href="#/wiki">
+        <ArrowLeft size={17} /> {t.openWiki}
+      </a>
       <header className="wiki-ai-header">
-        <div className="wiki-ai-logo"><Sparkles size={27} /></div>
+        <div className="wiki-ai-logo">
+          <Sparkles size={27} />
+        </div>
         <div>
           <span className="wiki-overline">{t.eyebrow}</span>
           <h1 id="wiki-ai-title">{t.title}</h1>
@@ -141,14 +156,26 @@ export function WikiAssistant() {
         </div>
       </header>
       <div className="wiki-ai-window">
-        <div className="wiki-ai-conversation" role="log" aria-live="polite" aria-relevant="additions text">
+        <div
+          className="wiki-ai-conversation"
+          role="log"
+          aria-live="polite"
+          aria-relevant="additions text"
+        >
           {messages.length === 0 && (
             <div className="wiki-ai-intro">
-              <span className="wiki-ai-intro-icon"><Bot size={31} /></span>
+              <span className="wiki-ai-intro-icon">
+                <Bot size={31} />
+              </span>
               <h2>{t.suggestions}</h2>
               <div className="wiki-ai-prompts">
                 {t.examples.map((example) => (
-                  <button key={example} type="button" disabled={!enabled || busy} onClick={() => void ask(example)}>
+                  <button
+                    key={example}
+                    type="button"
+                    disabled={!enabled || busy}
+                    onClick={() => void ask(example)}
+                  >
                     {example} <ArrowRight size={15} />
                   </button>
                 ))}
@@ -183,7 +210,9 @@ export function WikiAssistant() {
           ))}
           {busy && (
             <div className="wiki-ai-message wiki-ai-message-assistant">
-              <span className="wiki-ai-avatar"><Sparkles size={16} /></span>
+              <span className="wiki-ai-avatar">
+                <Sparkles size={16} />
+              </span>
               <div className="wiki-ai-bubble wiki-ai-thinking">
                 <span className="spinner" /> {t.thinking}
               </div>
@@ -193,9 +222,16 @@ export function WikiAssistant() {
         </div>
         <div className="wiki-ai-compose">
           {enabled === false && <div className="wiki-ai-alert">{t.unavailable}</div>}
-          {error && <div className="wiki-ai-alert" role="alert">{error}</div>}
+          {error && (
+            <div className="wiki-ai-alert" role="alert">
+              {error}
+            </div>
+          )}
           <form
-            onSubmit={(event) => { event.preventDefault(); void ask(input); }}
+            onSubmit={(event) => {
+              event.preventDefault();
+              void ask(input);
+            }}
             className="wiki-ai-form"
           >
             <textarea
@@ -213,7 +249,12 @@ export function WikiAssistant() {
                 }
               }}
             />
-            <button type="submit" aria-label={t.send} title={t.send} disabled={!enabled || busy || input.trim().length < 3}>
+            <button
+              type="submit"
+              aria-label={t.send}
+              title={t.send}
+              disabled={!enabled || busy || input.trim().length < 3}
+            >
               <Send size={19} />
             </button>
           </form>

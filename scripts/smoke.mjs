@@ -35,7 +35,11 @@ async function run() {
   ensure((await request('auth/setup-state')).body.initialized, false, 'Uninitialized');
   ensure((await request('dashboard')).status, 401, 'Dashboard guarded');
   ensure((await request('wiki-ai/status')).status, 401, 'AI endpoint guarded');
-  ensure((await request('wiki-ai/ask', 'POST', { question: 'CDT?', locale: 'en' })).status, 401, 'AI chat guarded');
+  ensure(
+    (await request('wiki-ai/ask', 'POST', { question: 'CDT?', locale: 'en' })).status,
+    401,
+    'AI chat guarded',
+  );
   const owner = await request('auth/bootstrap', 'POST', {
     bootstrapToken: process.env.BOOTSTRAP_TOKEN,
     username: 'owner',
@@ -48,7 +52,8 @@ async function run() {
   ensure(aiStatus.status, 200, 'AI status available to members');
   ensure(aiStatus.body.enabled, false, 'No-key environment reports disabled AI');
   ensure(
-    (await request('wiki-ai/ask', 'POST', { question: 'How does CDT work?', locale: 'en' }, ownerCookie)).status,
+    (await request('wiki-ai/ask', 'POST', { question: 'How does CDT work?', locale: 'en' }, ownerCookie))
+      .status,
     503,
     'No-key environment rejects AI requests without contacting Google',
   );

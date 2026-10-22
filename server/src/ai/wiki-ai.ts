@@ -23,16 +23,18 @@ import {
   type WikiSource,
 } from './wiki-search';
 
-const requestSchema = z.object({
-  question: z.string().trim().min(3).max(400),
-  locale: z.enum(['uk', 'en']),
-  previous: z
-    .object({
-      question: z.string().trim().max(250),
-      answer: z.string().trim().max(500),
-    })
-    .optional(),
-}).strict();
+const requestSchema = z
+  .object({
+    question: z.string().trim().min(3).max(400),
+    locale: z.enum(['uk', 'en']),
+    previous: z
+      .object({
+        question: z.string().trim().max(250),
+        answer: z.string().trim().max(500),
+      })
+      .optional(),
+  })
+  .strict();
 
 type AiQuestion = z.infer<typeof requestSchema>;
 

@@ -15,7 +15,8 @@ function sections(body) {
       const [heading, ...lines] = part.trim().split('\n');
       return {
         heading: heading.trim(),
-        text: lines.join('\n')
+        text: lines
+          .join('\n')
           .replace(/\[([^\]]+)\]\((?:wiki:[^)]+|https?:\/\/[^)]+)\)/g, '$1')
           .replace(/\*\*/g, '')
           .replace(/^> /gm, '')

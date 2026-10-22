@@ -25,8 +25,7 @@ export class AiQuota {
     if (
       this.minute.length >= 20 ||
       current.minute.length >= 4 ||
-      this.minute.reduce((sum, entry) => sum + entry.estimatedTokens, 0) +
-        estimatedTokens > 11_500
+      this.minute.reduce((sum, entry) => sum + entry.estimatedTokens, 0) + estimatedTokens > 11_500
     ) {
       return 'AI_RATE_LIMIT';
     }

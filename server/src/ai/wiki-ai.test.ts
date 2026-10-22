@@ -10,10 +10,16 @@ afterEach(() => {
 
 describe('bilingual wiki retrieval', () => {
   it('locates matching subjects without using AI', () => {
-    expect(searchWiki('How do I level Divine equipment to 130?', 'en')
-      .some((section) => section.articleId === 'gear-130')).toBe(true);
-    expect(searchWiki('Коли витрачати кістки у війні?', 'uk')
-      .some((section) => ['war-saving', 'war-boxes', 'war-calendar'].includes(section.articleId))).toBe(true);
+    expect(
+      searchWiki('How do I level Divine equipment to 130?', 'en').some(
+        (section) => section.articleId === 'gear-130',
+      ),
+    ).toBe(true);
+    expect(
+      searchWiki('Коли витрачати кістки у війні?', 'uk').some((section) =>
+        ['war-saving', 'war-boxes', 'war-calendar'].includes(section.articleId),
+      ),
+    ).toBe(true);
     expect(searchWiki('Як працює CDT -100% у PvP?', 'uk').length).toBeGreaterThan(0);
   });
 
@@ -66,9 +72,18 @@ describe('wiki AI generation', () => {
       const body = JSON.parse(String(options.body));
       expect(body.generationConfig.thinkingConfig.thinkingLevel).toBe('minimal');
       expect(body.contents[0].parts[0].text).not.toContain('password_hash');
-      return new Response(JSON.stringify({
-        candidates: [{ content: { parts: [{ text: 'The wiki says CDT reduces ordinary critical-hit bonus damage.' }] } }],
-      }), { status: 200 });
+      return new Response(
+        JSON.stringify({
+          candidates: [
+            {
+              content: {
+                parts: [{ text: 'The wiki says CDT reduces ordinary critical-hit bonus damage.' }],
+              },
+            },
+          ],
+        }),
+        { status: 200 },
+      );
     });
     vi.stubGlobal('fetch', fake);
 
@@ -85,7 +100,10 @@ describe('wiki AI generation', () => {
     vi.stubEnv('GEMINI_API_KEY', 'test-only-do-not-use');
     const fake = vi.fn();
     vi.stubGlobal('fetch', fake);
-    const result = await new WikiAiService().ask({ question: 'carbonara pasta tomatoes', locale: 'en' }, 1);
+    const result = await new WikiAiService().ask(
+      { question: 'carbonara pasta tomatoes', locale: 'en' },
+      1,
+    );
     expect(result.sources).toEqual([]);
     expect(fake).not.toHaveBeenCalled();
   });

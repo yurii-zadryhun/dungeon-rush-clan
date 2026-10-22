@@ -174,7 +174,11 @@ export function WikiScreen({ articleId }: { articleId?: string }) {
           </div>
           <p className="wiki-sidebar-label">{m.categories}</p>
           <nav className="wiki-category-nav">
-            <a href="#/wiki/ask" className={'wiki-ai-nav-link' + (articleId === 'ask' ? ' active' : '')} aria-current={articleId === 'ask' ? 'page' : undefined}>
+            <a
+              href="#/wiki/ask"
+              className={'wiki-ai-nav-link' + (articleId === 'ask' ? ' active' : '')}
+              aria-current={articleId === 'ask' ? 'page' : undefined}
+            >
               <Sparkles size={17} /> <span>{m.askAi}</span>
             </a>
             <button
@@ -234,7 +238,9 @@ export function WikiScreen({ articleId }: { articleId?: string }) {
                   <h1>{selectedArticle.title[locale]}</h1>
                   <p className="wiki-article-summary">{selectedArticle.summary[locale]}</p>
                   <div className="wiki-article-actions">
-                    <a className="wiki-ask-link" href="#/wiki/ask"><Sparkles size={16} /> {m.askAi}</a>
+                    <a className="wiki-ask-link" href="#/wiki/ask">
+                      <Sparkles size={16} /> {m.askAi}
+                    </a>
                     <span className={'wiki-evidence wiki-evidence-' + selectedArticle.evidence}>
                       {m[selectedArticle.evidence]}
                     </span>
@@ -332,7 +338,9 @@ export function WikiScreen({ articleId }: { articleId?: string }) {
                 </span>
                 <h1>{m.title}</h1>
                 <p>{m.subtitle}</p>
-                <a className="wiki-hero-ask" href="#/wiki/ask"><Sparkles size={17} /> {m.askAi} <ArrowRight size={15} /></a>
+                <a className="wiki-hero-ask" href="#/wiki/ask">
+                  <Sparkles size={17} /> {m.askAi} <ArrowRight size={15} />
+                </a>
                 <div className="wiki-hero-stats">
                   <span>
                     <BookOpen size={16} /> {wikiArticles.length} {m.guides}
@@ -379,7 +387,9 @@ export function WikiScreen({ articleId }: { articleId?: string }) {
             </div>
 
             <div className="wiki-mobile-categories" aria-label={m.categories}>
-              <a href="#/wiki/ask" className="wiki-mobile-ai"><Sparkles size={16} /> {m.askAi}</a>
+              <a href="#/wiki/ask" className="wiki-mobile-ai">
+                <Sparkles size={16} /> {m.askAi}
+              </a>
               <button
                 type="button"
                 className={category === 'all' ? 'active' : ''}
