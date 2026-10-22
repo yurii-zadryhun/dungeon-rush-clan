@@ -129,6 +129,36 @@ async function run() {
     400,
     'Prevent duplicate import',
   );
+  const ownerInvitation = await request('auth/invites', 'POST', {
+    label: 'SecondOwner', role: 'owner',
+  }, ownerCookie);
+  ensure(ownerInvitation.status, 201, 'Owner can invite another owner');
+  const ownerToken = new URL(ownerInvitation.body.url).searchParams.get('invite');
+  const secondOwner = await request('auth/invite/' + ownerToken + '/register', 'POST', {
+    username: 'SecondOwner', password: 'second-owner-password-1234',
+  });
+  ensure(secondOwner.status, 201, 'Second owner registered');
+  ensure(secondOwner.body.role, 'owner', 'Multiple owners supported');
+
+  const adminInvitation = await request('auth/invites', 'POST', {
+    label: 'TrustedAdmin', role: 'admin',
+  }, ownerCookie);
+  ensure(adminInvitation.status, 201, 'Owner can invite admin');
+  const adminToken = new URL(adminInvitation.body.url).searchParams.get('invite');
+  const administrator = await request('auth/invite/' + adminToken + '/register', 'POST', {
+    username: 'TrustedAdmin', password: 'trusted-admin-password-1234',
+  });
+  ensure(administrator.status, 201, 'Admin registered');
+  ensure((await request('auth/invites', 'POST', { label: 'Escalate', role: 'owner' },
+    administrator.cookie)).status, 403, 'Admin cannot invite owner');
+  ensure((await request('auth/invites', 'POST', { label: 'Higher', role: 'admin' },
+    administrator.cookie)).status, 403, 'Admin cannot invite admin');
+  ensure((await request('auth/invites', 'POST', { label: 'Permitted', role: 'member' },
+    administrator.cookie)).status, 201, 'Admin invites member');
+  ensure((await request('auth/accounts', 'GET', null, administrator.cookie)).status, 200,
+    'Admin can see accounts');
+  ensure((await request('auth/accounts/999', 'DELETE', null, administrator.cookie)).status, 403,
+    'Admin cannot revoke accounts');
   const invitation = await request(
     'auth/invites',
     'POST',
@@ -232,47 +262,21 @@ async function run() {
     ownerCookie,
   );
   ensure(lastResult.status, 201, 'War result imported for nickname migration');
-  ensure(
-    (
-      await request(
-        'auth/profile',
-        'PATCH',
-        {
-          username: 'FreshNick',
-          currentPassword: 'wrong-password',
-        },
-        groupFirst.cookie,
-      )
-    ).status,
-    401,
-    'Profile requires current password',
-  );
-  ensure(
-    (
-      await request(
-        'auth/profile',
-        'PATCH',
-        {
-          username: 'КРОСТ',
-          currentPassword: 'newperson-password-1234',
-        },
-        groupFirst.cookie,
-      )
-    ).status,
-    400,
-    'Cannot claim another historical player name',
-  );
-  const renamed = await request(
-    'auth/profile',
-    'PATCH',
-    {
-      username: 'FreshNick',
-      currentPassword: 'newperson-password-1234',
-      newPassword: 'fresh-password-5678',
-    },
-    groupFirst.cookie,
-  );
-  ensure(renamed.status, 200, 'Change nickname and password');
+  ensure((await request('auth/profile', 'PATCH', {
+    username: 'FreshNick', currentPassword: 'wrong-password',
+    newPassword: 'some-new-password-1234',
+  }, groupFirst.cookie)).status, 401, 'Password change checks current password');
+  ensure((await request('auth/profile', 'PATCH', {
+    username: 'КРОСТ',
+  }, groupFirst.cookie)).status, 400, 'Cannot claim a historical nickname');
+  const renamed = await request('auth/profile', 'PATCH', {
+    username: 'FreshNick',
+  }, groupFirst.cookie);
+  ensure(renamed.status, 200, 'Change nickname without password');
+  ensure((await request('auth/profile', 'PATCH', {
+    username: 'FreshNick', currentPassword: 'newperson-password-1234',
+    newPassword: 'fresh-password-5678',
+  }, groupFirst.cookie)).status, 200, 'Change password separately');
   ensure(renamed.body.playerId, newcomer.id, 'Stable player identity retained');
   ensure(
     (
@@ -334,6 +338,12 @@ async function run() {
     'Existing accounts remain active after disabling invitation',
   );
 
+  ensure((await request('auth/shared-invite', 'POST', {}, administrator.cookie)).status,
+    201, 'Admin manages member group invitations');
+  ensure((await request('auth/accounts/' + secondOwner.body.id, 'DELETE', null, ownerCookie)).status,
+    200, 'Owner may revoke another owner');
+  ensure((await request('auth/me', 'GET', null, secondOwner.cookie)).status, 401,
+    'Revoked owner session invalidated');
   console.log('Production integration smoke tests passed');
 }
 

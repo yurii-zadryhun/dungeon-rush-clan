@@ -35,7 +35,7 @@ function Leaders({
   const { t } = useI18n();
   const [expanded, setExpanded] = React.useState(false);
   return (
-    <section className="panel leaders-widget">
+    <section className={'panel leaders-widget' + (expanded ? ' expanded' : '')}>
       <header className="widget-head">
         <h2>
           <Medal size={19} /> {title}
@@ -70,9 +70,7 @@ function Leaders({
               <b className="score">
                 {number(metric === 'average' ? player.average : (player.lastPoints ?? 0))}
               </b>
-              <small title={t('calculatedScore')}>
-                {t('calculatedScore')}: {number(player.score)}
-              </small>
+
             </div>
           </div>
         ))}
