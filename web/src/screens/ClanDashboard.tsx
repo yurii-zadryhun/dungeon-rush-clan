@@ -464,7 +464,13 @@ export function ClanDashboard({
                 <History size={20} /> {t('warHistory')}
               </h2>
             </header>
-            <div className="timeline-scroll" ref={track} onTouchStart={touchStart} onTouchEnd={touchEnd} onWheel={wheelScroll}>
+            <div
+              className="timeline-scroll"
+              ref={track}
+              onTouchStart={touchStart}
+              onTouchEnd={touchEnd}
+              onWheel={wheelScroll}
+            >
               <div className="timeline-track">
                 <button
                   className="war-load-control"
