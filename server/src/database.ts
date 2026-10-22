@@ -18,6 +18,7 @@ export interface Tables {
     active: number;
     created_at: number;
   };
+  shared_invites: { id: number; token_hash: string; created_by: number; active: number; created_at: number };
   sessions: { token_hash: string; account_id: number; expires_at: number; extended_at: number };
   invites: {
     id: Generated<number>;
@@ -43,6 +44,7 @@ export interface Tables {
     id: Generated<number>;
     name: string;
     normalized_name: string;
+    account_id: number | null;
     active: number;
     created_at: number;
   };
@@ -71,12 +73,13 @@ export class Db implements OnModuleDestroy {
     this.connection.exec(`
       CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY CHECK(id=1), clan_name TEXT NOT NULL, minimum_points INTEGER NOT NULL, weights_json TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS accounts (id INTEGER PRIMARY KEY, username TEXT UNIQUE NOT NULL, display_name TEXT NOT NULL, role TEXT NOT NULL, password_hash TEXT NOT NULL, locale TEXT NOT NULL DEFAULT 'uk', active INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL);
+      CREATE TABLE IF NOT EXISTS shared_invites (id INTEGER PRIMARY KEY CHECK(id=1), token_hash TEXT UNIQUE NOT NULL, created_by INTEGER NOT NULL REFERENCES accounts(id), active INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE, expires_at INTEGER NOT NULL, extended_at INTEGER NOT NULL);
       CREATE INDEX IF NOT EXISTS sessions_by_account ON sessions(account_id);
       CREATE TABLE IF NOT EXISTS invites (id INTEGER PRIMARY KEY, token_hash TEXT UNIQUE NOT NULL, label TEXT NOT NULL, role TEXT NOT NULL, expires_at INTEGER NOT NULL, used_at INTEGER, created_by INTEGER NOT NULL REFERENCES accounts(id));
       CREATE TABLE IF NOT EXISTS clans (id INTEGER PRIMARY KEY, name TEXT NOT NULL, normalized_name TEXT UNIQUE NOT NULL);
       CREATE TABLE IF NOT EXISTS wars (id INTEGER PRIMARY KEY, start_date TEXT UNIQUE NOT NULL, opponent_clan_id INTEGER REFERENCES clans(id), our_score INTEGER, opponent_score INTEGER, ranking_imported_at INTEGER, result_imported_at INTEGER, created_at INTEGER NOT NULL);
-      CREATE TABLE IF NOT EXISTS players (id INTEGER PRIMARY KEY, name TEXT NOT NULL, normalized_name TEXT UNIQUE NOT NULL, active INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL);
+      CREATE TABLE IF NOT EXISTS players (id INTEGER PRIMARY KEY, name TEXT NOT NULL, normalized_name TEXT UNIQUE NOT NULL, account_id INTEGER UNIQUE REFERENCES accounts(id), active INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS player_scores (war_id INTEGER NOT NULL REFERENCES wars(id) ON DELETE CASCADE, player_id INTEGER NOT NULL REFERENCES players(id), position INTEGER NOT NULL, points INTEGER NOT NULL, PRIMARY KEY(war_id, player_id), UNIQUE(war_id, position));
       CREATE INDEX IF NOT EXISTS scores_by_player ON player_scores(player_id);
       CREATE TABLE IF NOT EXISTS war_days (war_id INTEGER NOT NULL REFERENCES wars(id) ON DELETE CASCADE, day_number INTEGER NOT NULL CHECK(day_number BETWEEN 1 AND 6), points INTEGER NOT NULL, winner TEXT NOT NULL, mvp TEXT NOT NULL, PRIMARY KEY(war_id, day_number));
@@ -115,6 +118,18 @@ export class Db implements OnModuleDestroy {
           ALTER TABLE invites_new RENAME TO invites;
         `);
       })();
+    }
+    const playerColumns = this.connection.pragma('table_info(players)') as { name: string }[];
+    if (!playerColumns.some((column) => column.name === 'account_id')) {
+      this.connection.exec('ALTER TABLE players ADD COLUMN account_id INTEGER REFERENCES accounts(id)');
+      this.connection.exec('CREATE UNIQUE INDEX IF NOT EXISTS players_account_unique ON players(account_id)');
+      // Existing users retain ownership of their historical player, matched by in-game name.
+      this.connection.exec(`
+        UPDATE players SET account_id = (
+          SELECT accounts.id FROM accounts
+          WHERE accounts.username = players.normalized_name AND accounts.active = 1 LIMIT 1
+        ) WHERE account_id IS NULL
+      `);
     }
     // Clear old enrollment secrets, then enforce FK constraints again.
     this.connection.exec('DROP TABLE IF EXISTS bootstrap');
