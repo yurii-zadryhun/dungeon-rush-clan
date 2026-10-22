@@ -23,6 +23,11 @@ interface CreatedInvitation {
   role: 'admin' | 'member';
   label: string;
 }
+interface SharedInvitation {
+  active: boolean;
+  createdAt: number | null;
+  url?: string;
+}
 
 export function MembersModal({ onClose }: { onClose: () => void }) {
   const { t, locale } = useI18n();
@@ -34,18 +39,24 @@ export function MembersModal({ onClose }: { onClose: () => void }) {
   const [error, setError] = React.useState('');
   const [busy, setBusy] = React.useState(false);
   const [copied, setCopied] = React.useState(false);
+  const [shared, setShared] = React.useState<SharedInvitation | null>(null);
+  const [sharedUrl, setSharedUrl] = React.useState('');
+  const [loading, setLoading] = React.useState(true);
 
   async function refresh() {
-    const [accounts, pending] = await Promise.all([
+    const [accounts, pending, link] = await Promise.all([
       api<ManagedAccount[]>('auth/accounts'),
       api<Invitation[]>('auth/invites'),
+      api<SharedInvitation>('auth/shared-invite'),
     ]);
     setMembers(accounts);
     setInvitations(pending);
+    setShared(link);
   }
 
   React.useEffect(() => {
-    void refresh().catch((failure) => setError((failure as Error).message));
+    void refresh().catch((failure) => setError((failure as Error).message))
+      .finally(() => setLoading(false));
   }, []);
 
   async function createInvitation() {
@@ -88,6 +99,44 @@ export function MembersModal({ onClose }: { onClose: () => void }) {
     }
   }
 
+  async function issueShared() {
+    setError('');
+    setBusy(true);
+    try {
+      const next = await api<SharedInvitation>('auth/shared-invite', { method: 'POST' });
+      setShared(next);
+      setSharedUrl(next.url ?? '');
+      setCopied(false);
+    } catch (failure) {
+      setError((failure as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function revokeShared() {
+    if (!window.confirm(t('confirmRevoke'))) return;
+    setBusy(true);
+    try {
+      await api('auth/shared-invite', { method: 'DELETE' });
+      setShared({ active: false, createdAt: null });
+      setSharedUrl('');
+    } catch (failure) {
+      setError((failure as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function copyShared() {
+    try {
+      await navigator.clipboard.writeText(sharedUrl);
+      setCopied(true);
+    } catch (failure) {
+      setError((failure as Error).message);
+    }
+  }
+
   function roleLabel(value: ManagedAccount['role']) {
     if (value === 'owner') return t('ownerRole');
     if (value === 'admin') return t('adminRole');
@@ -116,6 +165,23 @@ export function MembersModal({ onClose }: { onClose: () => void }) {
           </button>
         </header>
         <div className="modal-content">
+          <div className="shared-invite-box">
+            <h3>{t('sharedInviteTitle')}</h3>
+            <p className="tiny muted">{t('sharedInviteInfo')}</p>
+            <span className="tiny muted">{shared?.active ? t('sharedInviteActive') : t('sharedInviteDisabled')}</span>
+            {sharedUrl && <input aria-label={t('copyInvite')} readOnly value={sharedUrl}
+              onFocus={(event) => event.currentTarget.select()} />}
+            <div className="shared-invite-actions">
+              <button className="game-button blue" disabled={busy || loading} onClick={issueShared}>
+                {shared?.active ? t('reissueSharedInvite') : t('createSharedInvite')}
+              </button>
+              {sharedUrl && <button className="game-button secondary" onClick={copyShared}>
+                <Copy size={15} /> {copied ? t('copied') : t('copyInvite')}
+              </button>}
+              {shared?.active && <button className="game-button secondary" disabled={busy}
+                onClick={revokeShared}>{t('revokeSharedInvite')}</button>}
+            </div>
+          </div>
           <h3>{t('newInvitation')}</h3>
           <div className="invite-form">
             <label>
@@ -151,6 +217,7 @@ export function MembersModal({ onClose }: { onClose: () => void }) {
           )}
           <h3>{t('accounts')}</h3>
           <div className="accounts-list">
+            {loading && <span className="muted tiny">{t('loading')}</span>}
             {members.map((member) => (
               <div className={'account-row' + (!member.active ? ' inactive' : '')} key={member.id}>
                 <div>
