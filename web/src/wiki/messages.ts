@@ -5,7 +5,8 @@ const en = {
   home: 'Knowledge base',
   eyebrow: 'CLAN FIELD GUIDE',
   title: 'Know the game. Win together.',
-  subtitle: 'Practical guides, combat research and strategies learned from our clan. Always improving, never guessing with confidence.',
+  subtitle:
+    'Practical guides, combat research and strategies learned from our clan. Always improving, never guessing with confidence.',
   guides: 'guides',
   categories: 'Topics',
   all: 'All topics',
@@ -52,7 +53,8 @@ const uk: Record<MessageKey, string> = {
   home: 'База знань',
   eyebrow: 'ПОСІБНИК КЛАНУ',
   title: 'Знай гру. Перемагаймо разом.',
-  subtitle: 'Практичні гайди, дослідження бою та стратегії з досвіду нашого клану. Постійно вдосконалюємо й перевіряємо.',
+  subtitle:
+    'Практичні гайди, дослідження бою та стратегії з досвіду нашого клану. Постійно вдосконалюємо й перевіряємо.',
   guides: 'гайдів',
   categories: 'Розділи',
   all: 'Усі теми',
@@ -78,7 +80,8 @@ const uk: Record<MessageKey, string> = {
   practical: 'Практичний гайд',
   observed: 'Спостереження клану',
   theory: 'Робоча гіпотеза',
-  evidenceHelp: 'Інформація ґрунтується на досвіді клану. Висновки можуть змінитися після тестів або оновлень гри.',
+  evidenceHelp:
+    'Інформація ґрунтується на досвіді клану. Висновки можуть змінитися після тестів або оновлень гри.',
   theoryHelp: 'Містить гіпотези чи попередні формули, а не доведений найкращий білд.',
   updated: 'Опубліковано 22 жовтня 2026',
   notFound: 'Такого гайда немає',

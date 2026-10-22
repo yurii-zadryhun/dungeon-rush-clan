@@ -4,13 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { resolve, dirname } from 'node:path';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const paths = [
-  'getting-started',
-  'clan-wars',
-  'combat',
-  'progression',
-  'research',
-];
+const paths = ['getting-started', 'clan-wars', 'combat', 'progression', 'research'];
 const categories = new Set(['start', 'wars', 'combat', 'progress', 'research']);
 const levels = new Set(['beginner', 'intermediate', 'advanced']);
 const evidence = new Set(['practical', 'observed', 'theory']);
@@ -35,8 +29,10 @@ for (const article of all) {
   assert.ok(evidence.has(article.evidence), article.id + ': invalid evidence label');
   for (const field of ['title', 'summary', 'body']) {
     for (const locale of ['en', 'uk']) {
-      assert.ok(typeof article[field][locale] === 'string' && article[field][locale].trim(),
-        article.id + ': missing ' + field + '.' + locale);
+      assert.ok(
+        typeof article[field][locale] === 'string' && article[field][locale].trim(),
+        article.id + ': missing ' + field + '.' + locale,
+      );
     }
   }
   for (const locale of ['en', 'uk']) {

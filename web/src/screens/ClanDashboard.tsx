@@ -349,11 +349,17 @@ export function ClanDashboard({
           </div>
         </div>
         <nav className="top-navigation" aria-label={locale === 'uk' ? 'Навігація' : 'Navigation'}>
-          <a href="#/archive" className={!isWiki ? 'active' : ''} aria-current={!isWiki ? 'page' : undefined}>
-            <History size={17} /><span>{locale === 'uk' ? 'Архів' : 'Archive'}</span>
+          <a
+            href="#/archive"
+            className={!isWiki ? 'active' : ''}
+            aria-current={!isWiki ? 'page' : undefined}
+          >
+            <History size={17} />
+            <span>{locale === 'uk' ? 'Архів' : 'Archive'}</span>
           </a>
           <a href="#/wiki" className={isWiki ? 'active' : ''} aria-current={isWiki ? 'page' : undefined}>
-            <BookOpen size={17} /><span>{locale === 'uk' ? 'База знань' : 'Wiki'}</span>
+            <BookOpen size={17} />
+            <span>{locale === 'uk' ? 'База знань' : 'Wiki'}</span>
           </a>
         </nav>
         <div className="header-actions">
@@ -393,38 +399,38 @@ export function ClanDashboard({
       {isWiki ? (
         <WikiScreen articleId={wikiArticleId} />
       ) : (
-      <main className="dashboard">
-        {error && <div className="error-strip">{error}</div>}
-        <div className="dashboard-top">
-          <ClanOverview data={data} />
-          <Leaders title={t('allTimeLeaders')} players={data.rankings.allTime} metric="average" />
-          <Leaders title={t('latestLeaders')} players={data.rankings.latest} metric="lastPoints" />
-        </div>
-        <section className="panel history-widget">
-          <header className="widget-head timeline-heading">
-            <h2>
-              <History size={20} /> {t('warHistory')}
-            </h2>
-            <button className="game-button secondary" disabled={loadingOlder} onClick={loadOlder}>
-              <ChevronLeft size={17} /> {loadingOlder ? t('loading') : t('olderWars')}
-            </button>
-          </header>
-          <div className="timeline-scroll" ref={track}>
-            <div className="timeline-track">
-              {weeks.map((week) => (
-                <WarColumn
-                  key={week.start}
-                  week={week}
-                  onImport={setImportWeek}
-                  calculated={calculated}
-                  canEdit={canEdit}
-                  clanName={data.rankings.settings.clanName}
-                />
-              ))}
-            </div>
+        <main className="dashboard">
+          {error && <div className="error-strip">{error}</div>}
+          <div className="dashboard-top">
+            <ClanOverview data={data} />
+            <Leaders title={t('allTimeLeaders')} players={data.rankings.allTime} metric="average" />
+            <Leaders title={t('latestLeaders')} players={data.rankings.latest} metric="lastPoints" />
           </div>
-        </section>
-      </main>
+          <section className="panel history-widget">
+            <header className="widget-head timeline-heading">
+              <h2>
+                <History size={20} /> {t('warHistory')}
+              </h2>
+              <button className="game-button secondary" disabled={loadingOlder} onClick={loadOlder}>
+                <ChevronLeft size={17} /> {loadingOlder ? t('loading') : t('olderWars')}
+              </button>
+            </header>
+            <div className="timeline-scroll" ref={track}>
+              <div className="timeline-track">
+                {weeks.map((week) => (
+                  <WarColumn
+                    key={week.start}
+                    week={week}
+                    onImport={setImportWeek}
+                    calculated={calculated}
+                    canEdit={canEdit}
+                    clanName={data.rankings.settings.clanName}
+                  />
+                ))}
+              </div>
+            </div>
+          </section>
+        </main>
       )}
 
       {importWeek && canEdit && (

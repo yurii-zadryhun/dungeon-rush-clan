@@ -45,7 +45,10 @@ function readingMinutes(article: WikiArticle, locale: WikiLocale): number {
 }
 
 function normalize(value: string): string {
-  return value.normalize('NFKD').toLocaleLowerCase().replace(/[\u0300-\u036f]/g, '');
+  return value
+    .normalize('NFKD')
+    .toLocaleLowerCase()
+    .replace(/[\u0300-\u036f]/g, '');
 }
 
 function GuideCard({
@@ -68,7 +71,9 @@ function GuideCard({
   return (
     <article className={'wiki-guide-card' + (compact ? ' wiki-guide-compact' : '')}>
       <div className="wiki-guide-top">
-        <span className={'wiki-guide-icon wiki-icon-' + article.category}><Icon size={21} /></span>
+        <span className={'wiki-guide-icon wiki-icon-' + article.category}>
+          <Icon size={21} />
+        </span>
         <button
           type="button"
           className={'wiki-bookmark' + (bookmarked ? ' is-saved' : '')}
@@ -85,7 +90,9 @@ function GuideCard({
         <h3>{article.title[locale]}</h3>
         <p>{article.summary[locale]}</p>
         <div className="wiki-guide-footer">
-          <span><Clock3 size={13} /> {readingMinutes(article, locale)} {m.min}</span>
+          <span>
+            <Clock3 size={13} /> {readingMinutes(article, locale)} {m.min}
+          </span>
           <span>{m[article.level]}</span>
           <ArrowRight size={17} className="wiki-guide-arrow" />
         </div>
@@ -160,7 +167,9 @@ export function WikiScreen({ articleId }: { articleId?: string }) {
     <main className="wiki-page">
       <div className="wiki-shell">
         <aside className="wiki-sidebar" aria-label={m.categories}>
-          <div className="wiki-sidebar-heading"><BookOpen size={19} /> <span>{m.home}</span></div>
+          <div className="wiki-sidebar-heading">
+            <BookOpen size={19} /> <span>{m.home}</span>
+          </div>
           <p className="wiki-sidebar-label">{m.categories}</p>
           <nav className="wiki-category-nav">
             <button
@@ -168,7 +177,8 @@ export function WikiScreen({ articleId }: { articleId?: string }) {
               onClick={() => selectCategory('all')}
               type="button"
             >
-              <BookOpen size={17} /> <span>{m.all}</span><small>{wikiArticles.length}</small>
+              <BookOpen size={17} /> <span>{m.all}</span>
+              <small>{wikiArticles.length}</small>
             </button>
             {wikiCategories.map((item) => {
               const Icon = categoryIcons[item.id];
@@ -186,21 +196,33 @@ export function WikiScreen({ articleId }: { articleId?: string }) {
               );
             })}
           </nav>
-          <div className="wiki-sidebar-footer"><span className="wiki-lang-dot" /> {m.allLanguages}</div>
+          <div className="wiki-sidebar-footer">
+            <span className="wiki-lang-dot" /> {m.allLanguages}
+          </div>
         </aside>
 
         {articleId ? (
           selectedArticle ? (
             <div className="wiki-article-layout">
               <article className="wiki-article">
-                <a className="wiki-back-link" href="#/wiki"><ArrowLeft size={17} /> {m.back}</a>
+                <a className="wiki-back-link" href="#/wiki">
+                  <ArrowLeft size={17} /> {m.back}
+                </a>
                 <div className="wiki-article-heading">
                   <div className="wiki-article-meta">
-                    <span>{wikiCategories.find((item) => item.id === selectedArticle.category)?.title[locale]}</span>
+                    <span>
+                      {
+                        wikiCategories.find((item) => item.id === selectedArticle.category)?.title[
+                          locale
+                        ]
+                      }
+                    </span>
                     <span className="wiki-meta-dot" />
                     <span>{m[selectedArticle.level]}</span>
                     <span className="wiki-meta-dot" />
-                    <span>{readingMinutes(selectedArticle, locale)} {m.min}</span>
+                    <span>
+                      {readingMinutes(selectedArticle, locale)} {m.min}
+                    </span>
                   </div>
                   <h1>{selectedArticle.title[locale]}</h1>
                   <p className="wiki-article-summary">{selectedArticle.summary[locale]}</p>
@@ -210,11 +232,16 @@ export function WikiScreen({ articleId }: { articleId?: string }) {
                     </span>
                     <button
                       type="button"
-                      className={'wiki-save-action' + (savedIds.has(selectedArticle.id) ? ' is-saved' : '')}
+                      className={
+                        'wiki-save-action' + (savedIds.has(selectedArticle.id) ? ' is-saved' : '')
+                      }
                       onClick={() => toggleBookmark(selectedArticle.id)}
                       aria-pressed={savedIds.has(selectedArticle.id)}
                     >
-                      <Bookmark size={16} fill={savedIds.has(selectedArticle.id) ? 'currentColor' : 'none'} />
+                      <Bookmark
+                        size={16}
+                        fill={savedIds.has(selectedArticle.id) ? 'currentColor' : 'none'}
+                      />
                       {savedIds.has(selectedArticle.id) ? m.unsave : m.save}
                     </button>
                   </div>
@@ -265,7 +292,11 @@ export function WikiScreen({ articleId }: { articleId?: string }) {
                       <button
                         key={heading.section}
                         type="button"
-                        onClick={() => document.getElementById('wiki-section-' + heading.section)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                        onClick={() =>
+                          document
+                            .getElementById('wiki-section-' + heading.section)
+                            ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                        }
                       >
                         {heading.title}
                       </button>
@@ -279,24 +310,34 @@ export function WikiScreen({ articleId }: { articleId?: string }) {
               <BookOpen size={40} />
               <h1>{m.notFound}</h1>
               <p>{m.notFoundHelp}</p>
-              <a className="wiki-return-button" href="#/wiki">{m.back} <ArrowRight size={17} /></a>
+              <a className="wiki-return-button" href="#/wiki">
+                {m.back} <ArrowRight size={17} />
+              </a>
             </div>
           )
         ) : (
           <div className="wiki-home">
             <header className="wiki-hero">
               <div className="wiki-hero-content">
-                <span className="wiki-hero-eyebrow"><span /> {m.eyebrow}</span>
+                <span className="wiki-hero-eyebrow">
+                  <span /> {m.eyebrow}
+                </span>
                 <h1>{m.title}</h1>
                 <p>{m.subtitle}</p>
                 <div className="wiki-hero-stats">
-                  <span><BookOpen size={16} /> {wikiArticles.length} {m.guides}</span>
-                  <span>{wikiCategories.length} {m.categories.toLocaleLowerCase(locale)}</span>
+                  <span>
+                    <BookOpen size={16} /> {wikiArticles.length} {m.guides}
+                  </span>
+                  <span>
+                    {wikiCategories.length} {m.categories.toLocaleLowerCase(locale)}
+                  </span>
                   <span>UA / EN</span>
                 </div>
               </div>
               <div className="wiki-hero-art" aria-hidden="true">
-                <div className="wiki-art-ring"><Shield size={82} strokeWidth={1.2} /></div>
+                <div className="wiki-art-ring">
+                  <Shield size={82} strokeWidth={1.2} />
+                </div>
                 <span>DR</span>
               </div>
             </header>
@@ -311,7 +352,11 @@ export function WikiScreen({ articleId }: { articleId?: string }) {
                   placeholder={m.search}
                   aria-label={m.search}
                 />
-                {query && <button type="button" aria-label={m.clear} onClick={() => setQuery('')}><X size={17} /></button>}
+                {query && (
+                  <button type="button" aria-label={m.clear} onClick={() => setQuery('')}>
+                    <X size={17} />
+                  </button>
+                )}
               </div>
               <button
                 type="button"
@@ -319,25 +364,49 @@ export function WikiScreen({ articleId }: { articleId?: string }) {
                 onClick={() => setSavedOnly((value) => !value)}
                 aria-pressed={savedOnly}
               >
-                <Bookmark size={17} fill={savedOnly ? 'currentColor' : 'none'} /> {m.saved} <span>{saved.length}</span>
+                <Bookmark size={17} fill={savedOnly ? 'currentColor' : 'none'} /> {m.saved}{' '}
+                <span>{saved.length}</span>
               </button>
             </div>
 
             <div className="wiki-mobile-categories" aria-label={m.categories}>
-              <button type="button" className={category === 'all' ? 'active' : ''} onClick={() => selectCategory('all')}>{m.all}</button>
+              <button
+                type="button"
+                className={category === 'all' ? 'active' : ''}
+                onClick={() => selectCategory('all')}
+              >
+                {m.all}
+              </button>
               {wikiCategories.map((item) => (
-                <button type="button" key={item.id} className={category === item.id ? 'active' : ''} onClick={() => selectCategory(item.id)}>{item.title[locale]}</button>
+                <button
+                  type="button"
+                  key={item.id}
+                  className={category === item.id ? 'active' : ''}
+                  onClick={() => selectCategory(item.id)}
+                >
+                  {item.title[locale]}
+                </button>
               ))}
             </div>
 
             {showFeatured && (
               <section className="wiki-featured">
                 <div className="wiki-section-heading">
-                  <div><span className="wiki-overline">01 / {m.featured}</span><h2>{m.featured}</h2><p>{m.quickStart}</p></div>
+                  <div>
+                    <span className="wiki-overline">01 / {m.featured}</span>
+                    <h2>{m.featured}</h2>
+                    <p>{m.quickStart}</p>
+                  </div>
                 </div>
                 <div className="wiki-card-grid wiki-featured-grid">
                   {recommendations.map((article) => (
-                    <GuideCard key={article.id} article={article} locale={locale} bookmarked={savedIds.has(article.id)} onBookmark={toggleBookmark} />
+                    <GuideCard
+                      key={article.id}
+                      article={article}
+                      locale={locale}
+                      bookmarked={savedIds.has(article.id)}
+                      onBookmark={toggleBookmark}
+                    />
                   ))}
                 </div>
               </section>
@@ -345,13 +414,28 @@ export function WikiScreen({ articleId }: { articleId?: string }) {
 
             <section className="wiki-library">
               <div className="wiki-section-heading">
-                <div><span className="wiki-overline">02 / {m.browse}</span><h2>{category === 'all' ? m.browse : wikiCategories.find((item) => item.id === category)?.title[locale]}</h2></div>
-                <span className="wiki-result-count">{list.length} {m.articleCount}</span>
+                <div>
+                  <span className="wiki-overline">02 / {m.browse}</span>
+                  <h2>
+                    {category === 'all'
+                      ? m.browse
+                      : wikiCategories.find((item) => item.id === category)?.title[locale]}
+                  </h2>
+                </div>
+                <span className="wiki-result-count">
+                  {list.length} {m.articleCount}
+                </span>
               </div>
               {list.length ? (
                 <div className="wiki-card-grid">
                   {list.map((article) => (
-                    <GuideCard key={article.id} article={article} locale={locale} bookmarked={savedIds.has(article.id)} onBookmark={toggleBookmark} />
+                    <GuideCard
+                      key={article.id}
+                      article={article}
+                      locale={locale}
+                      bookmarked={savedIds.has(article.id)}
+                      onBookmark={toggleBookmark}
+                    />
                   ))}
                 </div>
               ) : (
@@ -362,7 +446,11 @@ export function WikiScreen({ articleId }: { articleId?: string }) {
                   <button
                     type="button"
                     className="wiki-return-button"
-                    onClick={() => { setQuery(''); setCategory('all'); setSavedOnly(false); }}
+                    onClick={() => {
+                      setQuery('');
+                      setCategory('all');
+                      setSavedOnly(false);
+                    }}
                   >
                     {m.reset} <ArrowRight size={16} />
                   </button>
