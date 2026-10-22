@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, History, LogOut, Medal, Settings, Swords, Users } from 'lucide-react';
+import { BookOpen, ChevronLeft, History, LogOut, Medal, Settings, Swords, Users } from 'lucide-react';
 import {
   api,
   number,
@@ -14,6 +14,7 @@ import { LanguagePicker, useI18n, type Locale } from '../i18n';
 import { ImportModal } from './ImportModal';
 import { MembersModal } from './MembersModal';
 import { SettingsModal } from './SettingsModal';
+import { WikiScreen } from '../wiki/WikiScreen';
 
 type PlayerMetric = 'average' | 'lastPoints';
 
@@ -263,7 +264,11 @@ export function ClanDashboard({
   onLocaleChange: (locale: Locale) => void;
   error: string;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const [route, setRoute] = React.useState(() => window.location.hash);
+  const wikiMatch = route.match(/^#\/wiki(?:\/([a-z0-9-]+))?\/?$/);
+  const isWiki = Boolean(wikiMatch);
+  const wikiArticleId = wikiMatch?.[1];
   const [dialog, setDialog] = React.useState<'settings' | 'members' | null>(null);
   const [importWeek, setImportWeek] = React.useState<Week | null>(null);
   const [loadingOlder, setLoadingOlder] = React.useState(false);
@@ -275,6 +280,12 @@ export function ClanDashboard({
     () => new Map(data?.rankings.calculated.map((player) => [player.id, player]) ?? []),
     [data?.rankings.calculated],
   );
+
+  React.useEffect(() => {
+    const syncRoute = () => setRoute(window.location.hash);
+    window.addEventListener('hashchange', syncRoute);
+    return () => window.removeEventListener('hashchange', syncRoute);
+  }, []);
 
   React.useEffect(() => {
     if (!data) return;
@@ -337,6 +348,14 @@ export function ClanDashboard({
             <small>{t('appTitle').toUpperCase()}</small>
           </div>
         </div>
+        <nav className="top-navigation" aria-label={locale === 'uk' ? 'Навігація' : 'Navigation'}>
+          <a href="#/archive" className={!isWiki ? 'active' : ''} aria-current={!isWiki ? 'page' : undefined}>
+            <History size={17} /><span>{locale === 'uk' ? 'Архів' : 'Archive'}</span>
+          </a>
+          <a href="#/wiki" className={isWiki ? 'active' : ''} aria-current={isWiki ? 'page' : undefined}>
+            <BookOpen size={17} /><span>{locale === 'uk' ? 'База знань' : 'Wiki'}</span>
+          </a>
+        </nav>
         <div className="header-actions">
           <LanguagePicker onSelect={onLocaleChange} />
           <span className="current-user">{user.displayName}</span>
@@ -371,6 +390,9 @@ export function ClanDashboard({
         </div>
       </header>
 
+      {isWiki ? (
+        <WikiScreen articleId={wikiArticleId} />
+      ) : (
       <main className="dashboard">
         {error && <div className="error-strip">{error}</div>}
         <div className="dashboard-top">
@@ -403,6 +425,7 @@ export function ClanDashboard({
           </div>
         </section>
       </main>
+      )}
 
       {importWeek && canEdit && (
         <ImportModal
