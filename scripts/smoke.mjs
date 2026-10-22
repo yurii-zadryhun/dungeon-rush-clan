@@ -415,6 +415,28 @@ async function run() {
     201,
     'Admin manages member group invitations',
   );
+  ensure((await request('auth/accounts/' + groupSecond.body.id, 'PATCH', {
+    username: 'RenamedMember', role: 'admin',
+  }, administrator.cookie)).status, 403, 'Admin cannot promote member to admin');
+  ensure((await request('auth/accounts/' + groupSecond.body.id, 'PATCH', {
+    username: 'RenamedMember', role: 'member',
+  }, administrator.cookie)).status, 200, 'Admin can rename a member');
+  ensure((await request('auth/login', 'POST', {
+    username: 'RenamedMember', password: 'othermember-password-1234',
+  })).status, 201, 'Edited nickname works for sign-in');
+  ensure((await request('auth/accounts/' + secondOwner.body.id, 'PATCH', {
+    username: 'SecondOwner', role: 'member',
+  }, administrator.cookie)).status, 403, 'Admin cannot edit owner');
+  ensure((await request('auth/accounts/' + owner.body.id, 'DELETE', null, ownerCookie)).status,
+    403, 'Owner cannot delete self');
+  ensure((await request('auth/accounts/' + groupFirst.body.id, 'DELETE', null administrator.cookie)).status,
+    200, 'Admin may delete member');
+  ensure((await request('auth/me', 'GET', null, groupFirst.cookie)).status, 401,
+    'Deleted account session invalidated');
+  const afterDeletion = await request('dashboard', 'GET', null, ownerCookie);
+  ensure(afterDeletion.body.weeks.find(w => w.start === recent).players
+    .some(player => player.id === newcomer.id && player.name === 'FreshNick'),
+    true, 'Deleted user leaves historical player and points intact');
   ensure(
     (await request('auth/accounts/' + secondOwner.body.id, 'DELETE', null, ownerCookie)).status,
     200,

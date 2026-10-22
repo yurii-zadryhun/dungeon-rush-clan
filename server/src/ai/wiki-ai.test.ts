@@ -34,8 +34,8 @@ describe('bilingual wiki retrieval', () => {
   it('keeps requests bounded and grounded with a minimal prompt', () => {
     const chunks = searchWiki('Ranged Defense and CDT against PvP', 'en');
     const prompt = createWikiPrompt('Ranged Defense and CDT against PvP', 'en', chunks);
-    expect(prompt.system).toContain('ONLY using the wiki extracts');
-    expect(prompt.user).toContain('QUESTION:');
+    expect(prompt.system).toContain('real clanmate');
+    expect(prompt.user).toContain('Player question:');
     expect(approximateInputTokens(prompt)).toBeLessThan(4000);
   });
 });
@@ -91,6 +91,7 @@ describe('wiki AI generation', () => {
     const first = await service.ask({ question: 'How does CDT affect PvP?', locale: 'en' }, 12);
     expect(first.sources.length).toBeGreaterThan(0);
     expect(first.cached).toBe(false);
+    expect(first.answer).not.toMatch(/^The wiki says/i);
     const second = await service.ask({ question: 'How does CDT affect PvP?', locale: 'en' }, 12);
     expect(second.cached).toBe(true);
     expect(fake).toHaveBeenCalledTimes(1);
