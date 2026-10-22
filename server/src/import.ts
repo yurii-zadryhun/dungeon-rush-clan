@@ -157,6 +157,7 @@ export class ImportService {
                 .values({
                   name: player.name,
                   normalized_name: normalizeName(player.name),
+                  account_id: null,
                   active: 1,
                   created_at: Date.now(),
                 })
@@ -178,6 +179,17 @@ export class ImportService {
                 points: player.points,
               })
               .execute();
+          }
+          // Bind already registered accounts to their first recognized in-game player.
+          const unlinked = await trx.selectFrom('players').select(['id', 'normalized_name'])
+            .where('account_id', 'is', null).execute();
+          const accounts = await trx.selectFrom('accounts')
+            .select(['id', 'username']).where('active', '=', 1).execute();
+          const byName = new Map(accounts.map(account => [normalizeName(account.username), account.id]));
+          for (const entry of unlinked) {
+            const accountId = byName.get(entry.normalized_name);
+            if (accountId) await trx.updateTable('players').set({ account_id: accountId })
+              .where('id', '=', entry.id).where('account_id', 'is', null).execute();
           }
           await trx
             .updateTable('wars')
