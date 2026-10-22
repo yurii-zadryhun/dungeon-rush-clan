@@ -60,7 +60,7 @@ function App() {
     setLocale(current.locale);
     setPhase('ready');
     setError('');
-    history.replaceState(null, '', location.pathname);
+    history.replaceState(null, '', location.pathname + location.hash);
   }
 
   async function saveLanguage(next: Locale) {
