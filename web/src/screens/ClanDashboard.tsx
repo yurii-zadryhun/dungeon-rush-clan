@@ -304,6 +304,8 @@ export function ClanDashboard({
   const positioned = React.useRef(false);
   const restore = React.useRef<{ width: number; left: number } | null>(null);
   const gesture = React.useRef<{ x: number; atStart: boolean } | null>(null);
+  const wheelPull = React.useRef(0);
+  const lastPull = React.useRef(0);
   const canEdit = user.role !== 'member';
   const calculated = React.useMemo(
     () => new Map(data?.rankings.calculated.map((player) => [player.id, player]) ?? []),
@@ -397,7 +399,23 @@ export function ClanDashboard({
     gesture.current = null;
     if (!start?.atStart || loadingOlder) return;
     const displacement = (event.changedTouches[0]?.clientX ?? 0) - start.x;
-    if (displacement > 75) void loadOlder();
+    if (displacement > 75 && Date.now() - lastPull.current > 700) {
+      lastPull.current = Date.now();
+      void loadOlder();
+    }
+  }
+
+  function wheelScroll(event: React.WheelEvent<HTMLDivElement>) {
+    if (event.currentTarget.scrollLeft > 3 || event.deltaX >= 0) {
+      wheelPull.current = 0;
+      return;
+    }
+    wheelPull.current += event.deltaX;
+    if (wheelPull.current < -90 && !loadingOlder && Date.now() - lastPull.current > 700) {
+      lastPull.current = Date.now();
+      wheelPull.current = 0;
+      void loadOlder();
+    }
   }
 
   if (!data)
@@ -446,7 +464,7 @@ export function ClanDashboard({
                 <History size={20} /> {t('warHistory')}
               </h2>
             </header>
-            <div className="timeline-scroll" ref={track} onTouchStart={touchStart} onTouchEnd={touchEnd}>
+            <div className="timeline-scroll" ref={track} onTouchStart={touchStart} onTouchEnd={touchEnd} onWheel={wheelScroll}>
               <div className="timeline-track">
                 <button
                   className="war-load-control"
