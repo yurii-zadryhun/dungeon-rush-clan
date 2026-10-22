@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, BookOpen, Bot, Send, Sparkles, UserRound } from 
 import { api, json } from '../api';
 import { useI18n } from '../i18n';
 import { WikiMarkdown } from './WikiMarkdown';
+import './ai.css';
 
 interface Source {
   id: string;
