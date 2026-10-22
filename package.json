@@ -13,7 +13,8 @@
     "check": "npm run typecheck -w server && npm run typecheck -w web",
     "test": "npm run test -w server",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "wiki:check": "node scripts/wiki-check.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
