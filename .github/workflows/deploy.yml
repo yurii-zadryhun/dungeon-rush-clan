@@ -87,6 +87,8 @@ jobs:
       - name: Deploy and restart PM2
         if: steps.version.outputs.current == 'true'
         shell: bash
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           set -euo pipefail
           ssh_opts=(-i "$HOME/.ssh/deploy_key" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes)
@@ -112,6 +114,15 @@ jobs:
           rsync -az -e "ssh -i $HOME/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes" \
             "$RUNNER_TEMP/release.tar.gz" "$target:$app_path/$stage_name/release.tar.gz"
 
+          # Transfer the secret as a private file, never as an SSH argument or build asset.
+          test -n "${GEMINI_API_KEY:-}" || { echo 'GEMINI_API_KEY secret is missing' >&2; exit 1; }
+          key_file=$(mktemp)
+          trap 'rm -f -- "$key_file"' EXIT
+          chmod 600 "$key_file"
+          printf 'GEMINI_API_KEY=%s\n' "$GEMINI_API_KEY" > "$key_file"
+          rsync -az -e "ssh -i $HOME/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes" \
+            "$key_file" "$target:$app_path/$stage_name/gemini-key.env"
+
           ssh "${ssh_opts[@]}" "$target" "$remote_args" <<'REMOTE'
           set -euo pipefail
           app=$1
@@ -120,6 +131,14 @@ jobs:
           trap 'rm -rf -- "$stage"' EXIT
           tar -xzf "$stage/release.tar.gz" -C "$stage"
           (cd "$stage" && node -e 'const Database = require("better-sqlite3"); new Database(":memory:").close()')
+          # Atomically update only this setting; preserve all other .env entries.
+          test -s "$stage/gemini-key.env"
+          env_tmp=$(mktemp "$app/.env.XXXXXXXX")
+          grep -v '^GEMINI_API_KEY=' "$app/.env" > "$env_tmp" || true
+          printf '\n' >> "$env_tmp"
+          cat "$stage/gemini-key.env" >> "$env_tmp"
+          chmod 600 "$env_tmp"
+          mv -f "$env_tmp" "$app/.env"
           mkdir -p "$app/server/dist" "$app/web/dist" "$app/node_modules"
           rsync -a --delete "$stage/server/dist/" "$app/server/dist/"
           rsync -a --delete "$stage/web/dist/" "$app/web/dist/"
