@@ -117,7 +117,7 @@ export class WikiAiService {
         /^(?:Based on (?:the )?(?:provided )?(?:extracts|sources|wiki)[^:]*:|Згідно з наданими (?:уривками|матеріалами):)\s*/i,
         '',
       )
-      .replace(/^(?:The (?:provided )?wiki (?:says|states) that\s*)/i, '')
+      .replace(/^(?:The (?:provided )?wiki (?:says|states)(?: that)?\s*)/i, '')
       .trim()
       .slice(0, 1800);
   }
