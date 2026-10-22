@@ -5,9 +5,10 @@ import { RankingService } from './ranking';
 import { WarsController, WarsService } from './wars';
 import { OcrController, VisionService } from './ocr';
 import { ImportController, ImportService } from './import';
+import { WikiAiController, WikiAiService } from './ai/wiki-ai';
 
 @Module({
-  controllers: [AuthController, WarsController, OcrController, ImportController],
+  controllers: [AuthController, WarsController, OcrController, ImportController, WikiAiController],
   providers: [
     Db,
     AccountsService,
@@ -18,6 +19,7 @@ import { ImportController, ImportService } from './import';
     WarsService,
     VisionService,
     ImportService,
+    WikiAiService,
   ],
 })
 export class AppModule {}

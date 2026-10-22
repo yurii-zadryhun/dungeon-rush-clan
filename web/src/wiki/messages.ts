@@ -2,6 +2,7 @@ import type { WikiLocale } from './model';
 
 const en = {
   nav: 'Wiki',
+  askAi: 'Ask AI',
   home: 'Knowledge base',
   eyebrow: 'CLAN FIELD GUIDE',
   title: 'Know the game. Win together.',
@@ -50,6 +51,7 @@ type MessageKey = keyof typeof en;
 
 const uk: Record<MessageKey, string> = {
   nav: 'Wiki',
+  askAi: 'Запитати AI',
   home: 'База знань',
   eyebrow: 'ПОСІБНИК КЛАНУ',
   title: 'Знай гру. Перемагаймо разом.',

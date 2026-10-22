@@ -11,3 +11,4 @@ data/
 .DS_Store
 coverage/
 .idea/
+server/src/ai/wiki-index.json

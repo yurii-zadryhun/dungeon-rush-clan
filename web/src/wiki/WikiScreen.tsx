@@ -8,6 +8,7 @@ import {
   Compass,
   FlaskConical,
   Search,
+  Sparkles,
   Shield,
   Swords,
   TrendingUp,
@@ -17,6 +18,7 @@ import {
 import { useI18n } from '../i18n';
 import { articleById, wikiArticles } from './catalog';
 import { articleHeadings, WikiMarkdown } from './WikiMarkdown';
+import { WikiAssistant, type WikiChatMessage } from './WikiAssistant';
 import { wikiMessages } from './messages';
 import { wikiCategories, type WikiArticle, type WikiCategory, type WikiLocale } from './model';
 import './wiki.css';
@@ -105,6 +107,7 @@ export function WikiScreen({ articleId }: { articleId?: string }) {
   const { locale } = useI18n();
   const m = wikiMessages(locale);
   const [query, setQuery] = React.useState('');
+  const [chatMessages, setChatMessages] = React.useState<WikiChatMessage[]>([]);
   const [category, setCategory] = React.useState<WikiCategory | 'all'>('all');
   const [savedOnly, setSavedOnly] = React.useState(false);
   const [saved, setSaved] = React.useState<string[]>(readSaved);
@@ -172,6 +175,13 @@ export function WikiScreen({ articleId }: { articleId?: string }) {
           </div>
           <p className="wiki-sidebar-label">{m.categories}</p>
           <nav className="wiki-category-nav">
+            <a
+              href="#/wiki/ask"
+              className={'wiki-ai-nav-link' + (articleId === 'ask' ? ' active' : '')}
+              aria-current={articleId === 'ask' ? 'page' : undefined}
+            >
+              <Sparkles size={17} /> <span>{m.askAi}</span>
+            </a>
             <button
               className={selectedCategory === 'all' ? 'active' : ''}
               onClick={() => selectCategory('all')}
@@ -201,7 +211,9 @@ export function WikiScreen({ articleId }: { articleId?: string }) {
           </div>
         </aside>
 
-        {articleId ? (
+        {articleId === 'ask' ? (
+          <WikiAssistant messages={chatMessages} setMessages={setChatMessages} />
+        ) : articleId ? (
           selectedArticle ? (
             <div className="wiki-article-layout">
               <article className="wiki-article">
@@ -227,6 +239,9 @@ export function WikiScreen({ articleId }: { articleId?: string }) {
                   <h1>{selectedArticle.title[locale]}</h1>
                   <p className="wiki-article-summary">{selectedArticle.summary[locale]}</p>
                   <div className="wiki-article-actions">
+                    <a className="wiki-ask-link" href="#/wiki/ask">
+                      <Sparkles size={16} /> {m.askAi}
+                    </a>
                     <span className={'wiki-evidence wiki-evidence-' + selectedArticle.evidence}>
                       {m[selectedArticle.evidence]}
                     </span>
@@ -324,6 +339,9 @@ export function WikiScreen({ articleId }: { articleId?: string }) {
                 </span>
                 <h1>{m.title}</h1>
                 <p>{m.subtitle}</p>
+                <a className="wiki-hero-ask" href="#/wiki/ask">
+                  <Sparkles size={17} /> {m.askAi} <ArrowRight size={15} />
+                </a>
                 <div className="wiki-hero-stats">
                   <span>
                     <BookOpen size={16} /> {wikiArticles.length} {m.guides}
@@ -370,6 +388,9 @@ export function WikiScreen({ articleId }: { articleId?: string }) {
             </div>
 
             <div className="wiki-mobile-categories" aria-label={m.categories}>
+              <a href="#/wiki/ask" className="wiki-mobile-ai">
+                <Sparkles size={16} /> {m.askAi}
+              </a>
               <button
                 type="button"
                 className={category === 'all' ? 'active' : ''}
