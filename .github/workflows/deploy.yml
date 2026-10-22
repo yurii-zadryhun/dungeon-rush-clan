@@ -1,0 +1,143 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [Check]
+    types: [completed]
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      APP_PATH: ${{ secrets.APP_PATH }}
+      PM2_PROC_NAME: ${{ secrets.PM2_PROC_NAME }}
+      DEPLOY_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+    steps:
+      - name: Checkout tested commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.DEPLOY_SHA }}
+          persist-credentials: false
+
+      - name: Skip superseded commits
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          head_sha=$(git ls-remote "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/master | cut -f1)
+          if [[ "$DEPLOY_SHA" == "$head_sha" ]]; then
+            echo 'current=true' >> "$GITHUB_OUTPUT"
+          else
+            echo "Skipping superseded commit $DEPLOY_SHA (master is $head_sha)"
+            echo 'current=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build compatible production bundle
+        if: steps.version.outputs.current == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm --platform linux/amd64 \
+            -v "$GITHUB_WORKSPACE:/app" -w /app \
+            node:24-bullseye bash -euo pipefail -c '
+              test "$(getconf GNU_LIBC_VERSION)" = "glibc 2.31"
+              npm ci --no-audit --no-fund
+              npm run build
+              npm ci --omit=dev --no-audit --no-fund
+              npm rebuild better-sqlite3 --build-from-source --no-audit --no-fund
+              node -e "const Database = require(\"better-sqlite3\"); new Database(\":memory:\").close()"
+            '
+          tar -czf "$RUNNER_TEMP/release.tar.gz" \
+            package.json package-lock.json server/package.json web/package.json \
+            server/dist web/dist node_modules
+
+      - name: Set up deployment SSH key
+        if: steps.version.outputs.current == 'true'
+        shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$SSH_HOST" && test -n "$SSH_USER" && test -n "$APP_PATH" && test -n "$PM2_PROC_NAME"
+          test -n "$SSH_PRIVATE_KEY"
+          mkdir -p -m 700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/deploy_key"
+          chmod 600 "$HOME/.ssh/deploy_key"
+          ssh-keyscan -T 10 -H "$SSH_HOST" > "$HOME/.ssh/known_hosts"
+          test -s "$HOME/.ssh/known_hosts"
+
+      - name: Deploy and restart PM2
+        if: steps.version.outputs.current == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh_opts=(-i "$HOME/.ssh/deploy_key" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes)
+          target="$SSH_USER@$SSH_HOST"
+          app_path=${APP_PATH%/}
+          stage_name=".deploy-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          printf -v app_arg '%q' "$app_path"
+          printf -v proc_arg '%q' "$PM2_PROC_NAME"
+          printf -v stage_arg '%q' "$stage_name"
+          remote_args="bash -s -- $app_arg $proc_arg $stage_arg"
+
+          ssh "${ssh_opts[@]}" "$target" "$remote_args" <<'REMOTE'
+          set -euo pipefail
+          app=$1
+          process=$2
+          stage=$3
+          test -f "$app/.env" && test -d "$app/data"
+          command -v pm2 >/dev/null && command -v rsync >/dev/null
+          pm2 describe "$process" >/dev/null
+          mkdir -m 700 "$app/$stage"
+          REMOTE
+
+          rsync -az -e "ssh -i $HOME/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes" \
+            "$RUNNER_TEMP/release.tar.gz" "$target:$app_path/$stage_name/release.tar.gz"
+
+          ssh "${ssh_opts[@]}" "$target" "$remote_args" <<'REMOTE'
+          set -euo pipefail
+          app=$1
+          process=$2
+          stage="$app/$3"
+          trap 'rm -rf -- "$stage"' EXIT
+          tar -xzf "$stage/release.tar.gz" -C "$stage"
+          (cd "$stage" && node -e 'const Database = require("better-sqlite3"); new Database(":memory:").close()')
+          mkdir -p "$app/server/dist" "$app/web/dist" "$app/node_modules"
+          rsync -a --delete "$stage/server/dist/" "$app/server/dist/"
+          rsync -a --delete "$stage/web/dist/" "$app/web/dist/"
+          rsync -a --delete "$stage/node_modules/" "$app/node_modules/"
+          cp "$stage/package.json" "$stage/package-lock.json" "$app/"
+          cp "$stage/server/package.json" "$app/server/package.json"
+          cp "$stage/web/package.json" "$app/web/package.json"
+          cd "$app"
+          pm2 restart "$process" --update-env
+          for i in $(seq 1 20); do
+            if curl --silent --show-error --fail --max-time 2 \
+              http://127.0.0.1:3000/api/auth/setup-state > /dev/null 2>&1; then
+              echo 'Deployment healthy'
+              exit 0
+            fi
+            sleep 1
+          done
+          echo 'Application failed the post-deploy health check' >&2
+          pm2 logs "$process" --lines 40 --nostream || true
+          exit 1
+          REMOTE
