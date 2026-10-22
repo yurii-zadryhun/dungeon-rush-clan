@@ -64,14 +64,13 @@ For local frontend hot reload, use `npm run dev`; Vite proxies API traffic to th
 
 ## Roles
 
-| Role | View | Import/settings | Invite | Revoke accounts |
-| --- | --- | --- | --- | --- |
-| Owner (multiple allowed) | Yes | Yes | Owner/Admin/Member | Yes, except themselves and the last owner |
-| Admin | Yes | Yes | Member only | No |
-| Member | Yes | No | No | No |
+| Role                     | View | Import/settings | Invite             | Revoke accounts                           |
+| ------------------------ | ---- | --------------- | ------------------ | ----------------------------------------- |
+| Owner (multiple allowed) | Yes  | Yes             | Owner/Admin/Member | Yes, except themselves and the last owner |
+| Admin                    | Yes  | Yes             | Member only        | No                                        |
+| Member                   | Yes  | No              | No                 | No                                        |
 
 Owners and admins can manage the reusable Member-only group link. Password changes are separate from nickname edits and require the current password. Renaming preserves the historical player ID and updates MVP text.
-
 
 ## Business rules
 

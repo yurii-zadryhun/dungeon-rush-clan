@@ -1963,4 +1963,6 @@ b {
   color: #fff;
   background: #396e99;
 }
-.language-toggle .locale-option span { font-size: 14px; }
+.language-toggle .locale-option span {
+  font-size: 14px;
+}
