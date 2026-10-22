@@ -1967,10 +1967,24 @@ b {
   font-size: 14px;
 }
 
-.user-actions { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
-.user-edit-modal { width: min(440px, 100%); }
-.user-edit-modal .modal-content { display: grid; gap: 14px; }
+.user-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.user-edit-modal {
+  width: min(440px, 100%);
+}
+.user-edit-modal .modal-content {
+  display: grid;
+  gap: 14px;
+}
 
 @media (max-width: 950px) {
-  .page, .wiki-page, .users-page { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
+  .page,
+  .wiki-page,
+  .users-page {
+    padding-bottom: calc(88px + env(safe-area-inset-bottom));
+  }
 }

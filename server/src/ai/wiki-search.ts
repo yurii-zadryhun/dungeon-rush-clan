@@ -176,8 +176,13 @@ export function createWikiPrompt(
       previous.answer.slice(0, 500) +
       '\n'
     : '';
-  const user = 'Reference notes for you only (not from the user):\n' + context
-    + '\n\n' + lastTurn + 'Player question:\n' + question;
+  const user =
+    'Reference notes for you only (not from the user):\n' +
+    context +
+    '\n\n' +
+    lastTurn +
+    'Player question:\n' +
+    question;
   return { system, user };
 }
 

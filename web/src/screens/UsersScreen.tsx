@@ -128,9 +128,13 @@ export function UsersScreen({ account }: { account: Account }) {
     event.preventDefault();
     if (!editing) return;
     void perform(async () => {
-      await api('auth/accounts/' + editing.id, json('PATCH', {
-        username: editName, role: editRole,
-      }));
+      await api(
+        'auth/accounts/' + editing.id,
+        json('PATCH', {
+          username: editName,
+          role: editRole,
+        }),
+      );
       setEditing(null);
       await refresh();
     });
@@ -270,12 +274,22 @@ export function UsersScreen({ account }: { account: Account }) {
                   </div>
                   {person.id !== account.id && (owner || person.role === 'member') && (
                     <div className="user-actions">
-                      <button className="icon-button" aria-label={t('editUser')}
-                        title={t('editUser')} disabled={busy} onClick={() => openEditor(person)}>
+                      <button
+                        className="icon-button"
+                        aria-label={t('editUser')}
+                        title={t('editUser')}
+                        disabled={busy}
+                        onClick={() => openEditor(person)}
+                      >
                         <Pencil size={17} />
                       </button>
-                      <button className="icon-button danger" aria-label={t('deleteUser')}
-                        title={t('deleteUser')} disabled={busy} onClick={() => deleteAccount(person)}>
+                      <button
+                        className="icon-button danger"
+                        aria-label={t('deleteUser')}
+                        title={t('deleteUser')}
+                        disabled={busy}
+                        onClick={() => deleteAccount(person)}
+                      >
                         <Trash2 size={17} />
                       </button>
                     </div>
@@ -318,23 +332,45 @@ export function UsersScreen({ account }: { account: Account }) {
         </div>
       </div>
       {editing && (
-        <div className="modal-backdrop" onMouseDown={(event) => {
-          if (event.target === event.currentTarget) setEditing(null);
-        }}>
-          <section className="panel modal user-edit-modal" role="dialog" aria-modal="true"
-            aria-label={t('editUser')}>
+        <div
+          className="modal-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setEditing(null);
+          }}
+        >
+          <section
+            className="panel modal user-edit-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('editUser')}
+          >
             <header className="modal-header">
-              <h2><Pencil size={19} /> {t('editUser')}</h2>
-              <button type="button" className="close-button" aria-label={t('close')}
-                onClick={() => setEditing(null)}><X /></button>
+              <h2>
+                <Pencil size={19} /> {t('editUser')}
+              </h2>
+              <button
+                type="button"
+                className="close-button"
+                aria-label={t('close')}
+                onClick={() => setEditing(null)}
+              >
+                <X />
+              </button>
             </header>
             <form onSubmit={saveUser}>
               <div className="modal-content">
-                <label>{t('username')}
-                  <input value={editName} minLength={2} maxLength={50} required
-                    onChange={(event) => setEditName(event.target.value)} />
+                <label>
+                  {t('username')}
+                  <input
+                    value={editName}
+                    minLength={2}
+                    maxLength={50}
+                    required
+                    onChange={(event) => setEditName(event.target.value)}
+                  />
                 </label>
-                <label>{t('role')}
+                <label>
+                  {t('role')}
                   <select value={editRole} onChange={(event) => setEditRole(event.target.value as Role)}>
                     <option value="member">{t('memberRole')}</option>
                     {owner && <option value="admin">{t('adminRole')}</option>}
@@ -342,10 +378,15 @@ export function UsersScreen({ account }: { account: Account }) {
                   </select>
                 </label>
               </div>
-              {error && <div className="error-strip" role="alert">{error}</div>}
+              {error && (
+                <div className="error-strip" role="alert">
+                  {error}
+                </div>
+              )}
               <footer className="modal-actions">
-                <button type="button" className="game-button secondary"
-                  onClick={() => setEditing(null)}>{t('cancel')}</button>
+                <button type="button" className="game-button secondary" onClick={() => setEditing(null)}>
+                  {t('cancel')}
+                </button>
                 <button className="game-button blue" type="submit" disabled={busy}>
                   {t('save')}
                 </button>

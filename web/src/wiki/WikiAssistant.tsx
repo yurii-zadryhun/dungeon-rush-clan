@@ -119,7 +119,10 @@ export function WikiAssistant({
     bottom.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [messages, busy]);
   React.useEffect(() => {
-    if (!busy) { setThinkingStep(0); return; }
+    if (!busy) {
+      setThinkingStep(0);
+      return;
+    }
     const interval = window.setInterval(() => {
       setThinkingStep((step) => (step + 1) % t.thinking.length);
     }, 2600);
@@ -274,7 +277,9 @@ export function WikiAssistant({
               <Send size={19} />
             </button>
           </form>
-          <div className="wiki-ai-footer"><span>{t.note}</span></div>
+          <div className="wiki-ai-footer">
+            <span>{t.note}</span>
+          </div>
         </div>
       </div>
     </section>

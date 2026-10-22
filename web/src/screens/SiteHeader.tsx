@@ -59,119 +59,127 @@ export function SiteHeader({
   }
   return (
     <>
-    <header className="site-header shell-header">
-      <a className="brand shell-brand" href="#/archive">
-        <span className="brand-mark">
-          <Swords size={25} />
-        </span>
-        <span className="brand-caption">
-          <strong>DUNGEON RUSH</strong>
-        </span>
-      </a>
-      <nav className="top-navigation shell-navigation" aria-label={t('navigation')}>
-        <a
-          href="#/archive"
-          className={!isWiki && !isUsers ? 'active' : ''}
-          aria-current={!isWiki && !isUsers ? 'page' : undefined}
-          onClick={closeMenu}
-        >
-          <History size={17} /> <span>{t('historyTab')}</span>
+      <header className="site-header shell-header">
+        <a className="brand shell-brand" href="#/archive">
+          <span className="brand-mark">
+            <Swords size={25} />
+          </span>
+          <span className="brand-caption">
+            <strong>DUNGEON RUSH</strong>
+          </span>
         </a>
-        <a
-          href="#/wiki"
-          className={isWiki ? 'active' : ''}
-          aria-current={isWiki ? 'page' : undefined}
-          onClick={closeMenu}
-        >
-          <BookOpen size={17} /> <span>{t('wikiTab')}</span>
-        </a>
-      </nav>
-      <div className="shell-tools">
-        <div className="shell-menu-container" ref={dropdown}>
-          <button
-            type="button"
-            className="shell-menu-button"
-            aria-label={t('menu')}
-            aria-expanded={menuOpen}
-            aria-haspopup="true"
-            onClick={() => setMenuOpen((open) => !open)}
+        <nav className="top-navigation shell-navigation" aria-label={t('navigation')}>
+          <a
+            href="#/archive"
+            className={!isWiki && !isUsers ? 'active' : ''}
+            aria-current={!isWiki && !isUsers ? 'page' : undefined}
+            onClick={closeMenu}
           >
-            <Menu size={20} />
-            <ChevronDown size={13} />
-          </button>
-          {menuOpen && (
-            <div className="shell-menu" role="menu">
-              <div className="shell-menu-user">
-                {user.displayName}
-                <small>
-                  {t(
-                    user.role === 'owner'
-                      ? 'ownerRole'
-                      : user.role === 'admin'
-                        ? 'adminRole'
-                        : 'memberRole',
-                  )}
-                </small>
-              </div>
-              <button
-                role="menuitem"
-                onClick={() => {
-                  closeMenu();
-                  onProfile();
-                }}
-              >
-                <UserRound size={18} /> {t('profile')}
-              </button>
-              {canManage && (
-                <a role="menuitem" href="#/users" onClick={closeMenu}>
-                  <UsersRound size={18} /> {t('userManagement')}
-                </a>
-              )}
-              {canManage && (
+            <History size={17} /> <span>{t('historyTab')}</span>
+          </a>
+          <a
+            href="#/wiki"
+            className={isWiki ? 'active' : ''}
+            aria-current={isWiki ? 'page' : undefined}
+            onClick={closeMenu}
+          >
+            <BookOpen size={17} /> <span>{t('wikiTab')}</span>
+          </a>
+        </nav>
+        <div className="shell-tools">
+          <div className="shell-menu-container" ref={dropdown}>
+            <button
+              type="button"
+              className="shell-menu-button"
+              aria-label={t('menu')}
+              aria-expanded={menuOpen}
+              aria-haspopup="true"
+              onClick={() => setMenuOpen((open) => !open)}
+            >
+              <Menu size={20} />
+              <ChevronDown size={13} />
+            </button>
+            {menuOpen && (
+              <div className="shell-menu" role="menu">
+                <div className="shell-menu-user">
+                  {user.displayName}
+                  <small>
+                    {t(
+                      user.role === 'owner'
+                        ? 'ownerRole'
+                        : user.role === 'admin'
+                          ? 'adminRole'
+                          : 'memberRole',
+                    )}
+                  </small>
+                </div>
                 <button
                   role="menuitem"
                   onClick={() => {
                     closeMenu();
-                    onSettings();
+                    onProfile();
                   }}
                 >
-                  <Settings size={18} /> {t('clanSettings')}
+                  <UserRound size={18} /> {t('profile')}
                 </button>
-              )}
-              <div className="shell-menu-language">
-                <LanguagePicker onSelect={onLocaleChange} />
+                {canManage && (
+                  <a role="menuitem" href="#/users" onClick={closeMenu}>
+                    <UsersRound size={18} /> {t('userManagement')}
+                  </a>
+                )}
+                {canManage && (
+                  <button
+                    role="menuitem"
+                    onClick={() => {
+                      closeMenu();
+                      onSettings();
+                    }}
+                  >
+                    <Settings size={18} /> {t('clanSettings')}
+                  </button>
+                )}
+                <div className="shell-menu-language">
+                  <LanguagePicker onSelect={onLocaleChange} />
+                </div>
+                <div className="shell-menu-separator" />
+                <button
+                  role="menuitem"
+                  onClick={() => {
+                    closeMenu();
+                    onLogout();
+                  }}
+                >
+                  <LogOut size={18} /> {t('logout')}
+                </button>
               </div>
-              <div className="shell-menu-separator" />
-              <button
-                role="menuitem"
-                onClick={() => {
-                  closeMenu();
-                  onLogout();
-                }}
-              >
-                <LogOut size={18} /> {t('logout')}
-              </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
-    </header>
-    <nav className="mobile-bottom-navigation" aria-label={t('navigation')}>
-      <a href="#/archive" className={!isWiki && !isUsers ? 'active' : ''}
-        aria-current={!isWiki && !isUsers ? 'page' : undefined}>
-        <History size={22} /><span>{t('historyTab')}</span>
-      </a>
-      <a href="#/wiki" className={isWiki ? 'active' : ''}
-        aria-current={isWiki ? 'page' : undefined}>
-        <BookOpen size={22} /><span>{t('wikiTab')}</span>
-      </a>
-      {canManage && (
-        <a href="#/users" className={isUsers ? 'active' : ''}
-          aria-current={isUsers ? 'page' : undefined}>
-          <UsersRound size={22} /><span>{t('userManagement')}</span>
+      </header>
+      <nav className="mobile-bottom-navigation" aria-label={t('navigation')}>
+        <a
+          href="#/archive"
+          className={!isWiki && !isUsers ? 'active' : ''}
+          aria-current={!isWiki && !isUsers ? 'page' : undefined}
+        >
+          <History size={22} />
+          <span>{t('historyTab')}</span>
         </a>
-      )}
-    </nav>
+        <a href="#/wiki" className={isWiki ? 'active' : ''} aria-current={isWiki ? 'page' : undefined}>
+          <BookOpen size={22} />
+          <span>{t('wikiTab')}</span>
+        </a>
+        {canManage && (
+          <a
+            href="#/users"
+            className={isUsers ? 'active' : ''}
+            aria-current={isUsers ? 'page' : undefined}
+          >
+            <UsersRound size={22} />
+            <span>{t('userManagement')}</span>
+          </a>
+        )}
+      </nav>
     </>
   );
 }

@@ -113,9 +113,13 @@ export class WikiAiService {
       .trim();
     if (!text) throw new ServiceUnavailableException('AI_PROVIDER_ERROR');
     return text
-      .replace(/^(?:Based on (?:the )?(?:provided )?(?:extracts|sources|wiki)[^:]*:|Згідно з наданими (?:уривками|матеріалами):)\s*/i, '')
+      .replace(
+        /^(?:Based on (?:the )?(?:provided )?(?:extracts|sources|wiki)[^:]*:|Згідно з наданими (?:уривками|матеріалами):)\s*/i,
+        '',
+      )
       .replace(/^(?:The (?:provided )?wiki (?:says|states) that\s*)/i, '')
-      .trim().slice(0, 1800);
+      .trim()
+      .slice(0, 1800);
   }
 
   async ask(input: unknown, accountId: number): Promise<AiResult> {

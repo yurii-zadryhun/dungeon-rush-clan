@@ -368,31 +368,56 @@ export class AccountsService {
     return { individual: null, label: '', role: 'member' as const, shared: true };
   }
 
-  private async renamePlayer(trx: Transaction<Tables>, accountId: number, username: string, oldUsername: string) {
+  private async renamePlayer(
+    trx: Transaction<Tables>,
+    accountId: number,
+    username: string,
+    oldUsername: string,
+  ) {
     const normalized = normalizeName(username);
-    const duplicate = await trx.selectFrom('accounts').select('id')
-      .where('username', '=', normalized).where('id', '!=', accountId).executeTakeFirst();
-    if (duplicate) throw new BadRequestException('Username already exists');
-    const player = await trx.selectFrom('players').selectAll()
-      .where('account_id', '=', accountId).executeTakeFirst();
-    const legacyPlayer = player || await trx.selectFrom('players').selectAll()
-      .where('normalized_name', '=', normalizeName(oldUsername)).where('account_id', 'is', null)
+    const duplicate = await trx
+      .selectFrom('accounts')
+      .select('id')
+      .where('username', '=', normalized)
+      .where('id', '!=', accountId)
       .executeTakeFirst();
-    const collision = await trx.selectFrom('players').select('id')
-      .where('normalized_name', '=', normalized).executeTakeFirst();
+    if (duplicate) throw new BadRequestException('Username already exists');
+    const player = await trx
+      .selectFrom('players')
+      .selectAll()
+      .where('account_id', '=', accountId)
+      .executeTakeFirst();
+    const legacyPlayer =
+      player ||
+      (await trx
+        .selectFrom('players')
+        .selectAll()
+        .where('normalized_name', '=', normalizeName(oldUsername))
+        .where('account_id', 'is', null)
+        .executeTakeFirst());
+    const collision = await trx
+      .selectFrom('players')
+      .select('id')
+      .where('normalized_name', '=', normalized)
+      .executeTakeFirst();
     if (collision && collision.id !== legacyPlayer?.id)
       throw new BadRequestException('Player name already exists');
     if (!legacyPlayer) return;
     if (legacyPlayer.name === username.trim() && legacyPlayer.account_id === accountId) return;
-    await trx.updateTable('players')
+    await trx
+      .updateTable('players')
       .set({ name: username.trim(), normalized_name: normalized, account_id: accountId })
-      .where('id', '=', legacyPlayer.id).execute();
-    const days = await trx.selectFrom('war_days')
-      .select(['war_id', 'day_number', 'mvp']).execute();
+      .where('id', '=', legacyPlayer.id)
+      .execute();
+    const days = await trx.selectFrom('war_days').select(['war_id', 'day_number', 'mvp']).execute();
     for (const day of days) {
       if (normalizeName(day.mvp) !== normalizeName(legacyPlayer.name)) continue;
-      await trx.updateTable('war_days').set({ mvp: username.trim() })
-        .where('war_id', '=', day.war_id).where('day_number', '=', day.day_number).execute();
+      await trx
+        .updateTable('war_days')
+        .set({ mvp: username.trim() })
+        .where('war_id', '=', day.war_id)
+        .where('day_number', '=', day.day_number)
+        .execute();
     }
   }
 
@@ -528,8 +553,11 @@ export class AccountsService {
 
   private async editableAccount(id: number, actor: AuthenticatedAccount) {
     if (id === actor.id) throw new ForbiddenException('Cannot edit your own access');
-    const target = await this.db.query.selectFrom('accounts').selectAll()
-      .where('id', '=', id).executeTakeFirst();
+    const target = await this.db.query
+      .selectFrom('accounts')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirst();
     if (!target) throw new BadRequestException('Account not found');
     if (actor.role !== 'owner' && (actor.role !== 'admin' || target.role !== 'member')) {
       throw new ForbiddenException('Cannot manage this account');
@@ -538,25 +566,38 @@ export class AccountsService {
   }
 
   async updateAccount(id: number, actor: AuthenticatedAccount, input: unknown) {
-    const data = validate(z.object({
-      username: usernameSchema,
-      role: z.enum(['owner', 'admin', 'member']),
-    }), input);
+    const data = validate(
+      z.object({
+        username: usernameSchema,
+        role: z.enum(['owner', 'admin', 'member']),
+      }),
+      input,
+    );
     const target = await this.editableAccount(id, actor);
     if (actor.role === 'admin' && data.role !== 'member') {
       throw new ForbiddenException('Cannot assign this role');
     }
     if (target.role === 'owner' && data.role !== 'owner') {
-      const others = await this.db.query.selectFrom('accounts').select('id')
-        .where('role', '=', 'owner').where('active', '=', 1).execute();
+      const others = await this.db.query
+        .selectFrom('accounts')
+        .select('id')
+        .where('role', '=', 'owner')
+        .where('active', '=', 1)
+        .execute();
       if (others.length <= 1) throw new ForbiddenException('Cannot change last owner');
     }
     try {
       await this.db.query.transaction().execute(async (trx) => {
         await this.renamePlayer(trx, id, data.username, target.username);
-        await trx.updateTable('accounts').set({
-          username: normalizeName(data.username), display_name: data.username.trim(), role: data.role,
-        }).where('id', '=', id).execute();
+        await trx
+          .updateTable('accounts')
+          .set({
+            username: normalizeName(data.username),
+            display_name: data.username.trim(),
+            role: data.role,
+          })
+          .where('id', '=', id)
+          .execute();
       });
     } catch (error) {
       if ((error as Error).message.includes('UNIQUE')) {
@@ -570,14 +611,17 @@ export class AccountsService {
   async deleteAccount(id: number, actor: AuthenticatedAccount) {
     const target = await this.editableAccount(id, actor);
     if (target.role === 'owner') {
-      const owners = await this.db.query.selectFrom('accounts').select('id')
-        .where('role', '=', 'owner').where('active', '=', 1).execute();
+      const owners = await this.db.query
+        .selectFrom('accounts')
+        .select('id')
+        .where('role', '=', 'owner')
+        .where('active', '=', 1)
+        .execute();
       if (owners.length <= 1) throw new ForbiddenException('Cannot delete last owner');
     }
     await this.db.query.transaction().execute(async (trx) => {
       // Keep the player and scores intact: the account is not the historical identity.
-      await trx.updateTable('players').set({ account_id: null })
-        .where('account_id', '=', id).execute();
+      await trx.updateTable('players').set({ account_id: null }).where('account_id', '=', id).execute();
       await trx.deleteFrom('sessions').where('account_id', '=', id).execute();
       await trx.deleteFrom('invites').where('created_by', '=', id).execute();
       await trx.deleteFrom('shared_invites').where('created_by', '=', id).execute();
@@ -745,8 +789,7 @@ export class AuthController {
 
   @UseGuards(SessionGuard, AdminGuard)
   @Patch('accounts/:id')
-  updateAccount(@Param('id') id: string, @Req() request: AuthenticatedRequest,
-    @Body() body: unknown) {
+  updateAccount(@Param('id') id: string, @Req() request: AuthenticatedRequest, @Body() body: unknown) {
     return this.auth.updateAccount(Number(id), request.account!, body);
   }
 
