@@ -70,7 +70,6 @@ function Leaders({
               <b className="score">
                 {number(metric === 'average' ? player.average : (player.lastPoints ?? 0))}
               </b>
-
             </div>
           </div>
         ))}
@@ -315,10 +314,13 @@ export function ClanDashboard({
     const imported = weeks.filter((week) => week.rankingImported || week.resultImported);
     const oldest = imported[0]?.start ?? data.currentStart;
     const blankBefore = previousTuesday(oldest);
-    return weeks.filter((week) =>
-      week.rankingImported || week.resultImported ||
-      week.start === blankBefore || week.start === data.currentStart ||
-      week.state === 'future',
+    return weeks.filter(
+      (week) =>
+        week.rankingImported ||
+        week.resultImported ||
+        week.start === blankBefore ||
+        week.start === data.currentStart ||
+        week.state === 'future',
     );
   }, [data?.currentStart, weeks]);
 
@@ -371,7 +373,9 @@ export function ClanDashboard({
       if (container) restore.current = { left: container.scrollLeft, width: container.scrollWidth };
       const anchor = previousTuesday(weeks[0].start);
       const next = await api<Dashboard>('dashboard?anchor=' + encodeURIComponent(anchor) + '&count=2');
-      const older = next.weeks.filter((week) => !weeks.some((existing) => existing.start === week.start));
+      const older = next.weeks.filter(
+        (week) => !weeks.some((existing) => existing.start === week.start),
+      );
       setWeeks((previous) => [...older, ...previous]);
     } catch (failure) {
       restore.current = null;
@@ -382,7 +386,10 @@ export function ClanDashboard({
   }
 
   function touchStart(event: React.TouchEvent<HTMLDivElement>) {
-    gesture.current = { x: event.touches[0]?.clientX ?? 0, atStart: event.currentTarget.scrollLeft <= 3 };
+    gesture.current = {
+      x: event.touches[0]?.clientX ?? 0,
+      atStart: event.currentTarget.scrollLeft <= 3,
+    };
   }
 
   function touchEnd(event: React.TouchEvent<HTMLDivElement>) {
@@ -401,10 +408,15 @@ export function ClanDashboard({
     );
   return (
     <div className="page">
-      <SiteHeader user={user} isWiki={isWiki} isUsers={isUsers}
+      <SiteHeader
+        user={user}
+        isWiki={isWiki}
+        isUsers={isUsers}
         onSettings={() => setDialog('settings')}
         onProfile={() => setDialog('profile')}
-        onLogout={onLogout} onLocaleChange={onLocaleChange} />
+        onLogout={onLogout}
+        onLocaleChange={onLocaleChange}
+      />
 
       {isWiki ? (
         <WikiScreen articleId={wikiArticleId} />
@@ -434,11 +446,15 @@ export function ClanDashboard({
                 <History size={20} /> {t('warHistory')}
               </h2>
             </header>
-            <div className="timeline-scroll" ref={track} onTouchStart={touchStart}
-              onTouchEnd={touchEnd}>
+            <div className="timeline-scroll" ref={track} onTouchStart={touchStart} onTouchEnd={touchEnd}>
               <div className="timeline-track">
-                <button className="war-load-control" disabled={loadingOlder}
-                  title={t('pullOlder')} aria-label={t('pullOlder')} onClick={loadOlder}>
+                <button
+                  className="war-load-control"
+                  disabled={loadingOlder}
+                  title={t('pullOlder')}
+                  aria-label={t('pullOlder')}
+                  onClick={loadOlder}
+                >
                   <ChevronsLeft size={32} />
                 </button>
                 {visibleWeeks.map((week) => (

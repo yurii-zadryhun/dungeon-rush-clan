@@ -384,7 +384,10 @@ export class AccountsService {
           .selectAll()
           .where('id', '=', accountId)
           .executeTakeFirstOrThrow();
-        if (data.newPassword && (!data.currentPassword || !verifyPassword(data.currentPassword, account.password_hash))) {
+        if (
+          data.newPassword &&
+          (!data.currentPassword || !verifyPassword(data.currentPassword, account.password_hash))
+        ) {
           throw new UnauthorizedException('Invalid username or password');
         }
         const duplicate = await trx
@@ -555,8 +558,12 @@ export class AccountsService {
       .where('id', '=', id)
       .executeTakeFirst();
     if (account?.role === 'owner') {
-      const remainingOwners = await this.db.query.selectFrom('accounts')
-        .select('id').where('role', '=', 'owner').where('active', '=', 1).execute();
+      const remainingOwners = await this.db.query
+        .selectFrom('accounts')
+        .select('id')
+        .where('role', '=', 'owner')
+        .where('active', '=', 1)
+        .execute();
       if (remainingOwners.length <= 1) throw new ForbiddenException('Cannot revoke last owner');
     }
     await this.db.query.transaction().execute(async (transaction) => {
@@ -567,13 +574,22 @@ export class AccountsService {
   }
 
   async revokeInvite(id: number, requester: AuthenticatedAccount) {
-    const invite = await this.db.query.selectFrom('invites')
-      .select(['role', 'created_by']).where('id', '=', id).executeTakeFirst();
-    if (requester.role !== 'owner' && (!invite || invite.role !== 'member' || invite.created_by !== requester.id)) {
+    const invite = await this.db.query
+      .selectFrom('invites')
+      .select(['role', 'created_by'])
+      .where('id', '=', id)
+      .executeTakeFirst();
+    if (
+      requester.role !== 'owner' &&
+      (!invite || invite.role !== 'member' || invite.created_by !== requester.id)
+    ) {
       throw new ForbiddenException('Cannot revoke this invitation');
     }
-    await this.db.query.deleteFrom('invites')
-      .where('id', '=', id).where('used_at', 'is', null).execute();
+    await this.db.query
+      .deleteFrom('invites')
+      .where('id', '=', id)
+      .where('used_at', 'is', null)
+      .execute();
     return { ok: true };
   }
 }

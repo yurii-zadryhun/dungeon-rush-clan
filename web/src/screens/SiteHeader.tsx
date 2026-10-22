@@ -1,5 +1,15 @@
 import React from 'react';
-import { BookOpen, ChevronDown, History, LogOut, Menu, Settings, Swords, UserRound, UsersRound } from 'lucide-react';
+import {
+  BookOpen,
+  ChevronDown,
+  History,
+  LogOut,
+  Menu,
+  Settings,
+  Swords,
+  UserRound,
+  UsersRound,
+} from 'lucide-react';
 import { type Account } from '../api';
 import { LanguagePicker, useI18n, type Locale } from '../i18n';
 import './SiteHeader.css';
@@ -15,7 +25,13 @@ interface SiteHeaderProps {
 }
 
 export function SiteHeader({
-  user, isWiki, isUsers, onSettings, onProfile, onLogout, onLocaleChange,
+  user,
+  isWiki,
+  isUsers,
+  onSettings,
+  onProfile,
+  onLogout,
+  onLocaleChange,
 }: SiteHeaderProps) {
   const { t } = useI18n();
   const [menuOpen, setMenuOpen] = React.useState(false);
@@ -38,37 +54,72 @@ export function SiteHeader({
     };
   }, [menuOpen]);
 
-  function closeMenu() { setMenuOpen(false); }
+  function closeMenu() {
+    setMenuOpen(false);
+  }
   return (
     <header className="site-header shell-header">
       <a className="brand shell-brand" href="#/archive">
-        <span className="brand-mark"><Swords size={25} /></span>
-        <span className="brand-caption"><strong>DUNGEON RUSH</strong></span>
+        <span className="brand-mark">
+          <Swords size={25} />
+        </span>
+        <span className="brand-caption">
+          <strong>DUNGEON RUSH</strong>
+        </span>
       </a>
       <nav className="top-navigation shell-navigation" aria-label={t('navigation')}>
-        <a href="#/archive" className={!isWiki && !isUsers ? 'active' : ''}
-          aria-current={!isWiki && !isUsers ? 'page' : undefined} onClick={closeMenu}>
+        <a
+          href="#/archive"
+          className={!isWiki && !isUsers ? 'active' : ''}
+          aria-current={!isWiki && !isUsers ? 'page' : undefined}
+          onClick={closeMenu}
+        >
           <History size={17} /> <span>{t('historyTab')}</span>
         </a>
-        <a href="#/wiki" className={isWiki ? 'active' : ''}
-          aria-current={isWiki ? 'page' : undefined} onClick={closeMenu}>
+        <a
+          href="#/wiki"
+          className={isWiki ? 'active' : ''}
+          aria-current={isWiki ? 'page' : undefined}
+          onClick={closeMenu}
+        >
           <BookOpen size={17} /> <span>{t('wikiTab')}</span>
         </a>
       </nav>
       <div className="shell-tools">
         <LanguagePicker onSelect={onLocaleChange} />
         <div className="shell-menu-container" ref={dropdown}>
-          <button type="button" className="shell-menu-button" aria-label={t('menu')}
-            aria-expanded={menuOpen} aria-haspopup="true"
-            onClick={() => setMenuOpen((open) => !open)}>
-            <Menu size={20} /><ChevronDown size={13} />
+          <button
+            type="button"
+            className="shell-menu-button"
+            aria-label={t('menu')}
+            aria-expanded={menuOpen}
+            aria-haspopup="true"
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            <Menu size={20} />
+            <ChevronDown size={13} />
           </button>
           {menuOpen && (
             <div className="shell-menu" role="menu">
-              <div className="shell-menu-user">{user.displayName}
-                <small>{t(user.role === 'owner' ? 'ownerRole' : user.role === 'admin' ? 'adminRole' : 'memberRole')}</small>
+              <div className="shell-menu-user">
+                {user.displayName}
+                <small>
+                  {t(
+                    user.role === 'owner'
+                      ? 'ownerRole'
+                      : user.role === 'admin'
+                        ? 'adminRole'
+                        : 'memberRole',
+                  )}
+                </small>
               </div>
-              <button role="menuitem" onClick={() => { closeMenu(); onProfile(); }}>
+              <button
+                role="menuitem"
+                onClick={() => {
+                  closeMenu();
+                  onProfile();
+                }}
+              >
                 <UserRound size={18} /> {t('profile')}
               </button>
               {canManage && (
@@ -77,12 +128,24 @@ export function SiteHeader({
                 </a>
               )}
               {canManage && (
-                <button role="menuitem" onClick={() => { closeMenu(); onSettings(); }}>
+                <button
+                  role="menuitem"
+                  onClick={() => {
+                    closeMenu();
+                    onSettings();
+                  }}
+                >
                   <Settings size={18} /> {t('clanSettings')}
                 </button>
               )}
               <div className="shell-menu-separator" />
-              <button role="menuitem" onClick={() => { closeMenu(); onLogout(); }}>
+              <button
+                role="menuitem"
+                onClick={() => {
+                  closeMenu();
+                  onLogout();
+                }}
+              >
                 <LogOut size={18} /> {t('logout')}
               </button>
             </div>

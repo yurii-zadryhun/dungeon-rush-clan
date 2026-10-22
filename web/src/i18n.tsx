@@ -427,9 +427,13 @@ export function LanguagePicker({ onSelect }: { onSelect?: (locale: Locale) => vo
     onSelect?.(next);
   }
   return (
-    <button className="language-picker language-toggle" type="button"
-      title={t('language')} aria-label={t('language')}
-      onClick={toggle}>
+    <button
+      className="language-picker language-toggle"
+      type="button"
+      title={t('language')}
+      aria-label={t('language')}
+      onClick={toggle}
+    >
       <span className={'locale-option' + (locale === 'uk' ? ' active' : '')}>
         <span aria-hidden="true">🇺🇦</span> UA
       </span>

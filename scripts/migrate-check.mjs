@@ -73,9 +73,16 @@ async function run() {
       sql.prepare("SELECT count(*) AS count FROM sqlite_master WHERE name='bootstrap'").get().count,
       0,
     );
-    sql.prepare("INSERT INTO accounts (username,display_name,role,password_hash,locale,active,created_at) VALUES ('second','Second','owner','hash','uk',1,123)").run();
-    assert.equal(sql.prepare("SELECT count(*) AS count FROM accounts WHERE role='owner'").get().count,
-      2, 'Owner restriction removed');
+    sql
+      .prepare(
+        "INSERT INTO accounts (username,display_name,role,password_hash,locale,active,created_at) VALUES ('second','Second','owner','hash','uk',1,123)",
+      )
+      .run();
+    assert.equal(
+      sql.prepare("SELECT count(*) AS count FROM accounts WHERE role='owner'").get().count,
+      2,
+      'Owner restriction removed',
+    );
     assert.deepEqual(sql.pragma('foreign_key_check'), []);
     await service.onModuleDestroy();
     console.log('Legacy SQLite migration passed');
