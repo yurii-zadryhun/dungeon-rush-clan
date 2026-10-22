@@ -429,7 +429,7 @@ async function run() {
   }, administrator.cookie)).status, 403, 'Admin cannot edit owner');
   ensure((await request('auth/accounts/' + owner.body.id, 'DELETE', null, ownerCookie)).status,
     403, 'Owner cannot delete self');
-  ensure((await request('auth/accounts/' + groupFirst.body.id, 'DELETE', null administrator.cookie)).status,
+  ensure((await request('auth/accounts/' + groupFirst.body.id, 'DELETE', null, administrator.cookie)).status,
     200, 'Admin may delete member');
   ensure((await request('auth/me', 'GET', null, groupFirst.cookie)).status, 401,
     'Deleted account session invalidated');
