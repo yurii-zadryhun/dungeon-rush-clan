@@ -5,6 +5,8 @@ export type { Locale } from './locale';
 
 const en = {
   appTitle: 'Clan War Archive',
+  firstRecorded: 'First recorded',
+  lastRecorded: 'Last recorded',
   clanHealth: 'Clan health',
   health_belowRequirement: 'Below minimum',
   health_dropping: 'Declining',
@@ -263,6 +265,8 @@ const en = {
 type MessageKey = keyof typeof en;
 const uk: Record<MessageKey, string> = {
   appTitle: 'Історія війн клану',
+  firstRecorded: 'Перша поява',
+  lastRecorded: 'Остання поява',
   clanHealth: 'Стан клану',
   health_belowRequirement: 'Нижче мінімуму',
   health_dropping: 'Падіння',
