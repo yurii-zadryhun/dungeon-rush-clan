@@ -515,10 +515,14 @@ export function ClanDashboard({
       {user.impersonating && (
         <aside className="impersonation-banner" role="status">
           <span>
-            <strong>{t('impersonationActive')}</strong>{' '}
-            {user.displayName} · {t('impersonationOwner', { name: user.impersonating.ownerName })}
+            <strong>{t('impersonationActive')}</strong> {user.displayName} ·{' '}
+            {t('impersonationOwner', { name: user.impersonating.ownerName })}
           </span>
-          <button type="button" className="impersonation-return" onClick={() => void onStopImpersonation()}>
+          <button
+            type="button"
+            className="impersonation-return"
+            onClick={() => void onStopImpersonation()}
+          >
             {t('returnToOwner')}
           </button>
         </aside>
