@@ -73,8 +73,12 @@ export class ImportService {
           .orderBy('player_scores.position')
           .execute()
       : [];
-    const all = await this.db.query.selectFrom('players').select(['id', 'name', 'active']).execute();
-    return { previousStart: last?.start_date || null, previous, all };
+    const [all, aliases] = await Promise.all([
+      this.db.query.selectFrom('players').select(['id', 'name', 'active']).execute(),
+      this.db.query.selectFrom('player_aliases')
+        .select(['normalized_name as normalizedName', 'player_id as playerId']).execute(),
+    ]);
+    return { previousStart: last?.start_date || null, previous, all, aliases };
   }
 
   async confirm(input: unknown) {
