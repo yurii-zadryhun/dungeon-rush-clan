@@ -116,13 +116,14 @@ export function renderClanDocument(
   clan: PublicClanSnapshot,
   origin: string,
   locale: PublicLocale = 'en',
+  isDefaultPage = false,
 ) {
   const uk = locale === 'uk';
   const messages = uk
     ? {
         archive: 'Архів війн клану',
         leader: 'Лідер',
-        contact: 'Зв’язатися з нами',
+        contact: 'Зв’язатися',
         wins: 'Перемоги',
         losses: 'Поразки',
         history: 'Історія війн',
@@ -132,13 +133,12 @@ export function renderClanDocument(
         defeat: 'Поразка',
         noWars: 'Поки немає завершених війн.',
         language: 'Мова',
-        description:
-          'Лідер клану, перемоги та результати війн Dungeon Rush — без приватної статистики гравців.',
+        description: 'клан у Dungeon Rush. Історія воєн, суперники та результати останніх битв.',
       }
     : {
         archive: 'Clan war archive',
         leader: 'Leader',
-        contact: 'Contact us',
+        contact: 'Get in touch',
         wins: 'Wins',
         losses: 'Losses',
         history: 'Clan war history',
@@ -148,13 +148,12 @@ export function renderClanDocument(
         defeat: 'Defeat',
         noWars: 'No completed clan wars yet.',
         language: 'Language',
-        description:
-          'Dungeon Rush clan leader, wins and finished wars — without private player statistics.',
+        description: 'a Dungeon Rush clan. Discover our war history, opponents and latest results.',
       };
-  const pageUrl = origin + '/clan/' + locale;
+  const pageUrl = origin + (isDefaultPage ? '/clan' : '/clan/' + locale);
   const imageUrl = origin + '/assets/og-clan.jpg';
   const title = clan.name + ' | Dungeon Rush ' + messages.history;
-  const description = clan.name + ': ' + messages.description;
+  const description = clan.name + ' — ' + messages.description;
   const wars = clan.recentWars
     .map((war) => {
       const victory = war.ourScore > war.opponentScore;
@@ -195,14 +194,19 @@ export function renderClanDocument(
               width="132" height="144" fetchpriority="high">
           </div>
           <div class="guest-hero-text">
-            <h1 id="clan-title">${escapeHtml(clan.name)} — Dungeon Rush</h1>
-            <div class="guest-leader"><span aria-hidden="true">♛</span> ${escapeHtml(messages.leader)}: <strong>${escapeHtml(clan.leader)}</strong></div>
-            ${
-              clan.contactUrl
-                ? `<a class="guest-contact-link" href="${escapeHtml(clan.contactUrl)}"
-              rel="noopener noreferrer" target="_blank">${escapeHtml(messages.contact)} <span aria-hidden="true">↗</span></a>`
-                : ''
-            }
+            <h1 id="clan-title">${escapeHtml(clan.name)}</h1>
+            <p class="guest-game">Dungeon Rush</p>
+            <div class="guest-identity-actions">
+              <div class="guest-leader">
+                <svg class="guest-crown" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" role="img" aria-label="${escapeHtml(messages.leader)}">
+                  <path d="M3 7.5 7.5 12 12 5.5 16.5 12 21 7.5 19.3 18.3H4.7L3 7.5Z" fill="currentColor"/>
+                  <path d="M5 20.5h14" stroke-linecap="round"/>
+                </svg>
+                <strong>${escapeHtml(clan.leader)}</strong>
+              </div>
+              ${clan.contactUrl ? `<a class="guest-contact-link" href="${escapeHtml(clan.contactUrl)}"
+                rel="noopener noreferrer" target="_blank"><span>${escapeHtml(messages.contact)}</span><span class="guest-contact-arrow" aria-hidden="true">↗</span></a>` : ''}
+            </div>
           </div>
         </div>
       </section>
@@ -281,14 +285,14 @@ export class PublicClanController {
     return reply.header('Cache-Control', 'public, max-age=60').send(data);
   }
 
-  private async html(reply: FastifyReply, locale: PublicLocale) {
+  private async html(reply: FastifyReply, locale: PublicLocale, isDefaultPage = false) {
     const snapshot = await this.clan.snapshot();
     const origin = (process.env.APP_ORIGIN || 'http://localhost:3000').replace(/\/$/, '');
     const template = readFileSync(resolve(__dirname, '../../web/dist/index.html'), 'utf8');
     return reply
       .header('Cache-Control', 'public, max-age=60')
       .type('text/html; charset=utf-8')
-      .send(renderClanDocument(template, snapshot, origin, locale));
+      .send(renderClanDocument(template, snapshot, origin, locale, isDefaultPage));
   }
 
   @Get('clan')
@@ -296,6 +300,7 @@ export class PublicClanController {
     return this.html(
       reply.header('Vary', 'Accept-Language'),
       detectLocale(String(request.headers['accept-language'] || '')),
+      true,
     );
   }
 
