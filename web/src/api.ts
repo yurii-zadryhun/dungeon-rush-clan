@@ -66,6 +66,82 @@ export interface Dashboard {
   serverNow: string;
 }
 
+export interface PlayerProgressWeek {
+  start: string;
+  points: number;
+  position: number;
+}
+export interface PlayerProgress {
+  id: number;
+  name: string;
+  active: boolean;
+  firstSeen: string | null;
+  lastSeen: string | null;
+  appearances: number;
+  average: number;
+  best: number;
+  mvpCount: number;
+  calculatedScore: number;
+  requirement: number;
+  belowRequirement: boolean;
+  weeks: PlayerProgressWeek[];
+}
+export interface DayAnalytics {
+  completedWars: number;
+  days: Array<{
+    day: number; wins: number; losses: number; total: number;
+    winRate: number | null; dayWeight: number;
+  }>;
+}
+export interface HealthPlayer {
+  id: number;
+  name: string;
+  active: boolean;
+  calculated: number;
+  latestPoints: number | null;
+  previousPoints: number | null;
+  change: number | null;
+  belowRequirement: boolean;
+  joined: boolean;
+  left: boolean;
+  dropping: boolean;
+  telegram: boolean;
+  discord: boolean;
+  exception?: boolean;
+  attention?: boolean;
+}
+export interface ClanHealth {
+  latestStart: string | null;
+  previousStart: string | null;
+  minimumPoints: number;
+  belowRequirement: HealthPlayer[];
+  dropping: HealthPlayer[];
+  joined: HealthPlayer[];
+  left: HealthPlayer[];
+  attention: HealthPlayer[];
+}
+export type PlayerTag = 'family' | 'exception' | 'attention' | 'inactive' | 'plan' | 'reliable';
+export type NoteCategory = 'note' | 'attention' | 'contact' | 'positive';
+export interface PlayerLabels {
+  telegram: boolean;
+  discord: boolean;
+  telegramHandle: string;
+  discordHandle: string;
+  tags: PlayerTag[];
+  exceptionReason: string;
+}
+export interface StaffNote {
+  id: number;
+  body: string;
+  category: NoteCategory;
+  createdAt: number;
+  author: string | null;
+}
+export interface PlayerManagement {
+  labels: PlayerLabels;
+  notes: StaffNote[];
+}
+
 export interface OcrPlayer {
   position: number;
   name: string;
