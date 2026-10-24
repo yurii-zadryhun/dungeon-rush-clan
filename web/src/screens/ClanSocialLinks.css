@@ -1,0 +1,41 @@
+.clan-social-links {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+.clan-social-link {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid #615f6c;
+  color: #fff;
+  text-decoration: none;
+  background: #2b2c34;
+  transition: border-color 120ms, background-color 120ms;
+}
+.clan-social-link:hover { color: #fff; border-color: #d0d5df; }
+.clan-social-link.telegram { background: #235979; border-color: #32799f; }
+.clan-social-link.telegram:hover { background: #2c749b; }
+.clan-social-link.discord { background: #444889; border-color: #6c71cf; }
+.clan-social-link.discord:hover { background: #555ad0; }
+.clan-social-link:focus-visible { outline: 3px solid #e9c369; outline-offset: 2px; }
+.clan-links-fields {
+  display: grid;
+  gap: 12px;
+  margin: 3px 0 14px;
+  padding: 15px;
+  border: 1px solid #635d65;
+  border-radius: 10px;
+  min-width: 0;
+}
+.clan-links-fields legend {
+  padding: 0 6px;
+  font-size: 12px;
+  font-weight: 950;
+}
+.clan-links-fields input { width: 100%; }
+.clan-links-fields small { font-weight: 500; }
