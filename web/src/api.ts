@@ -89,8 +89,12 @@ export interface PlayerProgress {
 export interface DayAnalytics {
   completedWars: number;
   days: Array<{
-    day: number; wins: number; losses: number; total: number;
-    winRate: number | null; dayWeight: number;
+    day: number;
+    wins: number;
+    losses: number;
+    total: number;
+    winRate: number | null;
+    dayWeight: number;
   }>;
 }
 export interface HealthPlayer {

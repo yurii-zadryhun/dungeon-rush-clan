@@ -64,7 +64,9 @@ function Leaders({
           >
             <span className={'place place-' + index}>{index + 1}</span>
             <div className="leader-name">
-              <a className="player-profile-link" href={'#/players/' + player.id}>{player.name}</a>
+              <a className="player-profile-link" href={'#/players/' + player.id}>
+                {player.name}
+              </a>
               <small>
                 {player.appearances} {t(player.appearances === 1 ? 'warsSingular' : 'warsPlural')}{' '}
                 {!player.active && '· ' + t('left')}
@@ -230,8 +232,13 @@ function WarColumn({
                     .join(' ')}
                 >
                   <span className="rank-number">{player.position}</span>
-                  <a className="roster-name player-profile-link" title={player.name}
-                    href={'#/players/' + player.id}>{player.name}</a>
+                  <a
+                    className="roster-name player-profile-link"
+                    title={player.name}
+                    href={'#/players/' + player.id}
+                  >
+                    {player.name}
+                  </a>
                   <b>{shortNumber(player.points)}</b>
                 </div>
               );
@@ -452,10 +459,20 @@ export function ClanDashboard({
       {isWiki ? (
         <WikiScreen articleId={wikiArticleId} />
       ) : isUsers ? (
-        <UsersScreen account={user} onMerged={next => { setWeeks([]); onChange(next); }} />
+        <UsersScreen
+          account={user}
+          onMerged={(next) => {
+            setWeeks([]);
+            onChange(next);
+          }}
+        />
       ) : playerId !== null ? (
-        <PlayerInsightsPage key={playerId} playerId={playerId} account={user}
-          candidates={data.rankings.calculated} />
+        <PlayerInsightsPage
+          key={playerId}
+          playerId={playerId}
+          account={user}
+          candidates={data.rankings.calculated}
+        />
       ) : (
         <main className="dashboard">
           {error && <div className="error-strip">{error}</div>}

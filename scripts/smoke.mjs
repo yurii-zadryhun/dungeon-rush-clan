@@ -814,40 +814,75 @@ async function run() {
   ensure(dayStats.body.days.length, 6, 'Six game days analyzed');
   ensure(dayStats.body.days[0].total, 2, 'Both completed wars counted');
   ensure(dayStats.body.days[0].winRate, 100, 'Day one win rate derived from actual wins');
-  ensure((await request('insights/health', 'GET', null, groupSecond.cookie)).status, 403,
-    'Private clan health not visible to members');
+  ensure(
+    (await request('insights/health', 'GET', null, groupSecond.cookie)).status,
+    403,
+    'Private clan health not visible to members',
+  );
   const progress = await request('insights/players/' + canonical.id, 'GET', null, groupSecond.cookie);
   ensure(progress.status, 200, 'Any member can inspect historical player profile');
   ensure(progress.body.weeks.length, 2, 'Player profile includes both wars');
   ensure(progress.body.best, 250000, 'Player personal best calculated from actual scores');
-  ensure((await request('player-management/' + canonical.id, 'GET', null, groupSecond.cookie)).status,
-    403, 'Member cannot see staff-only information');
+  ensure(
+    (await request('player-management/' + canonical.id, 'GET', null, groupSecond.cookie)).status,
+    403,
+    'Member cannot see staff-only information',
+  );
 
   const sourceLabels = {
-    telegram: true, discord: false, telegramHandle: '@helper', discordHandle: '',
-    tags: ['family', 'exception'], exceptionReason: 'Partner account: approved by leadership',
+    telegram: true,
+    discord: false,
+    telegramHandle: '@helper',
+    discordHandle: '',
+    tags: ['family', 'exception'],
+    exceptionReason: 'Partner account: approved by leadership',
   };
   const targetLabels = {
-    telegram: false, discord: true, telegramHandle: '', discordHandle: 'trusted-member',
-    tags: ['attention'], exceptionReason: '',
+    telegram: false,
+    discord: true,
+    telegramHandle: '',
+    discordHandle: 'trusted-member',
+    tags: ['attention'],
+    exceptionReason: '',
   };
-  ensure((await request('player-management/' + other.id, 'PATCH', sourceLabels, ownerCookie)).status,
-    200, 'Owner marks protected player');
-  ensure((await request('player-management/' + canonical.id, 'PATCH', targetLabels, ownerCookie)).status,
-    200, 'Owner marks team member as needing attention');
-  const note = await request('player-management/' + other.id + '/notes', 'POST', {
-    body: 'Discussed reduced activity, will follow up on Telegram', category: 'contact',
-  }, ownerCookie);
+  ensure(
+    (await request('player-management/' + other.id, 'PATCH', sourceLabels, ownerCookie)).status,
+    200,
+    'Owner marks protected player',
+  );
+  ensure(
+    (await request('player-management/' + canonical.id, 'PATCH', targetLabels, ownerCookie)).status,
+    200,
+    'Owner marks team member as needing attention',
+  );
+  const note = await request(
+    'player-management/' + other.id + '/notes',
+    'POST',
+    {
+      body: 'Discussed reduced activity, will follow up on Telegram',
+      category: 'contact',
+    },
+    ownerCookie,
+  );
   ensure(note.status, 201, 'Can append time-stamped private conversation note');
   ensure(note.body.notes[0].author, 'owner', 'Note records its author');
-  ensure((await request('player-management/' + other.id, 'GET', null, groupSecond.cookie)).status,
-    403, 'Private player notes never exposed to members');
+  ensure(
+    (await request('player-management/' + other.id, 'GET', null, groupSecond.cookie)).status,
+    403,
+    'Private player notes never exposed to members',
+  );
   const staffHealth = await request('insights/health', 'GET', null, ownerCookie);
   ensure(staffHealth.status, 200, 'Leadership can view health');
-  ensure(staffHealth.body.attention.some(p => p.id === canonical.id),
-    true, 'Tagged player appears in health attention list');
-  ensure(staffHealth.body.belowRequirement.some(p => p.id === other.id && p.exception),
-    true, 'Protected exception is visible alongside minimum-score warnings');
+  ensure(
+    staffHealth.body.attention.some((p) => p.id === canonical.id),
+    true,
+    'Tagged player appears in health attention list',
+  );
+  ensure(
+    staffHealth.body.belowRequirement.some((p) => p.id === other.id && p.exception),
+    true,
+    'Protected exception is visible alongside minimum-score warnings',
+  );
 
   ensure(
     (
@@ -884,13 +919,29 @@ async function run() {
   ensure(mergedStaff.body.labels.discord, true, 'Target contact flag preserved during merge');
   ensure(mergedStaff.body.labels.tags.includes('family'), true, 'Source tags migrated');
   ensure(mergedStaff.body.labels.tags.includes('attention'), true, 'Target tags retained');
-  ensure(mergedStaff.body.notes.some(entry => entry.body.includes('reduced activity')),
-    true, 'Staff notes moved to canonical player ID');
-  ensure((await request('player-management/' + other.id, 'GET', null, ownerCookie)).status,
-    400, 'Deleted OCR duplicate cannot retain an independent management profile');
+  ensure(
+    mergedStaff.body.notes.some((entry) => entry.body.includes('reduced activity')),
+    true,
+    'Staff notes moved to canonical player ID',
+  );
+  ensure(
+    (await request('player-management/' + other.id, 'GET', null, ownerCookie)).status,
+    400,
+    'Deleted OCR duplicate cannot retain an independent management profile',
+  );
   const savedNoteId = mergedStaff.body.notes[0].id;
-  ensure((await request('player-management/' + canonical.id + '/notes/' + savedNoteId,
-    'DELETE', null, ownerCookie)).status, 200, 'Leadership can remove obsolete note');
+  ensure(
+    (
+      await request(
+        'player-management/' + canonical.id + '/notes/' + savedNoteId,
+        'DELETE',
+        null,
+        ownerCookie,
+      )
+    ).status,
+    200,
+    'Leadership can remove obsolete note',
+  );
 
   console.log('Production integration smoke tests passed');
 }
