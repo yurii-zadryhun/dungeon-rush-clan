@@ -226,16 +226,31 @@ export class PlayersService {
             ...(canonicalLabels ? (JSON.parse(canonicalLabels.tags_json) as string[]) : []),
           ]),
         ];
-        const reasons = [canonicalLabels?.exception_reason, oldLabels.exception_reason].filter(
-          (text): text is string => !!text?.trim(),
-        );
+        // Preserve conflicting manager context as history, not an oversized form field.
+        const extraNotes: string[] = [];
+        if (oldLabels.exception_reason.trim() && canonicalLabels?.exception_reason.trim() &&
+            oldLabels.exception_reason !== canonicalLabels.exception_reason) {
+          extraNotes.push('Earlier exception for ' + source.name + ': ' + oldLabels.exception_reason);
+        }
+        for (const channel of ['telegram', 'discord'] as const) {
+          const field = channel === 'telegram' ? 'telegram_handle' : 'discord_handle';
+          if (oldLabels[field] && canonicalLabels?.[field] &&
+              oldLabels[field] !== canonicalLabels[field]) {
+            extraNotes.push('Previous ' + channel + ' contact for ' + source.name + ': ' + oldLabels[field]);
+          }
+        }
+        for (const body of extraNotes) {
+          await trx.insertInto('player_notes').values({
+            player_id: targetId, author_id: null, body, category: 'note', created_at: Date.now(),
+          }).execute();
+        }
         const mergedLabels = {
           telegram: Number(!!oldLabels.telegram || !!canonicalLabels?.telegram),
           discord: Number(!!oldLabels.discord || !!canonicalLabels?.discord),
           telegram_handle: canonicalLabels?.telegram_handle || oldLabels.telegram_handle,
           discord_handle: canonicalLabels?.discord_handle || oldLabels.discord_handle,
           tags_json: JSON.stringify(tags),
-          exception_reason: [...new Set(reasons)].join('\n'),
+          exception_reason: canonicalLabels?.exception_reason || oldLabels.exception_reason,
           updated_at: Date.now(),
         };
         await trx
