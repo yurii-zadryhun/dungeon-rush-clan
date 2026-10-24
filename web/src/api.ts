@@ -9,6 +9,7 @@ export interface Account {
   role: Role;
   locale: Locale;
   playerId: number | null;
+  impersonating?: { ownerId: number; ownerName: string; expiresAt: number };
 }
 
 export interface Player {
