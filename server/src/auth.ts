@@ -757,16 +757,22 @@ export class AccountsService {
     await this.db.query.transaction().execute(async (trx) => {
       // Historical player identities and scores are separate from website accounts.
       // Remove staff-only annotations and contact handles tied to this account.
-      const associated = await trx.selectFrom('players').select('id').where('account_id', '=', id).execute();
+      const associated = await trx
+        .selectFrom('players')
+        .select('id')
+        .where('account_id', '=', id)
+        .execute();
       for (const player of associated) {
         await trx.deleteFrom('player_notes').where('player_id', '=', player.id).execute();
         await trx.deleteFrom('player_labels').where('player_id', '=', player.id).execute();
       }
       await trx.deleteFrom('player_notes').where('author_id', '=', id).execute();
       await trx.updateTable('players').set({ account_id: null }).where('account_id', '=', id).execute();
-      await trx.updateTable('sessions')
+      await trx
+        .updateTable('sessions')
         .set({ impersonated_account_id: null, impersonation_expires_at: null })
-        .where('impersonated_account_id', '=', id).execute();
+        .where('impersonated_account_id', '=', id)
+        .execute();
       await trx.deleteFrom('sessions').where('account_id', '=', id).execute();
       await trx.deleteFrom('invites').where('created_by', '=', id).execute();
       await trx.deleteFrom('shared_invites').where('created_by', '=', id).execute();
@@ -783,40 +789,58 @@ export class AccountsService {
     if (actor.impersonating) throw new ForbiddenException('Return to your own account first');
     if (!raw) throw new UnauthorizedException();
     const { password, confirmation } = validate(
-      z.object({
-        password: z.string().min(1),
-        confirmation: z.literal('DELETE'),
-      }).strict(),
+      z
+        .object({
+          password: z.string().min(1),
+          confirmation: z.literal('DELETE'),
+        })
+        .strict(),
       input,
     );
-    const current = await this.db.query.selectFrom('accounts')
+    const current = await this.db.query
+      .selectFrom('accounts')
       .select(['id', 'password_hash', 'role', 'active'])
-      .where('id', '=', actor.id).executeTakeFirst();
+      .where('id', '=', actor.id)
+      .executeTakeFirst();
     if (!current || !current.active || !verifyPassword(password, current.password_hash))
       throw new UnauthorizedException('Invalid password');
 
     if (current.role === 'owner') {
-      const otherOwners = await this.db.query.selectFrom('accounts')
-        .select('id').where('role', '=', 'owner').where('active', '=', 1)
-        .where('id', '!=', actor.id).execute();
+      const otherOwners = await this.db.query
+        .selectFrom('accounts')
+        .select('id')
+        .where('role', '=', 'owner')
+        .where('active', '=', 1)
+        .where('id', '!=', actor.id)
+        .execute();
       if (!otherOwners.length) {
-        throw new ForbiddenException('Transfer ownership or create another owner before deleting this account');
+        throw new ForbiddenException(
+          'Transfer ownership or create another owner before deleting this account',
+        );
       }
     }
     // Never remove imported wars, player identities, or player_scores.
     await this.db.query.transaction().execute(async (trx) => {
-      const linked = await trx.selectFrom('players').select('id')
-        .where('account_id', '=', actor.id).execute();
+      const linked = await trx
+        .selectFrom('players')
+        .select('id')
+        .where('account_id', '=', actor.id)
+        .execute();
       for (const player of linked) {
         await trx.deleteFrom('player_notes').where('player_id', '=', player.id).execute();
         await trx.deleteFrom('player_labels').where('player_id', '=', player.id).execute();
       }
       await trx.deleteFrom('player_notes').where('author_id', '=', actor.id).execute();
-      await trx.updateTable('players').set({ account_id: null })
-        .where('account_id', '=', actor.id).execute();
-      await trx.updateTable('sessions')
+      await trx
+        .updateTable('players')
+        .set({ account_id: null })
+        .where('account_id', '=', actor.id)
+        .execute();
+      await trx
+        .updateTable('sessions')
         .set({ impersonated_account_id: null, impersonation_expires_at: null })
-        .where('impersonated_account_id', '=', actor.id).execute();
+        .where('impersonated_account_id', '=', actor.id)
+        .execute();
       await trx.deleteFrom('sessions').where('account_id', '=', actor.id).execute();
       await trx.deleteFrom('invites').where('created_by', '=', actor.id).execute();
       await trx.deleteFrom('shared_invites').where('created_by', '=', actor.id).execute();
@@ -957,8 +981,7 @@ export class AuthController {
     @Body() body: unknown,
     @Res({ passthrough: true }) reply: FastifyReply,
   ) {
-    const raw = (request as FastifyRequest & { cookies?: Record<string, string> }).cookies
-      ?.clan_session;
+    const raw = (request as FastifyRequest & { cookies?: Record<string, string> }).cookies?.clan_session;
     const result = await this.auth.deleteOwnAccount(request.account!, body, raw);
     clearSessionCookie(reply);
     return result;

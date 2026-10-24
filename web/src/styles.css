@@ -2129,19 +2129,88 @@ b {
   flex-wrap: wrap;
   margin: -4px 0 15px;
 }
-.auth-info-links a { color: #9eaab9; font-size: 11px; text-decoration: none; }
-.auth-info-links a:hover { color: #fff; text-decoration: underline; }
-.auth-password-note { display: block; margin-top: 5px; color: #adb2bf; font-size: 11px; font-weight: 500; line-height: 1.35; }
-.profile-danger-zone { padding: 5px 19px 16px; border-top: 1px solid #4b4447; }
-.profile-delete-trigger { display: inline-flex; align-items: center; gap: 6px; border: 0; background: none; padding: 9px 0; color: #da9d9f; font-size: 12px; cursor: pointer; }
-.profile-delete-trigger:hover { color: #fff; }
-.profile-delete-form { display: grid; gap: 11px; padding: 11px 0 0; }
-.profile-delete-form h3 { margin: 0; color: #ffaaaa; font-size: 15px; }
-.profile-delete-form p { margin: 0; color: #d3c9ce; font-size: 12px; line-height: 1.5; }
-.profile-delete-form label { font-size: 12px; }
-.profile-delete-form .profile-delete-check { display: flex; align-items: start; gap: 8px; line-height: 1.4; }
-.profile-delete-check input { width: 17px; height: 17px; flex: none; margin-top: 1px; }
-.profile-delete-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
-.profile-delete-actions .game-button.danger { color: #fff; background: #83333b; border-color: #d1787e; }
-.profile-delete-actions .game-button.danger:hover { background: #a34049; }
-.profile-privacy-link { color: #a0c4e5; font-size: 11px; text-align: right; }
+.auth-info-links a {
+  color: #9eaab9;
+  font-size: 11px;
+  text-decoration: none;
+}
+.auth-info-links a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+.auth-password-note {
+  display: block;
+  margin-top: 5px;
+  color: #adb2bf;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+.profile-danger-zone {
+  padding: 5px 19px 16px;
+  border-top: 1px solid #4b4447;
+}
+.profile-delete-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: none;
+  padding: 9px 0;
+  color: #da9d9f;
+  font-size: 12px;
+  cursor: pointer;
+}
+.profile-delete-trigger:hover {
+  color: #fff;
+}
+.profile-delete-form {
+  display: grid;
+  gap: 11px;
+  padding: 11px 0 0;
+}
+.profile-delete-form h3 {
+  margin: 0;
+  color: #ffaaaa;
+  font-size: 15px;
+}
+.profile-delete-form p {
+  margin: 0;
+  color: #d3c9ce;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.profile-delete-form label {
+  font-size: 12px;
+}
+.profile-delete-form .profile-delete-check {
+  display: flex;
+  align-items: start;
+  gap: 8px;
+  line-height: 1.4;
+}
+.profile-delete-check input {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  margin-top: 1px;
+}
+.profile-delete-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.profile-delete-actions .game-button.danger {
+  color: #fff;
+  background: #83333b;
+  border-color: #d1787e;
+}
+.profile-delete-actions .game-button.danger:hover {
+  background: #a34049;
+}
+.profile-privacy-link {
+  color: #a0c4e5;
+  font-size: 11px;
+  text-align: right;
+}

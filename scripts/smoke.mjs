@@ -124,17 +124,25 @@ async function run() {
   assert.match(await loginHtml.text(), /noindex,nofollow/, 'Login remains noindex');
   for (const path of ['about', 'privacy', 'terms']) {
     for (const locale of ['en', 'uk']) {
-      const legal = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/' + path + '/' + locale);
+      const legal = await fetch(
+        'http://127.0.0.1:' + (process.env.PORT || 3128) + '/' + path + '/' + locale,
+      );
       ensure(legal.status, 200, 'Bilingual legal page ' + path + '/' + locale);
       const body = await legal.text();
-      assert.match(body, new RegExp('rel="canonical" href="https://clan\\.example\\.com/' + path + '/' + locale + '"'),
-        'Legal page uses self-canonical URL');
+      assert.match(
+        body,
+        new RegExp('rel="canonical" href="https://clan\\.example\\.com/' + path + '/' + locale + '"'),
+        'Legal page uses self-canonical URL',
+      );
       assert.match(body, new RegExp('<html lang="' + locale + '"'), 'Correct legal language');
       assert.doesNotMatch(body, /<script type="module"/, 'Legal page never loads the private React app');
     }
   }
-  assert.match(await (await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/terms/en')).text(),
-    /Never enter your Dungeon Rush game password/, 'Website-specific password notice');
+  assert.match(
+    await (await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/terms/en')).text(),
+    /Never enter your Dungeon Rush game password/,
+    'Website-specific password notice',
+  );
   assert.match(
     guestHtml.headers.get('content-security-policy') || '',
     /frame-ancestors 'none'/,
@@ -248,8 +256,14 @@ async function run() {
   ensure(ownerSession.status, 200, 'Valid cookie restores via single request');
   ensure(ownerSession.body.account.role, 'owner', 'Session status returns only signed-in account');
   ensure(
-    (await request('auth/me', 'DELETE', { password: 'testing-password-1234', confirmation: 'DELETE' },
-      ownerCookie)).status,
+    (
+      await request(
+        'auth/me',
+        'DELETE',
+        { password: 'testing-password-1234', confirmation: 'DELETE' },
+        ownerCookie,
+      )
+    ).status,
     403,
     'The only owner cannot self-delete',
   );
@@ -556,7 +570,9 @@ async function run() {
   const inviteToken = new URL(invitation.body.url).pathname.split('/').pop();
   const info = await request('auth/invite/' + inviteToken);
   ensure(info.body.label, 'Guest', 'Invitation display name');
-  const invitePage = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/invite/' + inviteToken);
+  const invitePage = await fetch(
+    'http://127.0.0.1:' + (process.env.PORT || 3128) + '/invite/' + inviteToken,
+  );
   ensure(invitePage.status, 200, 'New invitation URLs return the registration application');
   assert.match(await invitePage.text(), /noindex,nofollow/, 'Invitation tokens are never indexed');
   const member = await request('auth/invite/' + inviteToken + '/register', 'POST', {
@@ -1358,33 +1374,82 @@ async function run() {
     'Leadership can remove obsolete note',
   );
 
-
   // A member can delete their own site account without destroying historical scores.
   const archiveBeforeDeletion = (await request('dashboard', 'GET', null, ownerCookie)).body;
-  ensure((await request('auth/me', 'DELETE', {
-    password: 'incorrect', confirmation: 'DELETE',
-  }, groupFirst.cookie)).status, 401, 'Account deletion requires the actual password');
-  ensure((await request('auth/me', 'DELETE', {
-    password: 'newperson-password-1234', confirmation: 'WRONG',
-  }, groupFirst.cookie)).status, 400, 'Account deletion requires explicit confirmation');
-  const removedAccount = await request('auth/me', 'DELETE', {
-    password: 'newperson-password-1234', confirmation: 'DELETE',
-  }, groupFirst.cookie);
+  ensure(
+    (
+      await request(
+        'auth/me',
+        'DELETE',
+        {
+          password: 'incorrect',
+          confirmation: 'DELETE',
+        },
+        groupFirst.cookie,
+      )
+    ).status,
+    401,
+    'Account deletion requires the actual password',
+  );
+  ensure(
+    (
+      await request(
+        'auth/me',
+        'DELETE',
+        {
+          password: 'newperson-password-1234',
+          confirmation: 'WRONG',
+        },
+        groupFirst.cookie,
+      )
+    ).status,
+    400,
+    'Account deletion requires explicit confirmation',
+  );
+  const removedAccount = await request(
+    'auth/me',
+    'DELETE',
+    {
+      password: 'newperson-password-1234',
+      confirmation: 'DELETE',
+    },
+    groupFirst.cookie,
+  );
   ensure(removedAccount.status, 200, 'Player can delete their own website account');
-  ensure((await request('auth/session-state', 'GET', null, groupFirst.cookie)).body.account,
-    null, 'Deleted account sessions no longer authenticate');
-  ensure((await request('auth/login', 'POST', {
-    username: 'NewPerson', password: 'newperson-password-1234',
-  })).status, 401, 'Deleted password can no longer sign in');
+  ensure(
+    (await request('auth/session-state', 'GET', null, groupFirst.cookie)).body.account,
+    null,
+    'Deleted account sessions no longer authenticate',
+  );
+  ensure(
+    (
+      await request('auth/login', 'POST', {
+        username: 'NewPerson',
+        password: 'newperson-password-1234',
+      })
+    ).status,
+    401,
+    'Deleted password can no longer sign in',
+  );
   const archiveAfterDeletion = (await request('dashboard', 'GET', null, ownerCookie)).body;
-  assert.deepEqual(archiveAfterDeletion.rankings.calculated, archiveBeforeDeletion.rankings.calculated,
-    'Historic calculated scores remain unchanged after account deletion');
-  assert.deepEqual(archiveAfterDeletion.record, archiveBeforeDeletion.record,
-    'Win/loss history survives account deletion');
+  assert.deepEqual(
+    archiveAfterDeletion.rankings.calculated,
+    archiveBeforeDeletion.rankings.calculated,
+    'Historic calculated scores remain unchanged after account deletion',
+  );
+  assert.deepEqual(
+    archiveAfterDeletion.record,
+    archiveBeforeDeletion.record,
+    'Win/loss history survives account deletion',
+  );
   const deletedPlayer = (await request('players', 'GET', null, ownerCookie)).body.find(
     (p) => p.id === groupFirst.body.playerId,
   );
-  assert.equal(deletedPlayer.hasAccount, false, 'Historic player is no longer linked to deleted account');
+  assert.equal(
+    deletedPlayer.hasAccount,
+    false,
+    'Historic player is no longer linked to deleted account',
+  );
 
   console.log('Production integration smoke tests passed');
 }

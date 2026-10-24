@@ -7,17 +7,30 @@ import { legalContent, type LegalPage, type Locale } from './legal-content';
 
 function escapeHtml(value: string) {
   const entities: Record<string, string> = {
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
   };
   return value.replace(/[&<>"']/g, (char) => entities[char]);
 }
 function browserLocale(header: string): Locale {
-  const choices = header.split(',').map((part) => {
-    const [language, weight] = part.trim().split(';q=');
-    return { language: language.toLowerCase().split('-')[0], q: weight === undefined ? 1 : Number(weight) };
-  }).filter((choice) => Number.isFinite(choice.q) && choice.q > 0)
+  const choices = header
+    .split(',')
+    .map((part) => {
+      const [language, weight] = part.trim().split(';q=');
+      return {
+        language: language.toLowerCase().split('-')[0],
+        q: weight === undefined ? 1 : Number(weight),
+      };
+    })
+    .filter((choice) => Number.isFinite(choice.q) && choice.q > 0)
     .sort((a, b) => b.q - a.q);
-  return choices.find((choice) => choice.language === 'uk' || choice.language === 'en')?.language === 'en' ? 'en' : 'uk';
+  return choices.find((choice) => choice.language === 'uk' || choice.language === 'en')?.language ===
+    'en'
+    ? 'en'
+    : 'uk';
 }
 
 @Injectable()
@@ -27,20 +40,43 @@ export class SitePagesService {
   async legalPage(page: LegalPage, locale: Locale, defaultPage: boolean): Promise<string> {
     const root = (process.env.APP_ORIGIN || 'http://localhost:3000').replace(/\/$/, '');
     const data = legalContent[locale][page];
-    const record = await this.db.query.selectFrom('settings').select('contact_url').where('id', '=', 1).executeTakeFirst();
-    const labels = locale === 'uk'
-      ? { archive: 'До клану', about: 'Про сайт', privacy: 'Конфіденційність', terms: 'Умови', contact: 'Зв’язатися', unofficial: 'Неофіційний фанатський сайт · Не пов’язаний із розробниками Dungeon Rush' }
-      : { archive: 'Back to clan', about: 'About', privacy: 'Privacy', terms: 'Terms', contact: 'Get in touch', unofficial: 'Unofficial fan site · Not affiliated with Dungeon Rush developers' };
+    const record = await this.db.query
+      .selectFrom('settings')
+      .select('contact_url')
+      .where('id', '=', 1)
+      .executeTakeFirst();
+    const labels =
+      locale === 'uk'
+        ? {
+            archive: 'До клану',
+            about: 'Про сайт',
+            privacy: 'Конфіденційність',
+            terms: 'Умови',
+            contact: 'Зв’язатися',
+            unofficial: 'Неофіційний фанатський сайт · Не пов’язаний із розробниками Dungeon Rush',
+          }
+        : {
+            archive: 'Back to clan',
+            about: 'About',
+            privacy: 'Privacy',
+            terms: 'Terms',
+            contact: 'Get in touch',
+            unofficial: 'Unofficial fan site · Not affiliated with Dungeon Rush developers',
+          };
     const url = root + '/' + page + (defaultPage ? '' : '/' + locale);
     const nav = `<nav aria-label="Site information">
       <a href="/about/${locale}" ${page === 'about' ? 'aria-current="page"' : ''}>${labels.about}</a>
       <a href="/privacy/${locale}" ${page === 'privacy' ? 'aria-current="page"' : ''}>${labels.privacy}</a>
       <a href="/terms/${locale}" ${page === 'terms' ? 'aria-current="page"' : ''}>${labels.terms}</a>
     </nav>`;
-    const sections = data.sections.map((section) => `<section>
+    const sections = data.sections
+      .map(
+        (section) => `<section>
       <h2>${escapeHtml(section.heading)}</h2>
       ${section.paragraphs.map((p) => `<p>${escapeHtml(p)}</p>`).join('\n')}
-    </section>`).join('\n');
+    </section>`,
+      )
+      .join('\n');
     const contact = record?.contact_url
       ? `<a class="legal-contact" href="${escapeHtml(record.contact_url)}" target="_blank" rel="noopener noreferrer">${labels.contact} ↗</a>`
       : `<a class="legal-contact" href="/public/${locale}">${labels.archive} ↗</a>`;
@@ -88,7 +124,9 @@ export class SitePagesController {
   constructor(private readonly pages: SitePagesService) {}
 
   private app(reply: FastifyReply) {
-    return reply.header('Cache-Control', 'no-store').type('text/html; charset=utf-8')
+    return reply
+      .header('Cache-Control', 'no-store')
+      .type('text/html; charset=utf-8')
       .send(readFileSync(resolve(__dirname, '../../web/dist/index.html'), 'utf8'));
   }
 
@@ -106,9 +144,11 @@ export class SitePagesController {
   private async legal(page: LegalPage, req: FastifyRequest, reply: FastifyReply, lang?: string) {
     if (lang !== undefined && lang !== 'uk' && lang !== 'en') throw new NotFoundException();
     if (!lang) reply.header('Vary', 'Accept-Language');
-    const locale = lang ? lang as Locale : browserLocale(String(req.headers['accept-language'] || ''));
-    return reply.header('Cache-Control', 'public, max-age=300')
-      .type('text/html; charset=utf-8').send(await this.pages.legalPage(page, locale, !lang));
+    const locale = lang ? (lang as Locale) : browserLocale(String(req.headers['accept-language'] || ''));
+    return reply
+      .header('Cache-Control', 'public, max-age=300')
+      .type('text/html; charset=utf-8')
+      .send(await this.pages.legalPage(page, locale, !lang));
   }
 
   @Get('about')
@@ -117,7 +157,11 @@ export class SitePagesController {
   }
 
   @Get('about/:locale')
-  aboutTranslated(@Param('locale') lang: string, @Req() req: FastifyRequest, @Res() reply: FastifyReply) {
+  aboutTranslated(
+    @Param('locale') lang: string,
+    @Req() req: FastifyRequest,
+    @Res() reply: FastifyReply,
+  ) {
     return this.legal('about', req, reply, lang);
   }
 
@@ -127,7 +171,11 @@ export class SitePagesController {
   }
 
   @Get('privacy/:locale')
-  privacyTranslated(@Param('locale') lang: string, @Req() req: FastifyRequest, @Res() reply: FastifyReply) {
+  privacyTranslated(
+    @Param('locale') lang: string,
+    @Req() req: FastifyRequest,
+    @Res() reply: FastifyReply,
+  ) {
     return this.legal('privacy', req, reply, lang);
   }
 
@@ -137,7 +185,11 @@ export class SitePagesController {
   }
 
   @Get('terms/:locale')
-  termsTranslated(@Param('locale') lang: string, @Req() req: FastifyRequest, @Res() reply: FastifyReply) {
+  termsTranslated(
+    @Param('locale') lang: string,
+    @Req() req: FastifyRequest,
+    @Res() reply: FastifyReply,
+  ) {
     return this.legal('terms', req, reply, lang);
   }
 }

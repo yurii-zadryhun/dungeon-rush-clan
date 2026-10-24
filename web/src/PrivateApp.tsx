@@ -34,9 +34,7 @@ export function PrivateApp() {
         } else if (!state.initialized) {
           setPhase('setup');
         } else {
-          setPhase(
-            invite && location.pathname !== '/login' ? 'invite' : 'login',
-          );
+          setPhase(invite && location.pathname !== '/login' ? 'invite' : 'login');
         }
       } catch (failure) {
         if (!mounted) return;

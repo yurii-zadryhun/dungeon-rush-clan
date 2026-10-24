@@ -331,7 +331,10 @@ export class PublicClanController {
   @Get('clan/:locale')
   oldTranslated(@Param('locale') locale: string, @Res() reply: FastifyReply) {
     if (locale !== 'uk' && locale !== 'en') throw new NotFoundException();
-    return reply.code(308).header('Location', '/public/' + locale).send();
+    return reply
+      .code(308)
+      .header('Location', '/public/' + locale)
+      .send();
   }
 
   @Get('robots.txt')

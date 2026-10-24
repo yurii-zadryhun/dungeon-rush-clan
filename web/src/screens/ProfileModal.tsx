@@ -230,7 +230,9 @@ export function ProfileModal({
                     {busy ? t('pleaseWait') : t('deleteAccount')}
                   </button>
                 </div>
-                <a href="/privacy" className="profile-privacy-link">{t('privacyLink')} ↗</a>
+                <a href="/privacy" className="profile-privacy-link">
+                  {t('privacyLink')} ↗
+                </a>
               </form>
             )}
           </section>
