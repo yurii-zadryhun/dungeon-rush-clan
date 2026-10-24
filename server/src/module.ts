@@ -10,6 +10,7 @@ import { PlayerManagementController, PlayerManagementService } from './player-ma
 import { InsightsController, InsightsService } from './insights';
 import { WikiAiController, WikiAiService } from './ai/wiki-ai';
 import { PublicClanController, PublicClanService } from './public-clan';
+import { SitePagesController, SitePagesService } from './site-pages';
 
 @Module({
   controllers: [
@@ -22,6 +23,7 @@ import { PublicClanController, PublicClanService } from './public-clan';
     InsightsController,
     WikiAiController,
     PublicClanController,
+    SitePagesController,
   ],
   providers: [
     Db,
@@ -38,6 +40,7 @@ import { PublicClanController, PublicClanService } from './public-clan';
     InsightsService,
     WikiAiService,
     PublicClanService,
+    SitePagesService,
   ],
 })
 export class AppModule {}
