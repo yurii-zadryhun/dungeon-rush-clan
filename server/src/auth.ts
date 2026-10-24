@@ -174,8 +174,11 @@ export class AccountsService {
     }
     this.loginAttempts.delete(attemptKey);
     if (data.locale && data.locale !== account.locale) {
-      await this.db.query.updateTable('accounts').set({ locale: data.locale })
-        .where('id', '=', account.id).execute();
+      await this.db.query
+        .updateTable('accounts')
+        .set({ locale: data.locale })
+        .where('id', '=', account.id)
+        .execute();
     }
     return this.createSession(account.id, reply);
   }

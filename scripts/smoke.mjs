@@ -71,30 +71,60 @@ async function run() {
     'Password-only login',
   );
   const preferred = await request('auth/login', 'POST', {
-    username: 'owner', password: 'testing-password-1234', locale: 'uk',
+    username: 'owner',
+    password: 'testing-password-1234',
+    locale: 'uk',
   });
   ensure(preferred.status, 201, 'Explicit locale accepted at login');
   ensure(preferred.body.locale, 'uk', 'Login returns explicitly chosen locale');
-  ensure((await request('auth/me', 'GET', null, ownerCookie)).body.locale,
-    'uk', 'Login locale persists across other active sessions');
-  ensure((await request('auth/login', 'POST', {
-    username: 'owner', password: 'wrong-password', locale: 'en',
-  })).status, 401, 'Invalid password cannot change locale');
-  ensure((await request('auth/me', 'GET', null, ownerCookie)).body.locale,
-    'uk', 'Failed login leaves account locale unchanged');
-  ensure((await request('auth/login', 'POST', {
-    username: 'owner', password: 'testing-password-1234', locale: 'fr',
-  })).status, 400, 'Unsupported locale is rejected');
+  ensure(
+    (await request('auth/me', 'GET', null, ownerCookie)).body.locale,
+    'uk',
+    'Login locale persists across other active sessions',
+  );
+  ensure(
+    (
+      await request('auth/login', 'POST', {
+        username: 'owner',
+        password: 'wrong-password',
+        locale: 'en',
+      })
+    ).status,
+    401,
+    'Invalid password cannot change locale',
+  );
+  ensure(
+    (await request('auth/me', 'GET', null, ownerCookie)).body.locale,
+    'uk',
+    'Failed login leaves account locale unchanged',
+  );
+  ensure(
+    (
+      await request('auth/login', 'POST', {
+        username: 'owner',
+        password: 'testing-password-1234',
+        locale: 'fr',
+      })
+    ).status,
+    400,
+    'Unsupported locale is rejected',
+  );
   const restored = await request('auth/login', 'POST', {
-    username: 'owner', password: 'testing-password-1234',
+    username: 'owner',
+    password: 'testing-password-1234',
   });
   ensure(restored.body.locale, 'uk', 'Login without explicit language keeps account preference');
   const english = await request('auth/login', 'POST', {
-    username: 'owner', password: 'testing-password-1234', locale: 'en',
+    username: 'owner',
+    password: 'testing-password-1234',
+    locale: 'en',
   });
   ensure(english.body.locale, 'en', 'Later explicit locale overrides existing account preference');
-  ensure((await request('auth/me', 'GET', null, english.cookie)).body.locale,
-    'en', 'Explicit locale is available on session restoration');
+  ensure(
+    (await request('auth/me', 'GET', null, english.cookie)).body.locale,
+    'en',
+    'Explicit locale is available on session restoration',
+  );
 
   const old = weekOffset(startFor(new Date()), -3);
   const recent = weekOffset(startFor(new Date()), -2);
