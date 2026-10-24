@@ -1374,82 +1374,72 @@ async function run() {
     'Leadership can remove obsolete note',
   );
 
-  // A member can delete their own site account without destroying historical scores.
+  // An account linked to a historical player may be deleted by its owner, but the
+  // independent war archive must retain the player's scores and identity.
+  const deletionInvite = await request(
+    'auth/invites',
+    'POST',
+    { label: 'FreshNick', role: 'member' },
+    ownerCookie,
+  );
+  ensure(deletionInvite.status, 201, 'Create invitation for a historic, unlinked player');
+  const deletionToken = new URL(deletionInvite.body.url).pathname.split('/').pop();
+  const deletionMember = await request(
+    'auth/invite/' + deletionToken + '/register',
+    'POST',
+    { username: 'FreshNick', password: 'delete-check-password-1234' },
+  );
+  ensure(deletionMember.status, 201, 'A new account can link to an existing historic player');
+  ensure(deletionMember.body.playerId, newcomer.id, 'Self-delete test player has real war scores');
+  const deletionCookie = deletionMember.cookie;
   const archiveBeforeDeletion = (await request('dashboard', 'GET', null, ownerCookie)).body;
+  const personalLabels = {
+    telegram: true, discord: true, telegramHandle: '@delete-me', discordHandle: 'temporary',
+    tags: ['attention'], exceptionReason: 'Private temporary note',
+  };
   ensure(
-    (
-      await request(
-        'auth/me',
-        'DELETE',
-        {
-          password: 'incorrect',
-          confirmation: 'DELETE',
-        },
-        groupFirst.cookie,
-      )
-    ).status,
-    401,
-    'Account deletion requires the actual password',
+    (await request('player-management/' + newcomer.id, 'PATCH', personalLabels, ownerCookie)).status,
+    200,
+    'Staff stores private contacts before account deletion',
   );
   ensure(
-    (
-      await request(
-        'auth/me',
-        'DELETE',
-        {
-          password: 'newperson-password-1234',
-          confirmation: 'WRONG',
-        },
-        groupFirst.cookie,
-      )
-    ).status,
-    400,
-    'Account deletion requires explicit confirmation',
+    (await request('player-management/' + newcomer.id + '/notes', 'POST',
+      { body: 'Private note to erase', category: 'note' }, ownerCookie)).status,
+    201, 'Staff stores private note before account deletion',
   );
-  const removedAccount = await request(
-    'auth/me',
-    'DELETE',
-    {
-      password: 'newperson-password-1234',
-      confirmation: 'DELETE',
-    },
-    groupFirst.cookie,
+  ensure(
+    (await request('auth/me', 'DELETE',
+      { password: 'wrong', confirmation: 'DELETE' }, deletionCookie)).status,
+    401, 'Account deletion requires the actual website password',
   );
+  ensure(
+    (await request('auth/me', 'DELETE',
+      { password: 'delete-check-password-1234', confirmation: 'WRONG' }, deletionCookie)).status,
+    400, 'Account deletion requires explicit confirmation',
+  );
+  const removedAccount = await request('auth/me', 'DELETE',
+    { password: 'delete-check-password-1234', confirmation: 'DELETE' }, deletionCookie);
   ensure(removedAccount.status, 200, 'Player can delete their own website account');
+  ensure((await request('auth/session-state', 'GET', null, deletionCookie)).body.account,
+    null, 'Deleted account sessions no longer authenticate');
   ensure(
-    (await request('auth/session-state', 'GET', null, groupFirst.cookie)).body.account,
-    null,
-    'Deleted account sessions no longer authenticate',
-  );
-  ensure(
-    (
-      await request('auth/login', 'POST', {
-        username: 'NewPerson',
-        password: 'newperson-password-1234',
-      })
-    ).status,
-    401,
-    'Deleted password can no longer sign in',
+    (await request('auth/login', 'POST',
+      { username: 'FreshNick', password: 'delete-check-password-1234' })).status,
+    401, 'Deleted password no longer works',
   );
   const archiveAfterDeletion = (await request('dashboard', 'GET', null, ownerCookie)).body;
-  assert.deepEqual(
-    archiveAfterDeletion.rankings.calculated,
-    archiveBeforeDeletion.rankings.calculated,
-    'Historic calculated scores remain unchanged after account deletion',
-  );
-  assert.deepEqual(
-    archiveAfterDeletion.record,
-    archiveBeforeDeletion.record,
-    'Win/loss history survives account deletion',
-  );
+  assert.deepEqual(archiveAfterDeletion.rankings.calculated, archiveBeforeDeletion.rankings.calculated,
+    'War rankings survive account removal');
+  assert.deepEqual(archiveAfterDeletion.record, archiveBeforeDeletion.record,
+    'Final war results survive account removal');
   const deletedPlayer = (await request('players', 'GET', null, ownerCookie)).body.find(
-    (p) => p.id === groupFirst.body.playerId,
+    (player) => player.id === newcomer.id,
   );
-  assert.equal(
-    deletedPlayer.hasAccount,
-    false,
-    'Historic player is no longer linked to deleted account',
-  );
+  assert.equal(deletedPlayer.hasAccount, false, 'Historical player loses deleted account association');
+  const cleansed = await request('player-management/' + newcomer.id, 'GET', null, ownerCookie);
+  ensure(cleansed.body.labels.telegram, false, 'Telegram flag erased with linked account');
+  ensure(cleansed.body.labels.discord, false, 'Discord flag erased with linked account');
+  ensure(cleansed.body.notes.length, 0, 'Private management notes about account erased');
 
   console.log('Production integration smoke tests passed');
 }
