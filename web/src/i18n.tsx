@@ -508,6 +508,17 @@ const backendErrors: Record<string, string> = {
   'Maximum 10 ranking screenshots and one result':
     'Дозволено до 10 скриншотів рейтингу й один підсумковий.',
   'Invalid image count': 'Невірна кількість зображень.',
+  'Player name belongs to another player. Merge duplicates first.':
+    'Це ім’я вже належить іншому гравцеві. Спочатку об’єднай дублікати.',
+  'Both players have different accounts. Resolve accounts first.':
+    'Обидва гравці мають різні акаунти. Спочатку виріши конфлікт акаунтів.',
+  'Canonical name belongs to another account': 'Правильне ім’я вже належить іншому акаунту.',
+  'Player not found': 'Гравця не знайдено.',
+  'Choose two different players': 'Обери двох різних гравців.',
+  'Invalid merge request': 'Неправильні дані об’єднання.',
+  'War not imported': 'Цю війну ще не імпортовано.',
+  'Player ranking not imported for this war': 'Рейтинг цієї війни ще не імпортовано.',
+  'Final result not imported for this war': 'Результат цієї війни ще не імпортовано.',
 };
 
 const serverMessages: Record<string, MessageKey> = {
