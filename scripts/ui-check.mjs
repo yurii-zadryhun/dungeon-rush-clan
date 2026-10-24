@@ -67,12 +67,12 @@ assert.match(
 );
 assert.match(
   managementCss,
-  /\.note-form-actions\s*\{[\s\S]*?grid-template-rows: 40px 40px;/,
+  /\.note-form-actions\s*\{[\s\S]*?grid-template-rows: 42px 42px;/,
   'Note category and button are stacked right of textarea',
 );
 assert.match(
   managementCss,
-  /\.note-form textarea\s*\{[\s\S]*?height: 88px;/,
+  /\.note-form textarea\s*\{[\s\S]*?height: 92px;/,
   'Note textarea matches stacked controls height',
 );
 console.log('UI regression checks passed');
