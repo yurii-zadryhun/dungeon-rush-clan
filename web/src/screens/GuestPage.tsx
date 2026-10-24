@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Copy, Crown, History, Shield, Swords, Trophy } from 'lucide-react';
+import { ArrowRight, Crown, History } from 'lucide-react';
 import { api, type PublicClan } from '../api';
 import { formatWarRange } from '../date-format';
 import { LanguagePicker, useI18n } from '../i18n';
@@ -9,7 +9,6 @@ export function GuestPage() {
   const { locale, t } = useI18n();
   const [clan, setClan] = React.useState<PublicClan | null>(null);
   const [error, setError] = React.useState('');
-  const [copied, setCopied] = React.useState(false);
 
   React.useEffect(() => {
     let alive = true;
@@ -20,29 +19,19 @@ export function GuestPage() {
       .catch((failure) => {
         if (alive) setError((failure as Error).message);
       });
-    return () => {
-      alive = false;
-    };
+    return () => { alive = false; };
   }, []);
 
   React.useEffect(() => {
     if (clan) document.title = clan.name + ' · Dungeon Rush';
   }, [clan]);
 
-  async function share() {
-    try {
-      await navigator.clipboard.writeText(window.location.origin + '/clan');
-      setCopied(true);
-    } catch {
-      setError(t('publicCopyFailed'));
-    }
-  }
-
   return (
     <div className="guest-page">
       <header className="guest-header">
         <a href="/clan" className="guest-brand">
-          <Swords size={21} /> DUNGEON RUSH
+          <img src="/assets/clan-emblem.png" alt="" width="32" height="35" />
+          <span>{t('publicArchive')}</span>
         </a>
         <div className="guest-actions">
           <LanguagePicker />
@@ -52,28 +41,18 @@ export function GuestPage() {
         </div>
       </header>
       <main className="guest-main">
-        {error && (
-          <div className="error-strip" role="alert">
-            {error}
-          </div>
-        )}
+        {error && <div className="error-strip" role="alert">{error}</div>}
         {!clan && !error && (
-          <div className="guest-loading">
-            <span className="spinner" />
-            {t('loading')}
-          </div>
+          <div className="guest-loading"><span className="spinner" />{t('loading')}</div>
         )}
         {clan && (
           <>
-            <section className="guest-hero panel">
+            <section className="panel guest-hero">
               <div className="guest-intro">
                 <div className="guest-emblem-wrap">
-                  <img src="/clan-emblem.png" alt="" width="132" height="144" />
+                  <img src="/assets/clan-emblem.png" alt="" width="132" height="144" />
                 </div>
                 <div className="guest-hero-text">
-                  <span className="guest-eyebrow">
-                    <Shield size={15} /> {t('publicClanProfile')}
-                  </span>
                   <h1>{clan.name}</h1>
                   <span className="guest-game">Dungeon Rush</span>
                   <div className="guest-leader">
@@ -81,49 +60,28 @@ export function GuestPage() {
                   </div>
                 </div>
               </div>
-              <div className="guest-hero-bottom">
-                <p>{t('publicIntro')}</p>
-                <button className="game-button blue" type="button" onClick={() => void share()}>
-                  <Copy size={17} /> {t(copied ? 'copied' : 'publicShare')}
-                </button>
-              </div>
             </section>
-            <div className="guest-stats">
-              <div className="panel guest-stat won">
-                <Trophy size={22} />
-                <strong>{clan.record.wins}</strong>
+            <div className="panel guest-record" aria-label={t('clanOverview')}>
+              <div className="guest-record-item">
+                <strong className="friendly">{clan.record.wins}</strong>
                 <span>{t('wins')}</span>
               </div>
-              <div className="panel guest-stat lost">
-                <Swords size={22} />
-                <strong>{clan.record.losses}</strong>
+              <span className="guest-record-divider" aria-hidden="true" />
+              <div className="guest-record-item">
+                <strong className="enemy">{clan.record.losses}</strong>
                 <span>{t('losses')}</span>
-              </div>
-              <div className="panel guest-stat total">
-                <History size={22} />
-                <strong>{clan.record.wins + clan.record.losses}</strong>
-                <span>{t('publicCompletedWars')}</span>
               </div>
             </div>
             <section className="panel guest-history">
               <div className="guest-section-head">
-                <h2>
-                  <History size={21} />
-                  {t('warHistory')}
-                </h2>
-                <span className="guest-history-note">{t('publicResultsOnly')}</span>
+                <h2><History size={21} />{t('warHistory')}</h2>
               </div>
-              {clan.recentWars.length === 0 ? (
-                <p className="empty">{t('publicNoWars')}</p>
-              ) : (
+              {clan.recentWars.length === 0 ? <p className="empty">{t('publicNoWars')}</p> : (
                 <div className="guest-wars">
                   {clan.recentWars.map((war) => {
                     const victory = war.ourScore > war.opponentScore;
                     return (
-                      <article
-                        key={war.start}
-                        className={'guest-war ' + (victory ? 'victory' : 'defeat')}
-                      >
+                      <article key={war.start} className={'guest-war ' + (victory ? 'victory' : 'defeat')}>
                         <div className="guest-war-info">
                           <span className="guest-war-date">{formatWarRange(war.start, locale)}</span>
                           <strong>
@@ -132,9 +90,7 @@ export function GuestPage() {
                           </strong>
                         </div>
                         <div className="guest-war-result">
-                          <b>
-                            {war.ourScore} : {war.opponentScore}
-                          </b>
+                          <b>{war.ourScore} : {war.opponentScore}</b>
                           <small>{t(victory ? 'victory' : 'defeat')}</small>
                         </div>
                       </article>
@@ -143,13 +99,6 @@ export function GuestPage() {
                 </div>
               )}
             </section>
-            <footer className="guest-footer">
-              <Shield size={17} />
-              {t('publicPrivacyNotice')}
-              <a href="/?login=1">
-                {t('publicMemberArea')} <ArrowRight size={14} />
-              </a>
-            </footer>
           </>
         )}
       </main>
