@@ -759,7 +759,7 @@ async function run() {
   const overlapAfter = (await request('dashboard?anchor=' + old + '&count=1',
     'GET', null, ownerCookie)).body.weeks[0].players;
   ensure(overlapAfter.find(p => p.id === canonical.id).points, 250000,
-    'Explicit keepTarget retains correct week's score');
+    'Explicit keepTarget retains the correct score');
   ensure(overlapAfter.some(p => p.id === other.id), false,
     'Incorrect overlapping row removed');
   ensure(overlapAfter.length, overlapBefore.length - 1, 'No duplicated score after overlap merge');
