@@ -5,6 +5,7 @@ import {
   Get,
   Injectable,
   Post,
+  Patch,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -75,6 +76,14 @@ export class ImportService {
   }
 
   async confirm(input: unknown) {
+    return this.save(input, 'create');
+  }
+
+  async revise(input: unknown) {
+    return this.save(input, 'update');
+  }
+
+  private async save(input: unknown, mode: 'create' | 'update') {
     const parsed = submission.safeParse(input);
     if (!parsed.success)
       throw new BadRequestException(parsed.error.issues.map((x) => x.message).join('; '));
@@ -118,6 +127,7 @@ export class ImportService {
           .selectAll()
           .where('start_date', '=', data.start)
           .executeTakeFirst();
+        if (!war && mode === 'update') throw new BadRequestException('War not imported');
         if (!war) {
           const id = await trx
             .insertInto('wars')
@@ -139,8 +149,12 @@ export class ImportService {
             .executeTakeFirstOrThrow();
         }
         if (data.players) {
-          if (war.ranking_imported_at !== null)
+          if (mode === 'create' && war.ranking_imported_at !== null)
             throw new BadRequestException('Player ranking already imported for this war');
+          if (mode === 'update' && war.ranking_imported_at === null)
+            throw new BadRequestException('Player ranking not imported for this war');
+          if (mode === 'update') await trx.deleteFrom('player_scores')
+            .where('war_id', '=', war.id).execute();
           const existingPlayers = await trx
             .selectFrom('players')
             .select(['id', 'normalized_name'])
@@ -234,8 +248,10 @@ export class ImportService {
               .execute();
         }
         if (data.result) {
-          if (war.result_imported_at !== null)
+          if (mode === 'create' && war.result_imported_at !== null)
             throw new BadRequestException('Final result already imported for this war');
+          if (mode === 'update' && war.result_imported_at === null)
+            throw new BadRequestException('Final result not imported for this war');
           const normalized = normalizeName(data.result.opponent);
           let opponent = await trx
             .selectFrom('clans')
@@ -261,6 +277,8 @@ export class ImportService {
             })
             .where('id', '=', war.id)
             .execute();
+          if (mode === 'update') await trx.deleteFrom('war_days')
+            .where('war_id', '=', war.id).execute();
           for (const day of data.result.days)
             await trx
               .insertInto('war_days')
@@ -295,5 +313,9 @@ export class ImportController {
 
   @Post('confirm') submit(@Body() body: unknown) {
     return this.importer.confirm(body);
+  }
+
+  @Patch('war') edit(@Body() body: unknown) {
+    return this.importer.revise(body);
   }
 }
