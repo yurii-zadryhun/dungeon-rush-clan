@@ -224,7 +224,7 @@ async function run() {
   const robots = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/robots.txt');
   assert.match(await robots.text(), /Disallow: \/api\//, 'API excluded from crawl');
   const sitemap = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/sitemap.xml');
-  assert.match(await sitemap.text(), /clan<\/loc>/, 'Public clan appears in sitemap');
+  assert.match(await sitemap.text(), /public<\/loc>/, 'Public clan appears in sitemap');
   const privateHtml = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/');
   assert.match(await privateHtml.text(), /noindex,nofollow/, 'Private sign-in is noindex');
   ensure(
