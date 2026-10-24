@@ -4,6 +4,31 @@ import { initialLocale, rememberLocale, type Locale } from './locale';
 export type { Locale } from './locale';
 
 const en = {
+  publicClanProfile: "Public clan profile",
+  publicIntro: "Public war history. Personal stats, roster and internal clan details remain private.",
+  publicLeader: "Public clan leader",
+  publicLeaderFallback: "First active Owner if empty",
+  publicLeaderHelp: "Shown to guests and in search previews. Leave blank to use the first active Owner.",
+  publicLeaderLabel: "Leader",
+  publicShare: "Copy guest link",
+  publicCopyFailed: "Couldn't copy the link. Copy the page URL manually.",
+  publicCompletedWars: "Completed wars",
+  publicResultsOnly: "Final results only · no player scores",
+  publicNoWars: "No completed clan wars yet.",
+  publicPrivacyNotice: "Individual player performance and internal information are private.",
+  publicMemberArea: "Members area",
+  publicGuestLink: "Public clan page",
+  activePlayersTab: "Active",
+  registeredPlayers: "Registered",
+  activeCountOne: "active player",
+  activeCountFew: "active players",
+  activeCountMany: "active players",
+  accountCountOne: "site account",
+  accountCountFew: "site accounts",
+  accountCountMany: "site accounts",
+  linkedCountOne: "linked",
+  linkedCountFew: "linked",
+  linkedCountMany: "linked",
   playersDirectory: 'Players',
   playersDirectoryHelp: 'Clan roster, performance and account registration in one place.',
   clanRoster: 'Clan roster',
@@ -285,6 +310,31 @@ const en = {
 
 type MessageKey = keyof typeof en;
 const uk: Record<MessageKey, string> = {
+  publicClanProfile: "Публічна сторінка клану",
+  publicIntro: "Публічна історія війн. Очки гравців, склад та внутрішня інформація залишаються закритими.",
+  publicLeader: "Лідер клану для гостей",
+  publicLeaderFallback: "Перший активний Owner, якщо порожньо",
+  publicLeaderHelp: "Відображається гостям і в прев’ю посилання. Якщо порожньо — перший активний Owner.",
+  publicLeaderLabel: "Лідер",
+  publicShare: "Скопіювати посилання",
+  publicCopyFailed: "Не вдалося скопіювати посилання. Скопіюйте адресу сторінки вручну.",
+  publicCompletedWars: "Завершених війн",
+  publicResultsOnly: "Лише результати · без очок гравців",
+  publicNoWars: "Ще немає завершених війн.",
+  publicPrivacyNotice: "Результати окремих гравців та внутрішня інформація закриті.",
+  publicMemberArea: "Для учасників",
+  publicGuestLink: "Публічна сторінка",
+  activePlayersTab: "Активні",
+  registeredPlayers: "Зареєстровані",
+  activeCountOne: "активний гравець",
+  activeCountFew: "активні гравці",
+  activeCountMany: "активних гравців",
+  accountCountOne: "акаунт на сайті",
+  accountCountFew: "акаунти на сайті",
+  accountCountMany: "акаунтів на сайті",
+  linkedCountOne: "пов’язаний",
+  linkedCountFew: "пов’язані",
+  linkedCountMany: "пов’язаних",
   playersDirectory: 'Гравці',
   playersDirectoryHelp: 'Склад клану, результати та реєстрація на сайті в одному місці.',
   clanRoster: 'Склад клану',
@@ -571,6 +621,12 @@ const LanguageContext = React.createContext<{
   setLocale: (value: Locale) => void;
   t: (key: MessageKey, params?: Interpolations) => string;
 } | null>(null);
+
+// Ukrainian has one/few/many forms; English effectively has one/other.
+export function nChoice(locale: Locale, count: number, one: string, few: string, many: string): string {
+  const category = new Intl.PluralRules(locale === 'uk' ? 'uk-UA' : 'en-US').select(count);
+  return category === 'one' ? one : category === 'few' ? few : many;
+}
 
 export function LanguageProvider({
   children,
