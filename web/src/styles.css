@@ -2027,3 +2027,45 @@ b {
   font-size: 11px;
   line-height: 1.15;
 }
+
+/* Shared leaderboard: one dense panel with explicit metric tabs. */
+.dashboard-top.dashboard-top-compact {
+  grid-template-columns: minmax(265px, 0.85fr) minmax(0, 1.5fr);
+}
+.leaderboard-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.leaderboard-heading h2 { margin-right: auto; }
+.leaderboard-tabs {
+  display: inline-flex;
+  flex: 0 1 auto;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 9px;
+  background: #201f23;
+  border: 1px solid #4e4950;
+}
+.leaderboard-tabs button {
+  border: 0;
+  border-radius: 7px;
+  padding: 8px 11px;
+  background: transparent;
+  color: #bbb6c3;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+.leaderboard-tabs button.selected { background: #3d6687; color: #fff; }
+.leaderboard-tabs button:hover:not(.selected) { color: #fff; background: #343137; }
+.leaderboard-tabs button:focus-visible { outline: 2px solid #f4cc62; outline-offset: 2px; }
+@media (max-width: 1000px) {
+  .dashboard-top.dashboard-top-compact .clan-widget { grid-column: auto; }
+}
+@media (max-width: 720px) {
+  .dashboard-top.dashboard-top-compact { grid-template-columns: minmax(0, 1fr); }
+  .leaderboard-tabs { width: 100%; }
+  .leaderboard-tabs button { flex: 1; }
+}

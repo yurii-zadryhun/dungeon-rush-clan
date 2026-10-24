@@ -4,6 +4,10 @@ import { initialLocale, rememberLocale, type Locale } from './locale';
 export type { Locale } from './locale';
 
 const en = {
+  rankingsTitle: 'Player rankings',
+  allTimeTab: 'All-time',
+  latestTab: 'Last war',
+  warsFew: 'wars',
   publicArchive: 'Clan war archive',
   publicClanProfile: 'Public clan profile',
   publicIntro: 'Public war history. Personal stats, roster and internal clan details remain private.',
@@ -311,6 +315,10 @@ const en = {
 
 type MessageKey = keyof typeof en;
 const uk: Record<MessageKey, string> = {
+  rankingsTitle: 'Рейтинг гравців',
+  allTimeTab: 'За весь час',
+  latestTab: 'Остання війна',
+  warsFew: 'війни',
   publicArchive: 'Архів війн клану',
   publicClanProfile: 'Публічна сторінка клану',
   publicIntro:
