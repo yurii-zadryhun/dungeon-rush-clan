@@ -61,12 +61,12 @@ async function run() {
   const privateHtml = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/');
   assert.match(await privateHtml.text(), /noindex,nofollow/, 'Private sign-in is noindex');
   ensure(
-    (await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan-emblem.png')).status,
+    (await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/assets/clan-emblem.png')).status,
     200,
     'Public emblem available',
   );
   ensure(
-    (await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/og-clan.jpg')).status,
+    (await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/assets/og-clan.jpg')).status,
     200,
     'Open Graph image available',
   );

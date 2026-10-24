@@ -85,14 +85,14 @@ const escapeHtml = (input: string) =>
 
 export function renderClanDocument(template: string, clan: PublicClanSnapshot, origin: string) {
   const pageUrl = origin + '/clan';
-  const imageUrl = origin + '/og-clan.jpg';
+  const imageUrl = origin + '/assets/og-clan.jpg';
   const title = clan.name + ' | Dungeon Rush Clan';
   const description =
     'Explore ' +
     clan.name +
     ' in Dungeon Rush: clan leader, victory record and completed clan war results.';
   const markup = `<main style="max-width:860px;margin:40px auto;padding:20px;font-family:system-ui,sans-serif;color:#f9f8fa">
-    <img src="/clan-emblem.png" alt="" width="90" height="95">
+    <img src="/assets/clan-emblem.png" alt="" width="90" height="95">
     <h1>${escapeHtml(clan.name)} — Dungeon Rush</h1>
     <p>Leader: ${escapeHtml(clan.leader)}</p>
     <p>Wins: ${clan.record.wins} · Losses: ${clan.record.losses}</p>
@@ -111,7 +111,7 @@ export function renderClanDocument(template: string, clan: PublicClanSnapshot, o
     '@type': 'Organization',
     name: clan.name,
     url: pageUrl,
-    logo: origin + '/clan-emblem.png',
+    logo: origin + '/assets/clan-emblem.png',
     description,
   }).replace(/</g, '\\u003c');
   const meta = `

@@ -4,6 +4,7 @@ import { initialLocale, rememberLocale, type Locale } from './locale';
 export type { Locale } from './locale';
 
 const en = {
+  publicArchive: 'Clan war archive',
   publicClanProfile: 'Public clan profile',
   publicIntro: 'Public war history. Personal stats, roster and internal clan details remain private.',
   publicLeader: 'Public clan leader',
@@ -30,7 +31,7 @@ const en = {
   linkedCountFew: 'linked',
   linkedCountMany: 'linked',
   playersDirectory: 'Players',
-  playersDirectoryHelp: 'Clan roster, performance and account registration in one place.',
+  playersDirectoryHelp: 'Player profiles and war performance.',
   clanRoster: 'Clan roster',
   accountsAndInvites: 'Accounts & invites',
   registered: 'Registered',
@@ -310,6 +311,7 @@ const en = {
 
 type MessageKey = keyof typeof en;
 const uk: Record<MessageKey, string> = {
+  publicArchive: 'Архів війн клану',
   publicClanProfile: 'Публічна сторінка клану',
   publicIntro:
     'Публічна історія війн. Очки гравців, склад та внутрішня інформація залишаються закритими.',
@@ -337,7 +339,7 @@ const uk: Record<MessageKey, string> = {
   linkedCountFew: 'пов’язані',
   linkedCountMany: 'пов’язаних',
   playersDirectory: 'Гравці',
-  playersDirectoryHelp: 'Склад клану, результати та реєстрація на сайті в одному місці.',
+  playersDirectoryHelp: 'Профілі учасників та результати кланових війн.',
   clanRoster: 'Склад клану',
   accountsAndInvites: 'Акаунти та запрошення',
   registered: 'Зареєстрований',

@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parent.parent
 PUBLIC = ROOT / 'web' / 'public'
-emblem = Image.open(PUBLIC / 'clan-emblem.png').convert('RGBA')
+emblem = Image.open(PUBLIC / 'assets' / 'clan-emblem.png').convert('RGBA')
 W, H = 1200, 630
 image = Image.new('RGB', (W, H))
 pixels = image.load()
@@ -38,5 +38,5 @@ draw.text((492, 291), 'DUNGEON RUSH', font=bold(34), fill=(255, 252, 243))
 draw.text((473, 368), 'CLAN WAR HISTORY', font=bold(40), fill=(243, 205, 117))
 draw.text((473, 443), 'Public war results',
           font=ImageFont.truetype(font_regular, 28), fill=(187, 199, 217))
-image.save(PUBLIC / 'og-clan.jpg', quality=70, optimize=True, subsampling=2)
+image.save(PUBLIC / 'assets' / 'og-clan.jpg', quality=70, optimize=True, subsampling=2)
 print('Generated:', PUBLIC / 'og-clan.jpg')
