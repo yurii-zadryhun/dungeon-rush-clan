@@ -1,5 +1,5 @@
-import { Controller, Get, Injectable, Res } from '@nestjs/common';
-import type { FastifyReply } from 'fastify';
+import { Controller, Get, Injectable, NotFoundException, Param, Req, Res } from '@nestjs/common';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Db } from './database';
@@ -85,30 +85,109 @@ const escapeHtml = (input: string) =>
     return entities[character];
   });
 
-export function renderClanDocument(template: string, clan: PublicClanSnapshot, origin: string) {
-  const pageUrl = origin + '/clan';
+type PublicLocale = 'uk' | 'en';
+
+function detectLocale(header: string): PublicLocale {
+  const languages = header.split(',').map((part) => {
+    const [code, q] = part.trim().split(';q=');
+    return { language: code?.toLowerCase().split('-')[0], quality: q === undefined ? 1 : Number(q) };
+  });
+  const result = languages.filter((item) => item.quality > 0 && Number.isFinite(item.quality))
+    .sort((a, b) => b.quality - a.quality)
+    .find((item) => item.language === 'uk' || item.language === 'en');
+  return result?.language === 'en' ? 'en' : 'uk';
+}
+
+function warLabel(start: string, locale: PublicLocale): string {
+  const from = new Date(start + 'T00:00:00Z');
+  const to = new Date(from);
+  to.setUTCDate(to.getUTCDate() + 5);
+  return new Intl.DateTimeFormat(locale === 'uk' ? 'uk-UA' : 'en-US', {
+    month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC',
+  }).formatRange(from, to);
+}
+
+export function renderClanDocument(
+  template: string,
+  clan: PublicClanSnapshot,
+  origin: string,
+  locale: PublicLocale = 'en',
+) {
+  const uk = locale === 'uk';
+  const messages = uk ? {
+    archive: 'Архів війн клану', leader: 'Лідер', contact: 'Зв’язатися з нами',
+    wins: 'Перемоги', losses: 'Поразки', history: 'Історія війн',
+    login: 'Увійти', unknown: 'Невідомий суперник', victory: 'Перемога',
+    defeat: 'Поразка', noWars: 'Поки немає завершених війн.', language: 'Мова',
+    description: 'Лідер клану, перемоги та результати війн Dungeon Rush — без приватної статистики гравців.',
+  } : {
+    archive: 'Clan war archive', leader: 'Leader', contact: 'Contact us',
+    wins: 'Wins', losses: 'Losses', history: 'Clan war history',
+    login: 'Sign in', unknown: 'Unknown opponent', victory: 'Victory',
+    defeat: 'Defeat', noWars: 'No completed clan wars yet.', language: 'Language',
+    description: 'Dungeon Rush clan leader, wins and finished wars — without private player statistics.',
+  };
+  const pageUrl = origin + '/clan/' + locale;
   const imageUrl = origin + '/assets/og-clan.jpg';
-  const title = clan.name + ' | Dungeon Rush Clan';
-  const description =
-    'Explore ' +
-    clan.name +
-    ' in Dungeon Rush: clan leader, victory record and completed clan war results.';
-  const markup = `<main style="max-width:860px;margin:40px auto;padding:20px;font-family:system-ui,sans-serif;color:#f9f8fa">
-    <img src="/assets/clan-emblem.png" alt="" width="90" height="95">
-    <h1>${escapeHtml(clan.name)} — Dungeon Rush</h1>
-    <p>Leader: ${escapeHtml(clan.leader)}</p>
-    ${clan.contactUrl ? `<p><a href="${escapeHtml(clan.contactUrl)}" rel="noopener noreferrer" target="_blank">Contact the clan</a></p>` : ''}
-    <p>Wins: ${clan.record.wins} · Losses: ${clan.record.losses}</p>
-    <h2>Recent clan wars</h2>
-    <ol>${clan.recentWars
-      .map(
-        (war) =>
-          `<li>${escapeHtml(war.start)} · ${escapeHtml(war.opponent ?? 'Unknown opponent')} ·
-      ${war.ourScore} : ${war.opponentScore} — ${war.ourScore > war.opponentScore ? 'Victory' : 'Defeat'}</li>`,
-      )
-      .join('')}</ol>
-    <p><a href="/?login=1">Sign in to the private clan archive</a></p>
-  </main>`;
+  const title = clan.name + ' | Dungeon Rush ' + messages.history;
+  const description = clan.name + ': ' + messages.description;
+  const wars = clan.recentWars.map((war) => {
+    const victory = war.ourScore > war.opponentScore;
+    const draw = war.ourScore === war.opponentScore;
+    const status = draw ? '' : victory ? 'victory' : 'defeat';
+    return `<li class="guest-war ${status}">
+      <div class="guest-war-info">
+        <time class="guest-war-date" datetime="${escapeHtml(war.start)}">${escapeHtml(warLabel(war.start, locale))}</time>
+        <strong>${escapeHtml(clan.name)} <span class="guest-versus">vs</span> ${escapeHtml(war.opponent || messages.unknown)}</strong>
+      </div>
+      <div class="guest-war-result">
+        <b>${war.ourScore} : ${war.opponentScore}</b>
+        <small>${draw ? '—' : victory ? messages.victory : messages.defeat}</small>
+      </div>
+    </li>`;
+  }).join('\n');
+
+  const markup = `<div class="guest-page">
+    <header class="guest-header">
+      <a href="/clan" class="guest-brand" aria-label="${escapeHtml(messages.archive)}">
+        <img src="/assets/clan-emblem.png" width="32" height="35" alt="">
+        <span>${escapeHtml(messages.archive)}</span>
+      </a>
+      <div class="guest-actions">
+        <nav class="guest-languages" aria-label="${escapeHtml(messages.language)}">
+          <a href="/clan/uk" lang="uk" hreflang="uk" ${uk ? 'aria-current="page"' : ''}>🇺🇦 UA</a>
+          <a href="/clan/en" lang="en" hreflang="en" ${!uk ? 'aria-current="page"' : ''}>🇬🇧 EN</a>
+        </nav>
+        <a class="guest-signin" href="/?login=1">${escapeHtml(messages.login)} <span aria-hidden="true">↗</span></a>
+      </div>
+    </header>
+    <main class="guest-main">
+      <section class="panel guest-hero" aria-labelledby="clan-title">
+        <div class="guest-intro">
+          <div class="guest-emblem-wrap">
+            <img src="/assets/clan-emblem.png" alt="${escapeHtml(clan.name)} clan emblem"
+              width="132" height="144" fetchpriority="high">
+          </div>
+          <div class="guest-hero-text">
+            <h1 id="clan-title">${escapeHtml(clan.name)} — Dungeon Rush</h1>
+            <div class="guest-leader"><span aria-hidden="true">♛</span> ${escapeHtml(messages.leader)}: <strong>${escapeHtml(clan.leader)}</strong></div>
+            ${clan.contactUrl ? `<a class="guest-contact-link" href="${escapeHtml(clan.contactUrl)}"
+              rel="noopener noreferrer" target="_blank">${escapeHtml(messages.contact)} <span aria-hidden="true">↗</span></a>` : ''}
+          </div>
+        </div>
+      </section>
+      <section class="panel guest-record" aria-label="${escapeHtml(messages.archive)}">
+        <div class="guest-record-item"><strong class="friendly">${clan.record.wins}</strong><span>${escapeHtml(messages.wins)}</span></div>
+        <span class="guest-record-divider" aria-hidden="true"></span>
+        <div class="guest-record-item"><strong class="enemy">${clan.record.losses}</strong><span>${escapeHtml(messages.losses)}</span></div>
+      </section>
+      <section class="panel guest-history" aria-labelledby="history-title">
+        <div class="guest-section-head"><h2 id="history-title">${escapeHtml(messages.history)}</h2></div>
+        ${wars ? '<ol class="guest-wars">' + wars + '</ol>' : '<p class="guest-empty">' + escapeHtml(messages.noWars) + '</p>'}
+      </section>
+    </main>
+  </div>`;
+
   const jsonLd = JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'Organization',
@@ -116,15 +195,21 @@ export function renderClanDocument(template: string, clan: PublicClanSnapshot, o
     url: pageUrl,
     logo: origin + '/assets/clan-emblem.png',
     description,
+    ...(clan.contactUrl ? { contactPoint: { '@type': 'ContactPoint', contactType: 'community', url: clan.contactUrl } } : {}),
   }).replace(/</g, '\\u003c');
   const meta = `
     <meta name="description" content="${escapeHtml(description)}" />
     <meta name="robots" content="index,follow,max-image-preview:large" />
     <link rel="canonical" href="${escapeHtml(pageUrl)}" />
+    <link rel="alternate" hreflang="en" href="${origin}/clan/en" />
+    <link rel="alternate" hreflang="uk" href="${origin}/clan/uk" />
+    <link rel="alternate" hreflang="x-default" href="${origin}/clan" />
+    <link rel="stylesheet" href="/assets/clan-public.css" />
+    <link rel="preload" href="/assets/clan-emblem.png" as="image" fetchpriority="high" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Dungeon Rush Clan War Archive" />
-    <meta property="og:locale" content="en_US" />
-    <meta property="og:locale:alternate" content="uk_UA" />
+    <meta property="og:locale" content="${uk ? 'uk_UA' : 'en_US'}" />
+    <meta property="og:locale:alternate" content="${uk ? 'en_US' : 'uk_UA'}" />
     <meta property="og:url" content="${escapeHtml(pageUrl)}" />
     <meta property="og:title" content="${escapeHtml(title)}" />
     <meta property="og:description" content="${escapeHtml(description)}" />
@@ -140,9 +225,13 @@ export function renderClanDocument(template: string, clan: PublicClanSnapshot, o
     <meta name="twitter:image" content="${escapeHtml(imageUrl)}" />
     <script type="application/ld+json">${jsonLd}</script>`;
   return template
-    .replace(/<html lang="[^"]*">/, '<html lang="en">')
+    .replace(/<html lang="[^"]*">/, '<html lang="' + locale + '">')
     .replace(/<title>[^<]*<\/title>/, '<title>' + escapeHtml(title) + '</title>')
     .replace(/<meta name="robots"[^>]*>/, '')
+    // Do not ship the authenticated React app or its CSS to public visitors.
+    .replace(/<script[^>]*type="module"[^>]*><\/script>/g, '')
+    .replace(/<link[^>]*rel="modulepreload"[^>]*>/g, '')
+    .replace(/<link[^>]*rel="stylesheet"[^>]*>/g, '')
     .replace('</head>', meta + '\n</head>')
     .replace('<div id="root"></div>', '<div id="root">' + markup + '</div>');
 }
@@ -157,15 +246,28 @@ export class PublicClanController {
     return reply.header('Cache-Control', 'public, max-age=60').send(data);
   }
 
-  @Get('clan')
-  async page(@Res() reply: FastifyReply) {
+  private async html(reply: FastifyReply, locale: PublicLocale) {
     const snapshot = await this.clan.snapshot();
     const origin = (process.env.APP_ORIGIN || 'http://localhost:3000').replace(/\/$/, '');
     const template = readFileSync(resolve(__dirname, '../../web/dist/index.html'), 'utf8');
     return reply
       .header('Cache-Control', 'public, max-age=60')
       .type('text/html; charset=utf-8')
-      .send(renderClanDocument(template, snapshot, origin));
+      .send(renderClanDocument(template, snapshot, origin, locale));
+  }
+
+  @Get('clan')
+  async page(@Req() request: FastifyRequest, @Res() reply: FastifyReply) {
+    return this.html(
+      reply.header('Vary', 'Accept-Language'),
+      detectLocale(String(request.headers['accept-language'] || '')),
+    );
+  }
+
+  @Get('clan/:locale')
+  async translated(@Param('locale') locale: string, @Res() reply: FastifyReply) {
+    if (locale !== 'uk' && locale !== 'en') throw new NotFoundException();
+    return this.html(reply, locale);
   }
 
   @Get('robots.txt')
@@ -182,6 +284,8 @@ export class PublicClanController {
     return reply.type('application/xml; charset=utf-8').send(`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>${escapeHtml(origin + '/clan')}</loc></url>
+  <url><loc>${escapeHtml(origin + '/clan/en')}</loc></url>
+  <url><loc>${escapeHtml(origin + '/clan/uk')}</loc></url>
 </urlset>`);
   }
 }
