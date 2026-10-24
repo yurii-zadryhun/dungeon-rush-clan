@@ -328,6 +328,19 @@ b {
 .auth-card .game-button {
   margin-top: 7px;
 }
+/* The global bright blue is decorative; sign-in text needs AA contrast. */
+.auth-card .game-button.blue {
+  background: #206b99;
+  box-shadow: 0 4px 0 #12405c;
+}
+.auth-card .game-button.blue:not(:disabled):hover {
+  background: #267daf;
+}
+.auth-card .game-button.blue:focus-visible {
+  outline: 3px solid #ffdf82;
+  outline-offset: 3px;
+}
+
 
 .auth-foot {
   margin: 20px 0 0;
