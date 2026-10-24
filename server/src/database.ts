@@ -54,6 +54,7 @@ export interface Tables {
     active: number;
     created_at: number;
   };
+  player_aliases: { normalized_name: string; player_id: number };
   player_scores: { war_id: number; player_id: number; position: number; points: number };
   war_days: {
     war_id: number;
@@ -88,6 +89,8 @@ export class Db implements OnModuleDestroy {
       CREATE TABLE IF NOT EXISTS players (id INTEGER PRIMARY KEY, name TEXT NOT NULL, normalized_name TEXT UNIQUE NOT NULL, account_id INTEGER UNIQUE REFERENCES accounts(id), active INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS player_scores (war_id INTEGER NOT NULL REFERENCES wars(id) ON DELETE CASCADE, player_id INTEGER NOT NULL REFERENCES players(id), position INTEGER NOT NULL, points INTEGER NOT NULL, PRIMARY KEY(war_id, player_id), UNIQUE(war_id, position));
       CREATE INDEX IF NOT EXISTS scores_by_player ON player_scores(player_id);
+      CREATE TABLE IF NOT EXISTS player_aliases (normalized_name TEXT PRIMARY KEY, player_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE);
+      CREATE INDEX IF NOT EXISTS player_aliases_by_player ON player_aliases(player_id);
       CREATE TABLE IF NOT EXISTS war_days (war_id INTEGER NOT NULL REFERENCES wars(id) ON DELETE CASCADE, day_number INTEGER NOT NULL CHECK(day_number BETWEEN 1 AND 6), points INTEGER NOT NULL, winner TEXT NOT NULL, mvp TEXT NOT NULL, PRIMARY KEY(war_id, day_number));
       INSERT OR IGNORE INTO settings(id,clan_name,minimum_points,weights_json) VALUES(1,'Ukrainians',100000,'[0.75,0.25]');
     `);
