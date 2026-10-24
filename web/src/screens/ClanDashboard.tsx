@@ -343,6 +343,8 @@ export function ClanDashboard({
   data,
   onChange,
   onLogout,
+  onImpersonate,
+  onStopImpersonation,
   onLocaleChange,
   onProfileChange,
   error,
@@ -351,6 +353,8 @@ export function ClanDashboard({
   data: Dashboard | null;
   onChange: (next: Dashboard) => void;
   onLogout: () => void;
+  onImpersonate: (account: Account) => void;
+  onStopImpersonation: () => Promise<void>;
   onLocaleChange: (locale: Locale) => void;
   onProfileChange: (account: Account) => Promise<void>;
   error: string;
@@ -508,6 +512,18 @@ export function ClanDashboard({
         onLocaleChange={onLocaleChange}
       />
 
+      {user.impersonating && (
+        <aside className="impersonation-banner" role="status">
+          <span>
+            <strong>{t('impersonationActive')}</strong>{' '}
+            {user.displayName} · {t('impersonationOwner', { name: user.impersonating.ownerName })}
+          </span>
+          <button type="button" className="impersonation-return" onClick={() => void onStopImpersonation()}>
+            {t('returnToOwner')}
+          </button>
+        </aside>
+      )}
+
       <React.Suspense
         fallback={
           <main className="loading-page">
@@ -532,6 +548,7 @@ export function ClanDashboard({
             initialAccess={legacyAccessRoute}
             account={user}
             dashboard={data}
+            onImpersonate={onImpersonate}
             onMerged={(next) => {
               setWeeks([]);
               onChange(next);

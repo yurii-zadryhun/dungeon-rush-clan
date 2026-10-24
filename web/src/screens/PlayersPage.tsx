@@ -33,11 +33,13 @@ export function PlayersPage({
   account,
   dashboard,
   onMerged,
+  onImpersonate,
   initialAccess = false,
 }: {
   account: Account;
   dashboard: Dashboard;
   onMerged: (data: Dashboard) => void;
+  onImpersonate: (account: Account) => void;
   initialAccess?: boolean;
 }) {
   const { t } = useI18n();
@@ -152,7 +154,7 @@ export function PlayersPage({
 
       {tab === 'access' && isStaff ? (
         <React.Suspense fallback={<p className="muted">{t('loading')}</p>}>
-          <UsersScreen account={account} onMerged={merged} />
+          <UsersScreen account={account} onMerged={merged} onImpersonate={onImpersonate} />
         </React.Suspense>
       ) : (
         <section className="panel players-directory" aria-label={t('clanRoster')}>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Copy, Link2, Pencil, Trash2, UserPlus, Users, X } from 'lucide-react';
+import { Copy, Eye, Link2, Pencil, Trash2, UserPlus, Users, X } from 'lucide-react';
 import { api, json, type Account, type Dashboard, type Role } from '../api';
 import { useI18n } from '../i18n';
 import { MergePlayers } from './MergePlayers';
@@ -39,9 +39,11 @@ interface AccessData {
 export function UsersScreen({
   account,
   onMerged,
+  onImpersonate,
 }: {
   account: Account;
   onMerged: (data: Dashboard) => void;
+  onImpersonate: (account: Account) => void;
 }) {
   const { t, locale } = useI18n();
   const [data, setData] = React.useState<AccessData | null>(null);
@@ -125,6 +127,15 @@ export function UsersScreen({
     });
   }
 
+  function viewAs(person: ManagedAccount) {
+    if (!owner || person.role === 'owner' || !person.active) return;
+    if (!window.confirm(t('impersonationConfirm', { name: person.display_name }))) return;
+    void perform(async () => {
+      const assumed = await api<Account>('auth/impersonate', json('POST', { accountId: person.id }));
+      onImpersonate(assumed);
+    });
+  }
+
   function openEditor(person: ManagedAccount) {
     setEditing(person);
     setEditName(person.display_name);
@@ -197,6 +208,17 @@ export function UsersScreen({
                   </div>
                   {person.id !== account.id && (owner || person.role === 'member') && (
                     <div className="user-actions">
+                      {owner && person.role !== 'owner' && person.active && (
+                        <button
+                          className="icon-button impersonation-action"
+                          aria-label={t('viewAsPlayer', { name: person.display_name })}
+                          title={t('viewAsPlayer', { name: person.display_name })}
+                          disabled={busy}
+                          onClick={() => viewAs(person)}
+                        >
+                          <Eye size={18} />
+                        </button>
+                      )}
                       <button
                         className="icon-button"
                         aria-label={t('editUser')}

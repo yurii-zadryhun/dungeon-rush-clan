@@ -326,3 +326,37 @@
     display: none;
   }
 }
+
+/* Always-visible owner identity while testing another user's permissions. */
+.impersonation-banner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px 20px;
+  padding: 10px 16px;
+  background: #49391e;
+  border-bottom: 2px solid #be8c37;
+  color: #fce2a6;
+  font-size: 12px;
+  font-weight: 650;
+}
+.impersonation-banner strong { color: #fff3d4; }
+.impersonation-return {
+  min-height: 33px;
+  padding: 6px 12px;
+  background: #eec77d;
+  color: #2b200e;
+  border: 1px solid #ffefc9;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.impersonation-return:hover { background: #ffe3ad; }
+.impersonation-return:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.impersonation-action { border-color: #507fa2; color: #a8d7fa; }
+.impersonation-action:hover { background: #254967; color: #fff; }
+@media (max-width: 650px) {
+  .impersonation-banner { justify-content: space-between; }
+}

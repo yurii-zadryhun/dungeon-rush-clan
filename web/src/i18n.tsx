@@ -4,6 +4,11 @@ import { initialLocale, rememberLocale, type Locale } from './locale';
 export type { Locale } from './locale';
 
 const en = {
+  viewAsPlayer: 'Sign in as {name}',
+  impersonationConfirm: 'Temporarily sign in as {name}? You will have their permissions for up to 30 minutes. You can return to your Owner account at any time.',
+  impersonationActive: 'Signed in as',
+  impersonationOwner: 'Owner: {name}',
+  returnToOwner: 'Return to Owner',
   clanLinksTitle: 'Clan links',
   clanTelegram: 'Telegram',
   clanDiscord: 'Discord',
@@ -326,6 +331,11 @@ const en = {
 
 type MessageKey = keyof typeof en;
 const uk: Record<MessageKey, string> = {
+  viewAsPlayer: 'Увійти як {name}',
+  impersonationConfirm: 'Тимчасово увійти як {name}? Ви матимете його права до 30 хвилин і зможете будь-коли повернутися до свого акаунта власника.',
+  impersonationActive: 'Ви увійшли як',
+  impersonationOwner: 'Власник: {name}',
+  returnToOwner: 'Повернутися до власника',
   clanLinksTitle: 'Посилання клану',
   clanTelegram: 'Telegram',
   clanDiscord: 'Discord',

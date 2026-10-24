@@ -57,7 +57,7 @@ export function PrivateApp() {
     api<Dashboard>('dashboard')
       .then(setDashboard)
       .catch((failure) => setError((failure as Error).message));
-  }, [phase]);
+  }, [phase, account?.id]);
 
   function authenticated(current: Account) {
     setAccount(current);
@@ -65,6 +65,27 @@ export function PrivateApp() {
     setPhase('ready');
     setError('');
     history.replaceState(null, '', location.pathname + location.hash);
+  }
+
+  function assumeAccount(next: Account) {
+    setDashboard(null);
+    setAccount(next);
+    setLocale(next.locale);
+    setError('');
+    window.location.hash = '#/archive';
+  }
+
+  async function returnToOwner() {
+    try {
+      const original = await api<Account>('auth/stop-impersonation', { method: 'POST' });
+      setDashboard(null);
+      setAccount(original);
+      setLocale(original.locale);
+      setError('');
+      window.location.hash = '#/users';
+    } catch (failure) {
+      setError((failure as Error).message);
+    }
   }
 
   async function saveLanguage(next: Locale) {
@@ -101,10 +122,13 @@ export function PrivateApp() {
   return (
     <React.Suspense fallback={<main className="loading-page">{t('loading')}</main>}>
       <ClanDashboard
+        key={account.id}
         user={account}
         data={dashboard}
         onChange={setDashboard}
         onLogout={logout}
+        onImpersonate={assumeAccount}
+        onStopImpersonation={returnToOwner}
         onLocaleChange={saveLanguage}
         onProfileChange={async (updated) => {
           setAccount(updated);
