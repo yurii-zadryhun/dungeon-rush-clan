@@ -154,7 +154,7 @@ export class PublicClanController {
     return reply.header('Cache-Control', 'public, max-age=60').send(data);
   }
 
-  @Get(['clan', 'clan/'])
+  @Get('clan')
   async page(@Res() reply: FastifyReply) {
     const snapshot = await this.clan.snapshot();
     const origin = (process.env.APP_ORIGIN || 'http://localhost:3000').replace(/\/$/, '');
