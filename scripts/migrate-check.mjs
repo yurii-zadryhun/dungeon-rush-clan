@@ -61,8 +61,19 @@ async function run() {
       locale: 'uk',
     });
     assert.deepEqual(
-      sql.prepare('SELECT clan_name, minimum_points, leader_name, telegram_url, discord_url, contact_url FROM settings WHERE id = 1').get(),
-      { clan_name: 'Original clan', minimum_points: 250000, leader_name: '', telegram_url: '', discord_url: '', contact_url: '' },
+      sql
+        .prepare(
+          'SELECT clan_name, minimum_points, leader_name, telegram_url, discord_url, contact_url FROM settings WHERE id = 1',
+        )
+        .get(),
+      {
+        clan_name: 'Original clan',
+        minimum_points: 250000,
+        leader_name: '',
+        telegram_url: '',
+        discord_url: '',
+        contact_url: '',
+      },
       'Existing settings acquire blank leader without losing config',
     );
     const player = sql.prepare('SELECT id, account_id FROM players WHERE id = 8').get();

@@ -92,7 +92,8 @@ function detectLocale(header: string): PublicLocale {
     const [code, q] = part.trim().split(';q=');
     return { language: code?.toLowerCase().split('-')[0], quality: q === undefined ? 1 : Number(q) };
   });
-  const result = languages.filter((item) => item.quality > 0 && Number.isFinite(item.quality))
+  const result = languages
+    .filter((item) => item.quality > 0 && Number.isFinite(item.quality))
     .sort((a, b) => b.quality - a.quality)
     .find((item) => item.language === 'uk' || item.language === 'en');
   return result?.language === 'en' ? 'en' : 'uk';
@@ -103,7 +104,10 @@ function warLabel(start: string, locale: PublicLocale): string {
   const to = new Date(from);
   to.setUTCDate(to.getUTCDate() + 5);
   return new Intl.DateTimeFormat(locale === 'uk' ? 'uk-UA' : 'en-US', {
-    month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
   }).formatRange(from, to);
 }
 
@@ -114,28 +118,49 @@ export function renderClanDocument(
   locale: PublicLocale = 'en',
 ) {
   const uk = locale === 'uk';
-  const messages = uk ? {
-    archive: 'Архів війн клану', leader: 'Лідер', contact: 'Зв’язатися з нами',
-    wins: 'Перемоги', losses: 'Поразки', history: 'Історія війн',
-    login: 'Увійти', unknown: 'Невідомий суперник', victory: 'Перемога',
-    defeat: 'Поразка', noWars: 'Поки немає завершених війн.', language: 'Мова',
-    description: 'Лідер клану, перемоги та результати війн Dungeon Rush — без приватної статистики гравців.',
-  } : {
-    archive: 'Clan war archive', leader: 'Leader', contact: 'Contact us',
-    wins: 'Wins', losses: 'Losses', history: 'Clan war history',
-    login: 'Sign in', unknown: 'Unknown opponent', victory: 'Victory',
-    defeat: 'Defeat', noWars: 'No completed clan wars yet.', language: 'Language',
-    description: 'Dungeon Rush clan leader, wins and finished wars — without private player statistics.',
-  };
+  const messages = uk
+    ? {
+        archive: 'Архів війн клану',
+        leader: 'Лідер',
+        contact: 'Зв’язатися з нами',
+        wins: 'Перемоги',
+        losses: 'Поразки',
+        history: 'Історія війн',
+        login: 'Увійти',
+        unknown: 'Невідомий суперник',
+        victory: 'Перемога',
+        defeat: 'Поразка',
+        noWars: 'Поки немає завершених війн.',
+        language: 'Мова',
+        description:
+          'Лідер клану, перемоги та результати війн Dungeon Rush — без приватної статистики гравців.',
+      }
+    : {
+        archive: 'Clan war archive',
+        leader: 'Leader',
+        contact: 'Contact us',
+        wins: 'Wins',
+        losses: 'Losses',
+        history: 'Clan war history',
+        login: 'Sign in',
+        unknown: 'Unknown opponent',
+        victory: 'Victory',
+        defeat: 'Defeat',
+        noWars: 'No completed clan wars yet.',
+        language: 'Language',
+        description:
+          'Dungeon Rush clan leader, wins and finished wars — without private player statistics.',
+      };
   const pageUrl = origin + '/clan/' + locale;
   const imageUrl = origin + '/assets/og-clan.jpg';
   const title = clan.name + ' | Dungeon Rush ' + messages.history;
   const description = clan.name + ': ' + messages.description;
-  const wars = clan.recentWars.map((war) => {
-    const victory = war.ourScore > war.opponentScore;
-    const draw = war.ourScore === war.opponentScore;
-    const status = draw ? '' : victory ? 'victory' : 'defeat';
-    return `<li class="guest-war ${status}">
+  const wars = clan.recentWars
+    .map((war) => {
+      const victory = war.ourScore > war.opponentScore;
+      const draw = war.ourScore === war.opponentScore;
+      const status = draw ? '' : victory ? 'victory' : 'defeat';
+      return `<li class="guest-war ${status}">
       <div class="guest-war-info">
         <time class="guest-war-date" datetime="${escapeHtml(war.start)}">${escapeHtml(warLabel(war.start, locale))}</time>
         <strong>${escapeHtml(clan.name)} <span class="guest-versus">vs</span> ${escapeHtml(war.opponent || messages.unknown)}</strong>
@@ -145,7 +170,8 @@ export function renderClanDocument(
         <small>${draw ? '—' : victory ? messages.victory : messages.defeat}</small>
       </div>
     </li>`;
-  }).join('\n');
+    })
+    .join('\n');
 
   const markup = `<div class="guest-page">
     <header class="guest-header">
@@ -171,8 +197,12 @@ export function renderClanDocument(
           <div class="guest-hero-text">
             <h1 id="clan-title">${escapeHtml(clan.name)} — Dungeon Rush</h1>
             <div class="guest-leader"><span aria-hidden="true">♛</span> ${escapeHtml(messages.leader)}: <strong>${escapeHtml(clan.leader)}</strong></div>
-            ${clan.contactUrl ? `<a class="guest-contact-link" href="${escapeHtml(clan.contactUrl)}"
-              rel="noopener noreferrer" target="_blank">${escapeHtml(messages.contact)} <span aria-hidden="true">↗</span></a>` : ''}
+            ${
+              clan.contactUrl
+                ? `<a class="guest-contact-link" href="${escapeHtml(clan.contactUrl)}"
+              rel="noopener noreferrer" target="_blank">${escapeHtml(messages.contact)} <span aria-hidden="true">↗</span></a>`
+                : ''
+            }
           </div>
         </div>
       </section>
@@ -195,7 +225,9 @@ export function renderClanDocument(
     url: pageUrl,
     logo: origin + '/assets/clan-emblem.png',
     description,
-    ...(clan.contactUrl ? { contactPoint: { '@type': 'ContactPoint', contactType: 'community', url: clan.contactUrl } } : {}),
+    ...(clan.contactUrl
+      ? { contactPoint: { '@type': 'ContactPoint', contactType: 'community', url: clan.contactUrl } }
+      : {}),
   }).replace(/</g, '\\u003c');
   const meta = `
     <meta name="description" content="${escapeHtml(description)}" />
@@ -224,17 +256,19 @@ export function renderClanDocument(
     <meta name="twitter:description" content="${escapeHtml(description)}" />
     <meta name="twitter:image" content="${escapeHtml(imageUrl)}" />
     <script type="application/ld+json">${jsonLd}</script>`;
-  return template
-    .replace(/<html lang="[^"]*">/, '<html lang="' + locale + '">')
-    .replace(/<title>[^<]*<\/title>/, '<title>' + escapeHtml(title) + '</title>')
-    .replace(/<meta name="robots"[^>]*>/, '')
-    .replace(/<meta\s+name="description"[\s\S]*?\/>/g, '')
-    // Do not ship the authenticated React app or its CSS to public visitors.
-    .replace(/<script[^>]*type="module"[^>]*><\/script>/g, '')
-    .replace(/<link[^>]*rel="modulepreload"[^>]*>/g, '')
-    .replace(/<link[^>]*rel="stylesheet"[^>]*>/g, '')
-    .replace('</head>', meta + '\n</head>')
-    .replace('<div id="root"></div>', '<div id="root">' + markup + '</div>');
+  return (
+    template
+      .replace(/<html lang="[^"]*">/, '<html lang="' + locale + '">')
+      .replace(/<title>[^<]*<\/title>/, '<title>' + escapeHtml(title) + '</title>')
+      .replace(/<meta name="robots"[^>]*>/, '')
+      .replace(/<meta\s+name="description"[\s\S]*?\/>/g, '')
+      // Do not ship the authenticated React app or its CSS to public visitors.
+      .replace(/<script[^>]*type="module"[^>]*><\/script>/g, '')
+      .replace(/<link[^>]*rel="modulepreload"[^>]*>/g, '')
+      .replace(/<link[^>]*rel="stylesheet"[^>]*>/g, '')
+      .replace('</head>', meta + '\n</head>')
+      .replace('<div id="root"></div>', '<div id="root">' + markup + '</div>')
+  );
 }
 
 @Controller()

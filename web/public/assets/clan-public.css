@@ -1,36 +1,119 @@
 /* Standalone public page: no JavaScript, React runtime, or private app stylesheet. */
-:root { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #f7f6f6; background:#111215; font-synthesis: none; color-scheme:dark; }
-*, *::before, *::after { box-sizing:border-box; }
-body { margin:0; min-width:320px; }
-a { -webkit-tap-highlight-color:transparent; }
-h1,h2,p { margin-top:0; }
-.panel { border:3px solid #070708; border-radius:17px; box-shadow: 0 6px 0 #070708; background:#302e2f; }
-.guest-wars { list-style:none; padding:0; margin:0; }
-.guest-empty { padding:18px; color:#c5c1c9; font-size:15px; }
+:root {
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  color: #f7f6f6;
+  background: #111215;
+  font-synthesis: none;
+  color-scheme: dark;
+}
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+}
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+.panel {
+  border: 3px solid #070708;
+  border-radius: 17px;
+  box-shadow: 0 6px 0 #070708;
+  background: #302e2f;
+}
+.guest-wars {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.guest-empty {
+  padding: 18px;
+  color: #c5c1c9;
+  font-size: 15px;
+}
 .guest-languages {
-  display:inline-flex; gap:4px; flex:0 0 auto; padding:3px;
-  border:2px solid #080808; border-radius:11px; background:#242224;
+  display: inline-flex;
+  gap: 4px;
+  flex: 0 0 auto;
+  padding: 3px;
+  border: 2px solid #080808;
+  border-radius: 11px;
+  background: #242224;
 }
 .guest-languages a {
-  display:inline-flex; align-items:center; justify-content:center; border-radius:8px;
-  padding:9px 11px; min-height:38px; text-decoration:none;
-  color:#d2ced6; font-size:13px; font-weight:800; white-space:nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  padding: 9px 11px;
+  min-height: 38px;
+  text-decoration: none;
+  color: #d2ced6;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
 }
-.guest-languages a[aria-current="page"] { background:#396e99; color:#fff; }
-.guest-languages a:focus-visible { outline:3px solid #ecc865; outline-offset:2px; }
-.guest-war-date { font-size:12px; }
-.guest-versus { font-size:12px; }
-.guest-war-info strong { font-size:14px; }
-.guest-war-result small { font-size:12px; }
-.guest-record-item span { font-size:12px; }
-.guest-contact-link { min-height:43px; font-size:13px; }
-.guest-game { margin:8px 0 24px; }
-@media (max-width:650px) {
-  .guest-languages a { padding:8px 7px; min-height:38px; font-size:12px; }
-  .guest-header { gap:8px; }
-  .guest-actions { gap:8px; }
-  .guest-signin { padding:8px 9px; }
-  .guest-brand span { max-width:150px; }
+.guest-languages a[aria-current='page'] {
+  background: #396e99;
+  color: #fff;
+}
+.guest-languages a:focus-visible {
+  outline: 3px solid #ecc865;
+  outline-offset: 2px;
+}
+.guest-war-date {
+  font-size: 12px;
+}
+.guest-versus {
+  font-size: 12px;
+}
+.guest-war-info strong {
+  font-size: 14px;
+}
+.guest-war-result small {
+  font-size: 12px;
+}
+.guest-record-item span {
+  font-size: 12px;
+}
+.guest-contact-link {
+  min-height: 43px;
+  font-size: 13px;
+}
+.guest-game {
+  margin: 8px 0 24px;
+}
+@media (max-width: 650px) {
+  .guest-languages a {
+    padding: 8px 7px;
+    min-height: 38px;
+    font-size: 12px;
+  }
+  .guest-header {
+    gap: 8px;
+  }
+  .guest-actions {
+    gap: 8px;
+  }
+  .guest-signin {
+    padding: 8px 9px;
+  }
+  .guest-brand span {
+    max-width: 150px;
+  }
 }
 
 .guest-page {
@@ -374,16 +457,40 @@ h1,h2,p { margin-top:0; }
   font-weight: 900;
   text-decoration: none;
 }
-.guest-contact-link:hover { background: #466786; color: #fff; }
-.guest-contact-link:focus-visible { outline: 3px solid #e9c369; outline-offset: 3px; }
+.guest-contact-link:hover {
+  background: #466786;
+  color: #fff;
+}
+.guest-contact-link:focus-visible {
+  outline: 3px solid #e9c369;
+  outline-offset: 3px;
+}
 
 /* Keep all informational text legible on narrow displays. */
-.guest-war-date { font-size: 12px; }
-.guest-war-info strong { font-size: 14px; }
-.guest-versus { font-size: 12px; }
-.guest-war-result small { font-size: 12px; }
-.guest-history h2 { font-size: clamp(19px, 3vw, 25px); }
-.guest-record-item span { font-size: 12px; }
-.guest-hero .guest-leader { font-size: 14px; }
-.guest-brand { font-size: 14px; }
-.guest-empty { font-size: 14px; }
+.guest-war-date {
+  font-size: 12px;
+}
+.guest-war-info strong {
+  font-size: 14px;
+}
+.guest-versus {
+  font-size: 12px;
+}
+.guest-war-result small {
+  font-size: 12px;
+}
+.guest-history h2 {
+  font-size: clamp(19px, 3vw, 25px);
+}
+.guest-record-item span {
+  font-size: 12px;
+}
+.guest-hero .guest-leader {
+  font-size: 14px;
+}
+.guest-brand {
+  font-size: 14px;
+}
+.guest-empty {
+  font-size: 14px;
+}

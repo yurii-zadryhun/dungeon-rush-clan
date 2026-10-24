@@ -58,20 +58,33 @@ async function run() {
   );
   assert.doesNotMatch(guestMarkup, /noindex,nofollow/, 'No private-app robots tag on guest page');
   assert.doesNotMatch(guestMarkup, /<script[^>]*type="module"/, 'Public page must ship no React code');
-  assert.doesNotMatch(guestMarkup, /\/assets\/index-[^" ]+\.js/, 'No private JavaScript URL in public HTML');
+  assert.doesNotMatch(
+    guestMarkup,
+    /\/assets\/index-[^" ]+\.js/,
+    'No private JavaScript URL in public HTML',
+  );
   assert.match(guestMarkup, /\/assets\/clan-public\.css/, 'Small standalone guest stylesheet');
   assert.match(guestMarkup, /hreflang="uk"/, 'Ukrainian alternate language declared');
   const englishGuest = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan/en');
   assert.match(await englishGuest.text(), /<html lang="en">/, 'English page served without JavaScript');
   const ukrainianGuest = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan/uk');
-  assert.match(await ukrainianGuest.text(), /<html lang="uk">/, 'Ukrainian page served without JavaScript');
+  assert.match(
+    await ukrainianGuest.text(),
+    /<html lang="uk">/,
+    'Ukrainian page served without JavaScript',
+  );
   const browserGuest = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan', {
     headers: { 'Accept-Language': 'en-GB,en;q=0.8,uk;q=0.2' },
   });
-  assert.match(await browserGuest.text(), /<html lang="en">/, 'Browser language used for default guest URL');
+  assert.match(
+    await browserGuest.text(),
+    /<html lang="en">/,
+    'Browser language used for default guest URL',
+  );
   ensure(
     (await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/assets/clan-public.css')).status,
-    200, 'Standalone public stylesheet available',
+    200,
+    'Standalone public stylesheet available',
   );
   const robots = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/robots.txt');
   assert.match(await robots.text(), /Disallow: \/api\//, 'API excluded from crawl');
@@ -144,23 +157,63 @@ async function run() {
     'Settings return public leader',
   );
   ensure((await request('public/clan')).body.leader, 'Clan Captain', 'Guests see configured leader');
-  ensure((await request('public/clan')).body.contactUrl, 'https://discord.gg/contact-clan',
-    'Guests see only public contact link, not private chat URLs');
-  ensure(publicSetting.body.rankings.settings.telegramUrl, 'https://t.me/ukrainians',
-    'Dashboard contains Telegram');
-  ensure(publicSetting.body.rankings.settings.discordUrl, 'https://discord.gg/clan',
-    'Dashboard contains Discord');
-  ensure((await request('settings', 'PATCH', {
-    clanName: 'Ukrainians', minimumPoints: 100000, weights: [0.75, 0.25],
-    contactUrl: 'javascript:alert(1)',
-  }, ownerCookie)).status, 400, 'Unsafe public contact URL rejected');
-  ensure((await request('settings', 'PATCH', {
-    clanName: 'Ukrainians', minimumPoints: 100000, weights: [0.75, 0.25],
-    discordUrl: 'http://discord.gg/clan',
-  }, ownerCookie)).status, 400, 'Insecure Discord URL rejected');
-  const configuredPublicPage = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan/en');
-  assert.match(await configuredPublicPage.text(), /href="https:\/\/discord.gg\/contact-clan"/,
-    'Public contact link is rendered in the searchable HTML');
+  ensure(
+    (await request('public/clan')).body.contactUrl,
+    'https://discord.gg/contact-clan',
+    'Guests see only public contact link, not private chat URLs',
+  );
+  ensure(
+    publicSetting.body.rankings.settings.telegramUrl,
+    'https://t.me/ukrainians',
+    'Dashboard contains Telegram',
+  );
+  ensure(
+    publicSetting.body.rankings.settings.discordUrl,
+    'https://discord.gg/clan',
+    'Dashboard contains Discord',
+  );
+  ensure(
+    (
+      await request(
+        'settings',
+        'PATCH',
+        {
+          clanName: 'Ukrainians',
+          minimumPoints: 100000,
+          weights: [0.75, 0.25],
+          contactUrl: 'javascript:alert(1)',
+        },
+        ownerCookie,
+      )
+    ).status,
+    400,
+    'Unsafe public contact URL rejected',
+  );
+  ensure(
+    (
+      await request(
+        'settings',
+        'PATCH',
+        {
+          clanName: 'Ukrainians',
+          minimumPoints: 100000,
+          weights: [0.75, 0.25],
+          discordUrl: 'http://discord.gg/clan',
+        },
+        ownerCookie,
+      )
+    ).status,
+    400,
+    'Insecure Discord URL rejected',
+  );
+  const configuredPublicPage = await fetch(
+    'http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan/en',
+  );
+  assert.match(
+    await configuredPublicPage.text(),
+    /href="https:\/\/discord.gg\/contact-clan"/,
+    'Public contact link is rendered in the searchable HTML',
+  );
   assert.equal(
     (await request('public/clan')).body.rankings,
     undefined,

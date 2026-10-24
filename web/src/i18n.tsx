@@ -8,7 +8,8 @@ const en = {
   clanTelegram: 'Telegram',
   clanDiscord: 'Discord',
   clanContactLink: 'Public contact link',
-  clanContactHint: 'Shown on the public clan page; use an invitation or contact URL (Discord, Telegram, etc.).',
+  clanContactHint:
+    'Shown on the public clan page; use an invitation or contact URL (Discord, Telegram, etc.).',
   clanContactAction: 'Contact us',
   playerColumn: 'Player',
   scoreColumn: 'Calculated',
@@ -329,7 +330,8 @@ const uk: Record<MessageKey, string> = {
   clanTelegram: 'Telegram',
   clanDiscord: 'Discord',
   clanContactLink: 'Публічний контакт',
-  clanContactHint: 'Відображається на публічній сторінці. Вкажіть посилання на Discord, Telegram або інший спосіб зв’язку.',
+  clanContactHint:
+    'Відображається на публічній сторінці. Вкажіть посилання на Discord, Telegram або інший спосіб зв’язку.',
   clanContactAction: 'Зв’язатися з нами',
   playerColumn: 'Гравець',
   scoreColumn: 'Рейтинг',

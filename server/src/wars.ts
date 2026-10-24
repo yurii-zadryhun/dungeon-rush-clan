@@ -28,8 +28,6 @@ const publicLink = z
     }
   }, 'Use a valid HTTPS link without credentials');
 
-
-
 @Injectable()
 export class WarsService {
   constructor(
@@ -156,7 +154,8 @@ export class WarsService {
       .safeParse(input);
     if (!parsed.success)
       throw new BadRequestException(parsed.error.issues.map((i) => i.message).join('; '));
-    const { clanName, minimumPoints, weights, leaderName, telegramUrl, discordUrl, contactUrl } = parsed.data;
+    const { clanName, minimumPoints, weights, leaderName, telegramUrl, discordUrl, contactUrl } =
+      parsed.data;
     const sum = weights.reduce((s, x) => s + x, 0);
     if (Math.abs(sum - 1) > 0.00001) throw new BadRequestException('Weights must sum to 1');
     await this.db.query

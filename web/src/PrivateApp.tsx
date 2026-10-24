@@ -23,9 +23,7 @@ export function PrivateApp() {
     let mounted = true;
     async function restore() {
       try {
-        const state = await api<{ account: Account | null; initialized: boolean }>(
-          'auth/session-state',
-        );
+        const state = await api<{ account: Account | null; initialized: boolean }>('auth/session-state');
         if (!mounted) return;
         if (state.account) {
           setAccount(state.account);
@@ -35,9 +33,7 @@ export function PrivateApp() {
           setPhase('setup');
         } else {
           setPhase(
-            invite && new URLSearchParams(location.search).get('login') !== '1'
-              ? 'invite'
-              : 'login',
+            invite && new URLSearchParams(location.search).get('login') !== '1' ? 'invite' : 'login',
           );
         }
       } catch (failure) {
