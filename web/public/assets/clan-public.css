@@ -543,18 +543,25 @@ p {
   border-radius: 999px;
   background: linear-gradient(125deg, #f6d58a 0%, #e5a450 100%);
   color: #302112;
-  box-shadow: 0 3px 0 #98612d, inset 0 1px 0 #fff7d4a8;
+  box-shadow:
+    0 3px 0 #98612d,
+    inset 0 1px 0 #fff7d4a8;
   text-decoration: none;
   font-size: 13px;
   font-weight: 950;
   text-shadow: none;
-  transition: background-color 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+  transition:
+    background-color 120ms ease,
+    transform 120ms ease,
+    box-shadow 120ms ease;
 }
 .guest-identity-actions .guest-contact-link:hover {
   color: #201509;
   background: linear-gradient(125deg, #ffebbc 0%, #f4b95b 100%);
   transform: translateY(-1px);
-  box-shadow: 0 4px 0 #98612d, inset 0 1px 0 #fff9e5;
+  box-shadow:
+    0 4px 0 #98612d,
+    inset 0 1px 0 #fff9e5;
 }
 .guest-identity-actions .guest-contact-link:focus-visible {
   outline: 3px solid #fff2b7;
@@ -574,7 +581,13 @@ p {
   font-weight: 700;
 }
 @media (max-width: 650px) {
-  .guest-hero .guest-game { margin: 5px 0 14px; }
-  .guest-identity-actions { gap: 8px 12px; }
-  .guest-identity-actions .guest-contact-link { font-size: 12px; }
+  .guest-hero .guest-game {
+    margin: 5px 0 14px;
+  }
+  .guest-identity-actions {
+    gap: 8px 12px;
+  }
+  .guest-identity-actions .guest-contact-link {
+    font-size: 12px;
+  }
 }
