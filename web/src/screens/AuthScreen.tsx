@@ -21,6 +21,7 @@ function AuthLayout({
         </div>
         <h1>Dungeon Rush</h1>
         <h2>{t('appTitle')}</h2>
+        <a className="auth-public-link" href="/clan">{t('publicGuestLink')} ↗</a>
         {children}
       </div>
     </main>

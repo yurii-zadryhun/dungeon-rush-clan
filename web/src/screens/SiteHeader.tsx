@@ -4,6 +4,7 @@ import {
   BookOpen,
   ChevronDown,
   History,
+  Globe2,
   LogOut,
   Menu,
   Settings,
@@ -155,6 +156,9 @@ export function SiteHeader({
                     <Settings size={18} /> {t('clanSettings')}
                   </button>
                 )}
+                <a role="menuitem" href="/clan">
+                  <Globe2 size={18} /> {t('publicGuestLink')}
+                </a>
                 <div className="shell-menu-language">
                   <LanguagePicker onSelect={onLocaleChange} />
                 </div>

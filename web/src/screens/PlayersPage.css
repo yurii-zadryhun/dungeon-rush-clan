@@ -316,3 +316,13 @@
     padding: 10px 6px;
   }
 }
+
+.players-overview { align-items: start; flex-wrap: wrap; justify-content: end; }
+.players-overview span { max-width: 132px; line-height: 1.3; }
+.auth-public-link { display: inline-flex; margin: 0 0 15px; text-decoration: none; color: #9bd4fc; font-size: 12px; font-weight: 800; }
+.auth-public-link:hover { color: #fff; }
+@media (max-width: 540px) {
+  .players-heading { align-items: start; }
+  .players-overview { width: 100%; justify-content: space-between; gap: 10px; padding: 7px 0 2px; }
+  .players-overview span { flex: 1; text-align: center; font-size: 9px; }
+}
