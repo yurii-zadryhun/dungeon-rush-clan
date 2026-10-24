@@ -1,8 +1,8 @@
 import React from 'react';
-import { Activity, ArrowUpRight, GitMerge, Search, ShieldCheck, UserRound, Users } from 'lucide-react';
+import { Activity, ArrowUpRight, Search, ShieldCheck, UserRound, Users } from 'lucide-react';
 import { api, shortNumber, type Account, type Dashboard, type Player } from '../api';
 import { useI18n } from '../i18n';
-import { UsersScreen } from './UsersScreen';
+const UsersScreen = React.lazy(() => import('./UsersScreen').then((m) => ({ default: m.UsersScreen })));
 import './PlayersPage.css';
 
 interface DirectoryPlayer {
@@ -10,7 +10,7 @@ interface DirectoryPlayer {
   name: string;
   active: boolean;
   hasAccount: boolean;
-  accountLinked: boolean;
+  accountActive: boolean;
   accountRole: Account['role'] | null;
   accountId?: number | null;
   weeks: string[];
@@ -82,8 +82,8 @@ export function PlayersPage({
     .filter((player) => {
       if (membership === 'active' && !player.active) return false;
       if (membership === 'left' && player.active) return false;
-      if (registration === 'registered' && !player.hasAccount) return false;
-      if (registration === 'unregistered' && player.hasAccount) return false;
+      if (registration === 'registered' && !(player.hasAccount && player.accountActive)) return false;
+      if (registration === 'unregistered' && player.hasAccount && player.accountActive) return false;
       return player.name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase());
     })
     .sort((a, b) => {
@@ -95,7 +95,7 @@ export function PlayersPage({
       return (bScore?.score ?? 0) - (aScore?.score ?? 0) || a.name.localeCompare(b.name);
     });
   const activeCount = members.filter((player) => player.active).length;
-  const registeredCount = members.filter((player) => player.active && player.hasAccount).length;
+  const registeredCount = members.filter((player) => player.active && player.hasAccount && player.accountActive).length;
 
   function merged(next: Dashboard) {
     onMerged(next);
@@ -129,7 +129,9 @@ export function PlayersPage({
       )}
 
       {tab === 'access' && isStaff ? (
-        <UsersScreen account={account} onMerged={merged} />
+        <React.Suspense fallback={<p className="muted">{t('loading')}</p>}>
+          <UsersScreen account={account} onMerged={merged} />
+        </React.Suspense>
       ) : (
         <section className="panel players-directory" aria-label={t('clanRoster')}>
           <div className="players-filters">
@@ -206,10 +208,10 @@ function DirectoryRow({ player, stat }: { player: DirectoryPlayer; stat?: Player
           {player.name} <ArrowUpRight size={15} />
         </a>
         <div className="directory-player-flags">
-          <span className={'directory-flag ' + (player.hasAccount ? 'linked' : 'unlinked')}>
-            {t(player.hasAccount ? 'registered' : player.accountLinked ? 'revokedAccount' : 'notRegistered')}
+          <span className={'directory-flag ' + (player.hasAccount && player.accountActive ? 'linked' : 'unlinked')}>
+            {t(player.hasAccount ? player.accountActive ? 'registered' : 'revokedAccount' : 'notRegistered')}
           </span>
-          {player.hasAccount && player.accountRole && player.accountRole !== 'member' && (
+          {player.hasAccount && player.accountActive && player.accountRole && player.accountRole !== 'member' && (
             <span className="directory-flag">{t(player.accountRole === 'owner' ? 'ownerRole' : 'adminRole')}</span>
           )}
           {!player.active && <span className="directory-flag">{t('left')}</span>}
