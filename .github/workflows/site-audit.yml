@@ -1,0 +1,55 @@
+name: Site audit
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/site-audit.yml
+permissions:
+  contents: read
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run real Lighthouse audits against production
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p audit
+          for page in sign-in clan; do
+            if [ "$page" = clan ]; then url="https://clan.dungeon-rush.webestit.com/clan"; else url="https://clan.dungeon-rush.webestit.com/"; fi
+            for device in mobile desktop; do
+              echo "::group::Lighthouse $page / $device"
+              options=()
+              if [ "$device" = desktop ]; then options+=(--preset=desktop); fi
+              npx --yes lighthouse@12.8.2 "$url" --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --only-categories=performance,accessibility,best-practices,seo --output=json --output-path="audit/$page-$device.json" --quiet "${options[@]}" || true
+              if [ -f "audit/$page-$device.json" ]; then
+                node scripts/audit-report.mjs "audit/$page-$device.json"
+              else
+                echo "ERROR: Lighthouse did not return a report"
+              fi
+              echo "::endgroup::"
+            done
+          done
+      - name: Ask PageSpeed Insights API for field/lab metrics
+        shell: bash
+        run: |
+          for page in sign-in clan; do
+            if [ "$page" = clan ]; then url="https://clan.dungeon-rush.webestit.com/clan"; else url="https://clan.dungeon-rush.webestit.com/"; fi
+            for device in mobile desktop; do
+              echo "::group::PageSpeed Insights $page / $device"
+              curl -sSL -G --max-time 100 --retry 1                 --data-urlencode "url=$url" --data "strategy=$device"                 "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"                 -o "audit/psi-$page-$device.json" -w "HTTP %{http_code}\n" || true
+              node -e 'let p=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")); console.log(p.error?.message || "PageSpeed performance: "+Math.round(100*(p.lighthouseResult?.categories?.performance?.score||0))+", field data: "+(p.loadingExperience?.overall_category||"unavailable"));' "audit/psi-$page-$device.json" || true
+              echo "::endgroup::"
+            done
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: site-audit-reports
+          path: audit/
+          retention-days: 7
