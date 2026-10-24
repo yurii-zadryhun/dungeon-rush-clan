@@ -270,3 +270,34 @@
     font-size: 13px;
   }
 }
+
+/* Keep the current user's identity visible on phones without opening the menu. */
+.shell-mobile-profile { display: none; }
+@media (max-width: 950px) {
+  .shell-header .brand-caption { display: none; }
+  .site-header.shell-header .shell-tools { gap: 7px; }
+  .shell-mobile-profile {
+    display: grid;
+    justify-items: end;
+    align-content: center;
+    min-width: 0;
+    max-width: min(54vw, 280px);
+    border: 0;
+    background: transparent;
+    color: #fff;
+    padding: 4px 0;
+    text-align: right;
+    cursor: pointer;
+  }
+  .shell-mobile-name {
+    display: block;
+    max-width: 100%;
+    font-size: 12px;
+    font-weight: 950;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .shell-mobile-profile small { font-size: 10px; color: #c9b8d0; font-weight: 800; }
+  .shell-menu-user { display: none; }
+}
