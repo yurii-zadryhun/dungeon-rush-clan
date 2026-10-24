@@ -48,7 +48,6 @@ export function PlayerManagementPanel({ playerId }: { playerId: number }) {
   const [toast, setToast] = React.useState<Toast | null>(null);
   const latestLabels = React.useRef(labels);
   const playerEpoch = React.useRef(0);
-  const autosaveTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   latestLabels.current = labels;
 
@@ -86,7 +85,6 @@ export function PlayerManagementPanel({ playerId }: { playerId: number }) {
     return () => {
       alive = false;
       ++playerEpoch.current;
-      if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
     };
   }, [playerId]);
 
@@ -141,7 +139,6 @@ export function PlayerManagementPanel({ playerId }: { playerId: number }) {
   React.useEffect(() => {
     if (!unsaved || saving || saveError) return;
     const timer = setTimeout(saveLabels, 600);
-    autosaveTimer.current = timer;
     return () => clearTimeout(timer);
   }, [unsaved, saving, saveError, saveLabels]);
 
@@ -189,29 +186,7 @@ export function PlayerManagementPanel({ playerId }: { playerId: number }) {
           <ShieldCheck size={19} />
           {t('managementNotes')}
         </h2>
-        {data && (
-          <div className="management-sync" role="status">
-            {saveError ? (
-              <button
-                type="button"
-                className="management-retry"
-                onClick={() => {
-                  setSaveError('');
-                  saveLabels();
-                }}
-              >
-                <RotateCcw size={14} />
-                {t('retrySave')}
-              </button>
-            ) : saving || unsaved ? (
-              <span className="management-pending">
-                {t(saving ? 'savingChanges' : 'pendingAutosave')}
-              </span>
-            ) : (
-              <span className="management-auto">{t('autosaveEnabled')}</span>
-            )}
-          </div>
-        )}
+
       </div>
 
       {!data && !loadError && <p className="muted">{t('loading')}</p>}
@@ -311,7 +286,18 @@ export function PlayerManagementPanel({ playerId }: { playerId: number }) {
           {saveError && (
             <div className="management-save-error" role="alert">
               <AlertCircle size={17} />
-              {t('autosaveFailed')}: {saveError}
+              <span>{t('autosaveFailed')}: {saveError}</span>
+              <button
+                type="button"
+                className="management-retry"
+                onClick={() => {
+                  setSaveError('');
+                  saveLabels();
+                }}
+              >
+                <RotateCcw size={14} />
+                {t('retrySave')}
+              </button>
             </div>
           )}
 

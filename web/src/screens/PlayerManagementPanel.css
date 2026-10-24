@@ -1,43 +1,12 @@
-/* Staff-only player management: compact layout with a persistent autosave status. */
+/* Compact staff player management. Save feedback is provided by toast, not a sticky header. */
 .player-management .management-heading {
-  position: sticky;
-  top: 70px;
-  z-index: 12;
-  min-width: 0;
-  margin: -9px -9px 0;
-  padding: 12px 9px;
+  position: static;
+  margin: 0 0 13px;
+  padding: 0 0 12px;
   border-bottom: 1px solid #625e66;
-  background: #302e2f;
-  border-radius: 10px 10px 0 0;
 }
 .management-heading h2 {
   margin: 0;
-}
-.management-sync {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  min-height: 32px;
-  max-width: 100%;
-  font-size: 11px;
-  font-weight: 850;
-}
-.management-pending,
-.management-auto {
-  display: inline-flex;
-  align-items: center;
-  min-height: 29px;
-  border-radius: 7px;
-  padding: 6px 9px;
-  white-space: nowrap;
-}
-.management-pending {
-  color: #ffda95;
-  background: #4a3d28;
-}
-.management-auto {
-  color: #a3e8bd;
-  background: #224634;
 }
 .management-retry {
   display: inline-flex;
@@ -172,6 +141,8 @@
 .management-save-error svg {
   flex: 0 0 auto;
 }
+.management-save-error span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.management-save-error .management-retry { flex: 0 0 auto; }
 .note-section {
   display: grid;
   gap: 10px;
@@ -301,15 +272,8 @@
   }
 }
 @media (max-width: 650px) {
-  .player-management .management-heading {
-    top: 68px;
-    gap: 8px;
-  }
   .management-heading h2 {
     font-size: 16px;
-  }
-  .management-sync {
-    font-size: 10px;
   }
   .management-toast {
     right: 12px;
