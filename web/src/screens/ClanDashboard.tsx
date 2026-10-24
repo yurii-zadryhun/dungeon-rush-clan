@@ -12,7 +12,7 @@ import {
   normalizeName,
 } from '../api';
 import { formatWarRange } from '../date-format';
-import { useI18n, type Locale } from '../i18n';
+import { nChoice, useI18n, type Locale } from '../i18n';
 
 import { SiteHeader } from './SiteHeader';
 
@@ -41,25 +41,50 @@ const ProfileModal = React.lazy(() =>
 type PlayerMetric = 'average' | 'lastPoints';
 
 function Leaders({
-  title,
-  players,
-  metric,
+  allTime,
+  latest,
   account,
 }: {
-  title: string;
-  players: Player[];
-  metric: PlayerMetric;
+  allTime: Player[];
+  latest: Player[];
   account: Account;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const [metric, setMetric] = React.useState<PlayerMetric>('average');
   const [expanded, setExpanded] = React.useState(false);
+  const players = metric === 'average' ? allTime : latest;
+
+  function selectMetric(next: PlayerMetric) {
+    setMetric(next);
+    setExpanded(false);
+  }
+
   return (
     <section className={'panel leaders-widget' + (expanded ? ' expanded' : '')}>
-      <header className="widget-head">
+      <header className="widget-head leaderboard-heading">
         <h2>
-          <Medal size={19} /> {title}
+          <Medal size={19} /> {t('rankingsTitle')}
         </h2>
-        <span className="chip">{t(metric === 'average' ? 'averagePerWar' : 'weeklyPoints')}</span>
+        <div className="leaderboard-tabs" role="tablist" aria-label={t('rankingsTitle')}>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={metric === 'average'}
+            className={metric === 'average' ? 'selected' : ''}
+            onClick={() => selectMetric('average')}
+          >
+            {t('allTimeTab')}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={metric === 'lastPoints'}
+            className={metric === 'lastPoints' ? 'selected' : ''}
+            onClick={() => selectMetric('lastPoints')}
+          >
+            {t('latestTab')}
+          </button>
+        </div>
       </header>
       {players.length === 0 && <p className="empty">{t('noLeaders')}</p>}
       <div className="leader-list">
@@ -83,7 +108,8 @@ function Leaders({
                 {player.name}
               </a>
               <small>
-                {player.appearances} {t(player.appearances === 1 ? 'warsSingular' : 'warsPlural')}{' '}
+                {player.appearances}{' '}
+                {nChoice(locale, player.appearances, t('warsSingular'), t('warsFew'), t('warsPlural'))}{' '}
                 {!player.active && '· ' + t('left')}
               </small>
             </div>
@@ -507,18 +533,11 @@ export function ClanDashboard({
         ) : (
           <main className="dashboard">
             {error && <div className="error-strip">{error}</div>}
-            <div className="dashboard-top">
+            <div className="dashboard-top dashboard-top-compact">
               <ClanOverview data={data} />
               <Leaders
-                title={t('allTimeLeaders')}
-                players={data.rankings.allTime}
-                metric="average"
-                account={user}
-              />
-              <Leaders
-                title={t('latestLeaders')}
-                players={data.rankings.latest}
-                metric="lastPoints"
+                allTime={data.rankings.allTime}
+                latest={data.rankings.latest}
                 account={user}
               />
             </div>
