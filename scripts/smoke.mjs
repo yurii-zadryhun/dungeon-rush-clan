@@ -32,9 +32,76 @@ function ensure(actual, expected, context) {
 }
 
 async function run() {
+  // Browser-origin CSRF protections must fail closed on state-changing routes.
+  const attackBase = 'http://127.0.0.1:' + (process.env.PORT || 3128);
+  const loginBody = JSON.stringify({ username: 'attacker', password: 'invalid' });
+  const missingMarker = await fetch(attackBase + '/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: loginBody,
+  });
+  ensure(missingMarker.status, 403, 'Missing non-simple CSRF header is denied');
+  const hostileOrigin = await fetch(attackBase + '/api/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'clan-stats',
+      Origin: 'https://evil.example',
+    },
+    body: loginBody,
+  });
+  ensure(hostileOrigin.status, 403, 'Foreign Origin is denied');
+  const hostileFetch = await fetch(attackBase + '/api/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'clan-stats',
+      'Sec-Fetch-Site': 'cross-site',
+    },
+    body: loginBody,
+  });
+  ensure(hostileFetch.status, 403, 'Cross-site Fetch Metadata request is denied');
+
+  // Simulate two real external clients behind the trusted loopback Nginx hop.
+  for (let index = 0; index < 20; index++) {
+    const response = await fetch(attackBase + '/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'clan-stats',
+        'X-Forwarded-For': '203.0.113.51',
+      },
+      body: loginBody,
+    });
+    ensure(response.status, 401, 'Limited login attempts are rejected as invalid credentials');
+  }
+  const blocked = await fetch(attackBase + '/api/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'clan-stats',
+      'X-Forwarded-For': '203.0.113.51',
+    },
+    body: loginBody,
+  });
+  ensure(blocked.status, 429, 'Excessive login attempts are rate limited');
+  assert.ok(Number(blocked.headers.get('retry-after')) > 0, 'Rate limit supplies Retry-After');
+  const independent = await fetch(attackBase + '/api/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'clan-stats',
+      'X-Forwarded-For': '203.0.113.52',
+    },
+    body: loginBody,
+  });
+  ensure(independent.status, 401, 'Different client IP has independent rate budget');
   ensure((await request('auth/setup-state')).body.initialized, false, 'Uninitialized');
   const anonymousSession = await request('auth/session-state');
   ensure(anonymousSession.status, 200, 'Public session check never returns an expected 401');
+  // Private API responses must never be cached by browsers or shared proxies.
+  const privateState = await fetch(attackBase + '/api/auth/session-state');
+  ensure(privateState.headers.get('cache-control'), 'no-store', 'Session status is uncacheable');
   assert.deepEqual(anonymousSession.body, { account: null, initialized: false });
   const publicBeforeEnrollment = await request('public/clan');
   ensure(publicBeforeEnrollment.status, 200, 'Public profile needs no account');
@@ -47,6 +114,10 @@ async function run() {
   ensure(publicBeforeEnrollment.body.leader, '—', 'Uninitialized clan has no leader');
   const guestHtml = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan');
   ensure(guestHtml.status, 200, 'Public clan HTML is server-rendered');
+  assert.match(guestHtml.headers.get('content-security-policy') || '', /frame-ancestors 'none'/,
+    'Guests cannot embed the site in third-party frames');
+  assert.match(guestHtml.headers.get('strict-transport-security') || '', /max-age=/,
+    'Production enforces HTTPS for repeat visitors');
   const guestMarkup = await guestHtml.text();
   assert.match(guestMarkup, /property="og:image"/, 'Social preview metadata');
   assert.match(guestMarkup, /rel="canonical"/, 'Canonical public URL');
