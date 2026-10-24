@@ -269,4 +269,11 @@
   }
 }
 
-.profile-observed{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:11px;color:#b4adb8;font-size:10px}
+.profile-observed {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 11px;
+  color: #b4adb8;
+  font-size: 10px;
+}

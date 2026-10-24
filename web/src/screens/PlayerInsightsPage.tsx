@@ -232,8 +232,16 @@ export function PlayerInsightsPage({
                 <span className="profile-status caution">{t('underMinimum')}</span>
               )}
               <div className="profile-observed">
-                {player.firstSeen && <span>{t('firstRecorded')}: {formatWarRange(player.firstSeen, locale)}</span>}
-                {player.lastSeen && <span>{t('lastRecorded')}: {formatWarRange(player.lastSeen, locale)}</span>}
+                {player.firstSeen && (
+                  <span>
+                    {t('firstRecorded')}: {formatWarRange(player.firstSeen, locale)}
+                  </span>
+                )}
+                {player.lastSeen && (
+                  <span>
+                    {t('lastRecorded')}: {formatWarRange(player.lastSeen, locale)}
+                  </span>
+                )}
               </div>
             </div>
             <div className="profile-score-top">
