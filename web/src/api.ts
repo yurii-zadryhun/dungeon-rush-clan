@@ -91,6 +91,7 @@ export interface Roster {
   previousStart: string | null;
   previous: { id: number; name: string; points: number }[];
   all: { id: number; name: string; active: number }[];
+  aliases?: { normalizedName: string; playerId: number }[];
 }
 
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
