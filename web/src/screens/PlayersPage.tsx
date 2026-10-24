@@ -126,21 +126,6 @@ export function PlayersPage({
       </header>
 
       {isStaff && (
-            <span>
-              <b>{linkedCount}</b>
-              {nChoice(
-                locale,
-                linkedCount,
-                t('linkedCountOne'),
-                t('linkedCountFew'),
-                t('linkedCountMany'),
-              )}
-            </span>
-          )}
-        </div>
-      </header>
-
-      {isStaff && (
         <div className="players-tabs" role="tablist" aria-label={t('playersDirectory')}>
           <button
             role="tab"
