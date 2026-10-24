@@ -613,6 +613,65 @@ async function run() {
     400,
     'Cannot edit a war that was never imported',
   );
+  // OCR nickname corrections must preserve player identity, history, and the canonical login.
+  const corrected = await request('import/war', 'PATCH', {
+    start: old,
+    players: [
+      { position: 1, name: 'КРОСТ-fixed', playerId: oldName.id, points: 250000 },
+      { position: 2, name: 'Someone', playerId: oldPlayer.id, points: 200000 },
+      { position: 3, name: 'HistoricNew', points: 7777 },
+    ],
+  }, ownerCookie);
+  ensure(corrected.status, 200, 'Correct OCR name without creating duplicate identity');
+  ensure(corrected.body.rankings.calculated.find(p => p.id === oldName.id).name,
+    'КРОСТ-fixed', 'Original player ID retained');
+  ensure(corrected.body.rankings.calculated.filter(p => p.name === 'КРОСТ-fixed').length, 1,
+    'Corrected name appears once');
+  ensure((await request('import/roster?start=' + recent, 'GET', null, ownerCookie))
+    .body.aliases.some(a => a.normalizedName === 'крост' && a.playerId === oldName.id),
+    true, 'OCR correction saves old spelling as alias');
+  const correctedDays = (await request('dashboard?anchor=' + old + '&count=1',
+    'GET', null, ownerCookie)).body.weeks[0].days;
+  ensure(correctedDays.some(day => day.mvp === 'КРОСТ-fixed'),
+    true, 'Older MVP text updates with corrected identity');
+
+  ensure((await request('players/merge', 'POST', {
+    sourceId: oldPlayer.id, targetId: newcomer.id, overlap: 'keepTarget',
+  }, groupSecond.cookie)).status, 403, 'Member cannot merge player identities');
+  const migrated = await request('players/merge', 'POST', {
+    sourceId: oldPlayer.id, targetId: newcomer.id, overlap: 'keepTarget',
+  }, ownerCookie);
+  ensure(migrated.status, 201, 'Merge wrong OCR player into corrected account');
+  ensure(migrated.body.rankings.calculated.some(p => p.id === oldPlayer.id),
+    false, 'Old duplicate identity removed');
+  ensure(migrated.body.rankings.calculated.find(p => p.id === newcomer.id).appearances,
+    2, 'Both historical weeks retained for merged player');
+  const migratedWeek = (await request('dashboard?anchor=' + old + '&count=1',
+    'GET', null, ownerCookie)).body.weeks[0];
+  ensure(migratedWeek.players.some(p => p.id === newcomer.id && p.points === 200000),
+    true, 'Earlier war points reassigned to canonical ID');
+  ensure((await request('import/roster?start=' + recent, 'GET', null, ownerCookie))
+    .body.aliases.some(a => a.normalizedName === 'someone' && a.playerId === newcomer.id),
+    true, 'Merged old nickname is searchable OCR alias');
+  const rosterAfter = await request('players', 'GET', null, ownerCookie);
+  ensure(rosterAfter.body.some(p => p.id === oldPlayer.id), false, 'Duplicate removed from players list');
+  ensure((await request('players/merge', 'POST', {
+    sourceId: newcomer.id, targetId: newcomer.id, overlap: 'keepSource',
+  }, ownerCookie)).status, 400, 'Cannot merge identity into itself');
+
+  const resolvedAlias = await request('import/war', 'PATCH', {
+    start: old,
+    players: [
+      { position: 1, name: 'КРОСТ-fixed', playerId: oldName.id, points: 250000 },
+      { position: 2, name: 'Someone', playerId: null, points: 200000 },
+      { position: 3, name: 'HistoricNew', points: 7777 },
+    ],
+  }, ownerCookie);
+  ensure(resolvedAlias.status, 200, 'Historic typo resolves via alias on repeat edit');
+  ensure((await request('dashboard?anchor=' + old + '&count=1',
+    'GET', null, ownerCookie)).body.weeks[0].players
+      .some(p => p.id === newcomer.id && p.name === 'FreshNick'),
+    true, 'Old alias cannot create a duplicate player');
   console.log('Production integration smoke tests passed');
 }
 
