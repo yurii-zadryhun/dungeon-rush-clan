@@ -13,6 +13,9 @@ export interface Tables {
     minimum_points: number;
     weights_json: string;
     leader_name: string;
+    telegram_url: string;
+    discord_url: string;
+    contact_url: string;
   };
   accounts: {
     id: Generated<number>;
@@ -102,7 +105,7 @@ export class Db implements OnModuleDestroy {
     this.connection.pragma('foreign_keys = OFF');
     this.connection.pragma('busy_timeout = 5000');
     this.connection.exec(`
-      CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY CHECK(id=1), clan_name TEXT NOT NULL, minimum_points INTEGER NOT NULL, weights_json TEXT NOT NULL, leader_name TEXT NOT NULL DEFAULT '');
+      CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY CHECK(id=1), clan_name TEXT NOT NULL, minimum_points INTEGER NOT NULL, weights_json TEXT NOT NULL, leader_name TEXT NOT NULL DEFAULT '', telegram_url TEXT NOT NULL DEFAULT '', discord_url TEXT NOT NULL DEFAULT '', contact_url TEXT NOT NULL DEFAULT '');
       CREATE TABLE IF NOT EXISTS accounts (id INTEGER PRIMARY KEY, username TEXT UNIQUE NOT NULL, display_name TEXT NOT NULL, role TEXT NOT NULL, password_hash TEXT NOT NULL, locale TEXT NOT NULL DEFAULT 'uk', active INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS shared_invites (id INTEGER PRIMARY KEY CHECK(id=1), token_hash TEXT UNIQUE NOT NULL, created_by INTEGER NOT NULL REFERENCES accounts(id), active INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE, expires_at INTEGER NOT NULL, extended_at INTEGER NOT NULL);
@@ -141,6 +144,11 @@ export class Db implements OnModuleDestroy {
     const settingsColumns = this.connection.pragma('table_info(settings)') as { name: string }[];
     if (!settingsColumns.some((column) => column.name === 'leader_name')) {
       this.connection.exec("ALTER TABLE settings ADD COLUMN leader_name TEXT NOT NULL DEFAULT ''");
+    }
+    for (const field of ['telegram_url', 'discord_url', 'contact_url'] as const) {
+      if (!settingsColumns.some((column) => column.name === field)) {
+        this.connection.exec(`ALTER TABLE settings ADD COLUMN ${field} TEXT NOT NULL DEFAULT ''`);
+      }
     }
     // Existing installations used TOTP. Rebuild tables once to remove secrets entirely
     // while preserving account IDs, password hashes, sessions and invitations.

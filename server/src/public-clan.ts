@@ -7,6 +7,7 @@ import { Db } from './database';
 export interface PublicClanSnapshot {
   name: string;
   leader: string;
+  contactUrl: string;
   record: { wins: number; losses: number };
   recentWars: {
     start: string;
@@ -26,7 +27,7 @@ export class PublicClanService {
     const [settings, owner, results] = await Promise.all([
       this.db.query
         .selectFrom('settings')
-        .select(['clan_name', 'leader_name'])
+        .select(['clan_name', 'leader_name', 'contact_url'])
         .where('id', '=', 1)
         .executeTakeFirstOrThrow(),
       this.db.query
@@ -57,6 +58,7 @@ export class PublicClanService {
     return {
       name: settings.clan_name,
       leader: settings.leader_name.trim() || owner?.display_name || '—',
+      contactUrl: settings.contact_url,
       record: {
         wins: completed.filter((war) => war.ourScore > war.opponentScore).length,
         losses: completed.filter((war) => war.ourScore < war.opponentScore).length,

@@ -14,6 +14,22 @@ import { AdminGuard, SessionGuard } from './auth';
 import { RankingService } from './ranking';
 import { z } from 'zod';
 
+const publicLink = z
+  .string()
+  .trim()
+  .max(500)
+  .refine((value) => {
+    if (!value) return true;
+    try {
+      const url = new URL(value);
+      return url.protocol === 'https:' && !!url.hostname && !url.username && !url.password;
+    } catch {
+      return false;
+    }
+  }, 'Use a valid HTTPS link without credentials');
+
+
+
 @Injectable()
 export class WarsService {
   constructor(
@@ -133,11 +149,14 @@ export class WarsService {
         minimumPoints: z.number().int().min(0).max(1_000_000_000),
         weights: z.array(z.number().positive().finite()).min(1).max(12),
         leaderName: z.string().trim().max(80).optional(),
+        telegramUrl: publicLink.optional(),
+        discordUrl: publicLink.optional(),
+        contactUrl: publicLink.optional(),
       })
       .safeParse(input);
     if (!parsed.success)
       throw new BadRequestException(parsed.error.issues.map((i) => i.message).join('; '));
-    const { clanName, minimumPoints, weights, leaderName } = parsed.data;
+    const { clanName, minimumPoints, weights, leaderName, telegramUrl, discordUrl, contactUrl } = parsed.data;
     const sum = weights.reduce((s, x) => s + x, 0);
     if (Math.abs(sum - 1) > 0.00001) throw new BadRequestException('Weights must sum to 1');
     await this.db.query
@@ -147,6 +166,9 @@ export class WarsService {
         minimum_points: minimumPoints,
         weights_json: JSON.stringify(weights),
         ...(leaderName !== undefined ? { leader_name: leaderName } : {}),
+        ...(telegramUrl !== undefined ? { telegram_url: telegramUrl } : {}),
+        ...(discordUrl !== undefined ? { discord_url: discordUrl } : {}),
+        ...(contactUrl !== undefined ? { contact_url: contactUrl } : {}),
       })
       .where('id', '=', 1)
       .execute();

@@ -15,6 +15,9 @@ export function SettingsModal({
   const { t } = useI18n();
   const [clanName, setClanName] = React.useState(current.clanName);
   const [leaderName, setLeaderName] = React.useState(current.leaderName);
+  const [telegramUrl, setTelegramUrl] = React.useState(current.telegramUrl);
+  const [discordUrl, setDiscordUrl] = React.useState(current.discordUrl);
+  const [contactUrl, setContactUrl] = React.useState(current.contactUrl);
   const [minimum, setMinimum] = React.useState(String(current.minimumPoints / 1000));
   const [weights, setWeights] = React.useState(
     current.weights.map((weight) => String(Math.round(weight * 10000) / 100)),
@@ -47,6 +50,9 @@ export function SettingsModal({
         json('PATCH', {
           clanName,
           leaderName,
+          telegramUrl,
+          discordUrl,
+          contactUrl,
           minimumPoints: minimumThousands * 1000,
           weights: list,
         }),
@@ -96,6 +102,43 @@ export function SettingsModal({
             />
             <small className="muted">{t('publicLeaderHelp')}</small>
           </label>
+          <fieldset className="clan-links-fields">
+            <legend>{t('clanLinksTitle')}</legend>
+            <label>
+              {t('clanTelegram')}
+              <input
+                type="url"
+                autoComplete="url"
+                placeholder="https://t.me/..."
+                value={telegramUrl}
+                maxLength={500}
+                onChange={(event) => setTelegramUrl(event.target.value)}
+              />
+            </label>
+            <label>
+              {t('clanDiscord')}
+              <input
+                type="url"
+                autoComplete="url"
+                placeholder="https://discord.gg/..."
+                value={discordUrl}
+                maxLength={500}
+                onChange={(event) => setDiscordUrl(event.target.value)}
+              />
+            </label>
+            <label>
+              {t('clanContactLink')}
+              <input
+                type="url"
+                autoComplete="url"
+                placeholder="https://discord.gg/..."
+                value={contactUrl}
+                maxLength={500}
+                onChange={(event) => setContactUrl(event.target.value)}
+              />
+              <small className="muted">{t('clanContactHint')}</small>
+            </label>
+          </fieldset>
           <label>
             {t('minimumScore')}
             <div className="input-suffix">
