@@ -879,8 +879,11 @@ async function run() {
     'Tagged player appears in health attention list',
   );
   const protectedMetadata = await request('player-management/' + other.id, 'GET', null, ownerCookie);
-  ensure(protectedMetadata.body.labels.exceptionReason,
-    'Partner account: approved by leadership', 'Reason for protected player retained');
+  ensure(
+    protectedMetadata.body.labels.exceptionReason,
+    'Partner account: approved by leadership',
+    'Reason for protected player retained',
+  );
 
   ensure(
     (
