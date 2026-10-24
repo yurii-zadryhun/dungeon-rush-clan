@@ -268,7 +268,7 @@ function WarColumn({
           </button>
         )}
         {canEdit && imported && (
-          <button className="war-edit-button" onClick={() => onEdit(week)}>
+          <button className="game-button secondary full war-edit-button" onClick={() => onEdit(week)}>
             <Pencil size={15} /> {t('editWar')}
           </button>
         )}

@@ -2013,3 +2013,17 @@ b {
   font-size: inherit;
   max-width: 100%;
 }
+
+/* War editor action shares the consistent button system used throughout the archive. */
+.war-content .war-edit-button {
+  width: 100%;
+  min-height: 36px;
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 12px;
+  font-size: 11px;
+  line-height: 1.15;
+}

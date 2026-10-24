@@ -31,6 +31,46 @@
 }
 .shell-header .shell-navigation {
   justify-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  border-radius: 12px;
+  padding: 4px;
+  background: #252327;
+  border: 1px solid #3f3c42;
+}
+.shell-header .shell-navigation a {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 39px;
+  padding: 8px 11px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 900;
+  color: #c8c4cc;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.shell-header .shell-navigation a:hover {
+  color: #fff;
+  background: #3b3940;
+}
+.shell-header .shell-navigation a.active {
+  color: #fff;
+  background: #375f85;
+}
+.shell-header .shell-navigation a:focus-visible {
+  outline: 2px solid #f3ce77;
+  outline-offset: 2px;
+}
+@media (min-width: 951px) and (max-width: 1180px) {
+  .site-header.shell-header { grid-template-columns: minmax(0, 0.5fr) auto minmax(0, 0.5fr); }
+  .shell-header .shell-navigation a { font-size: 10px; padding-inline: 7px; gap: 5px; }
 }
 .shell-header .shell-tools {
   display: flex;
