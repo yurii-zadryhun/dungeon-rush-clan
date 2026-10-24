@@ -228,21 +228,36 @@ export class PlayersService {
         ];
         // Preserve conflicting manager context as history, not an oversized form field.
         const extraNotes: string[] = [];
-        if (oldLabels.exception_reason.trim() && canonicalLabels?.exception_reason.trim() &&
-            oldLabels.exception_reason !== canonicalLabels.exception_reason) {
+        if (
+          oldLabels.exception_reason.trim() &&
+          canonicalLabels?.exception_reason.trim() &&
+          oldLabels.exception_reason !== canonicalLabels.exception_reason
+        ) {
           extraNotes.push('Earlier exception for ' + source.name + ': ' + oldLabels.exception_reason);
         }
         for (const channel of ['telegram', 'discord'] as const) {
           const field = channel === 'telegram' ? 'telegram_handle' : 'discord_handle';
-          if (oldLabels[field] && canonicalLabels?.[field] &&
-              oldLabels[field] !== canonicalLabels[field]) {
-            extraNotes.push('Previous ' + channel + ' contact for ' + source.name + ': ' + oldLabels[field]);
+          if (
+            oldLabels[field] &&
+            canonicalLabels?.[field] &&
+            oldLabels[field] !== canonicalLabels[field]
+          ) {
+            extraNotes.push(
+              'Previous ' + channel + ' contact for ' + source.name + ': ' + oldLabels[field],
+            );
           }
         }
         for (const body of extraNotes) {
-          await trx.insertInto('player_notes').values({
-            player_id: targetId, author_id: null, body, category: 'note', created_at: Date.now(),
-          }).execute();
+          await trx
+            .insertInto('player_notes')
+            .values({
+              player_id: targetId,
+              author_id: null,
+              body,
+              category: 'note',
+              created_at: Date.now(),
+            })
+            .execute();
         }
         const mergedLabels = {
           telegram: Number(!!oldLabels.telegram || !!canonicalLabels?.telegram),
