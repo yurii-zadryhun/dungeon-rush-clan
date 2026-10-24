@@ -11,6 +11,7 @@ import {
   type Week,
   normalizeName,
 } from '../api';
+import { formatWarRange } from '../date-format';
 import { useI18n, type Locale } from '../i18n';
 import { ImportModal } from './ImportModal';
 import { EditWarModal } from './EditWarModal';
@@ -155,7 +156,7 @@ function WarColumn({
   canEdit: boolean;
   account: Account;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { status, importLabel } = useWarLabels();
   const imported = week.rankingImported || week.resultImported;
   const isWin = week.resultImported && (week.ourScore ?? 0) > (week.opponentScore ?? 0);
@@ -178,7 +179,7 @@ function WarColumn({
   return (
     <article className={classes} data-start={week.start}>
       <header className="war-heading">
-        <div className="war-date">{week.label}</div>
+        <div className="war-date">{formatWarRange(week.start, locale)}</div>
         <div className="war-status">{status(week)}</div>
       </header>
       <div className="war-content">

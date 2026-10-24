@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pencil, Save, X } from 'lucide-react';
 import { api, json, type Dashboard, type Roster, type Week } from '../api';
+import { formatWarRange } from '../date-format';
 import { useI18n } from '../i18n';
 import {
   WarReviewEditor,
@@ -22,7 +23,7 @@ export function EditWarModal({
   onClose: () => void;
   onDone: (dashboard: Dashboard, updatedWeek: Week) => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [draft, setDraft] = React.useState<WarDraft>(() => draftFromWeek(week));
   const [roster, setRoster] = React.useState<Roster>(emptyRoster);
   const [busy, setBusy] = React.useState(false);
@@ -91,7 +92,7 @@ export function EditWarModal({
       >
         <header className="modal-header">
           <h2>
-            <Pencil size={20} /> {t('editWar')} · {week.label}
+            <Pencil size={20} /> {t('editWar')} · {formatWarRange(week.start, locale)}
           </h2>
           <button className="close-button" aria-label={t('close')} onClick={onClose}>
             <X />

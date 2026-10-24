@@ -9,6 +9,7 @@ import {
   type Roster,
   type Week,
 } from '../api';
+import { formatWarRange } from '../date-format';
 import { useI18n } from '../i18n';
 import {
   WarReviewEditor,
@@ -95,7 +96,7 @@ export function ImportModal({
   onClose: () => void;
   onDone: (data: Dashboard) => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [rankingImages, setRankingImages] = React.useState<File[]>([]);
   const [resultImage, setResultImage] = React.useState<File | null>(null);
   const [stage, setStage] = React.useState<'upload' | 'review'>('upload');
@@ -192,7 +193,7 @@ export function ImportModal({
       >
         <header className="modal-header">
           <h2>
-            <UploadCloud size={20} /> {t('importWar')} · {week.label}
+            <UploadCloud size={20} /> {t('importWar')} · {formatWarRange(week.start, locale)}
           </h2>
           <button className="close-button" aria-label={t('close')} onClick={onClose}>
             <X />
