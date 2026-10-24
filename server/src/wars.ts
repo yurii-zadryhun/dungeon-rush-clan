@@ -146,6 +146,7 @@ export class WarsService {
         clan_name: clanName,
         minimum_points: minimumPoints,
         weights_json: JSON.stringify(weights),
+        ...(leaderName !== undefined ? { leader_name: leaderName } : {}),
       })
       .where('id', '=', 1)
       .execute();
