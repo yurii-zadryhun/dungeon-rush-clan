@@ -150,7 +150,7 @@ export function renderClanDocument(
         language: 'Language',
         description: 'a Dungeon Rush clan. Discover our war history, opponents and latest results.',
       };
-  const pageUrl = origin + (isDefaultPage ? '/clan' : '/clan/' + locale);
+  const pageUrl = origin + (isDefaultPage ? '/public' : '/public/' + locale);
   const imageUrl = origin + '/assets/og-clan.jpg';
   const title = clan.name + ' | Dungeon Rush ' + messages.history;
   const description = clan.name + ' — ' + messages.description;
@@ -174,16 +174,16 @@ export function renderClanDocument(
 
   const markup = `<div class="guest-page">
     <header class="guest-header">
-      <a href="/clan" class="guest-brand" aria-label="${escapeHtml(messages.archive)}">
+      <a href="/public" class="guest-brand" aria-label="${escapeHtml(messages.archive)}">
         <img src="/assets/clan-emblem.png" width="32" height="35" alt="">
         <span>${escapeHtml(messages.archive)}</span>
       </a>
       <div class="guest-actions">
         <nav class="guest-languages" aria-label="${escapeHtml(messages.language)}">
-          <a href="/clan/uk" lang="uk" hreflang="uk" ${uk ? 'aria-current="page"' : ''}>🇺🇦 UA</a>
-          <a href="/clan/en" lang="en" hreflang="en" ${!uk ? 'aria-current="page"' : ''}>🇬🇧 EN</a>
+          <a href="/public/uk" lang="uk" hreflang="uk" ${uk ? 'aria-current="page"' : ''}>🇺🇦 UA</a>
+          <a href="/public/en" lang="en" hreflang="en" ${!uk ? 'aria-current="page"' : ''}>🇬🇧 EN</a>
         </nav>
-        <a class="guest-signin" href="/?login=1">${escapeHtml(messages.login)} <span aria-hidden="true">↗</span></a>
+        <a class="guest-signin" href="/login">${escapeHtml(messages.login)} <span aria-hidden="true">↗</span></a>
       </div>
     </header>
     <main class="guest-main">
@@ -224,6 +224,14 @@ export function renderClanDocument(
         ${wars ? '<ol class="guest-wars">' + wars + '</ol>' : '<p class="guest-empty">' + escapeHtml(messages.noWars) + '</p>'}
       </section>
     </main>
+    <footer class="guest-footer">
+      <nav aria-label="${uk ? 'Інформація про сайт' : 'Site information'}">
+        <a href="/about/${locale}">${uk ? 'Про сайт' : 'About'}</a>
+        <a href="/privacy/${locale}">${uk ? 'Конфіденційність' : 'Privacy'}</a>
+        <a href="/terms/${locale}">${uk ? 'Умови' : 'Terms'}</a>
+      </nav>
+      <small>${uk ? 'Неофіційний фанатський проєкт. Не пов’язаний із розробниками Dungeon Rush.' : 'Unofficial fan-made project · Not affiliated with Dungeon Rush developers.'}</small>
+    </footer>
   </div>`;
 
   const jsonLd = JSON.stringify({
@@ -241,9 +249,9 @@ export function renderClanDocument(
     <meta name="description" content="${escapeHtml(description)}" />
     <meta name="robots" content="index,follow,max-image-preview:large" />
     <link rel="canonical" href="${escapeHtml(pageUrl)}" />
-    <link rel="alternate" hreflang="en" href="${origin}/clan/en" />
-    <link rel="alternate" hreflang="uk" href="${origin}/clan/uk" />
-    <link rel="alternate" hreflang="x-default" href="${origin}/clan" />
+    <link rel="alternate" hreflang="en" href="${origin}/public/en" />
+    <link rel="alternate" hreflang="uk" href="${origin}/public/uk" />
+    <link rel="alternate" hreflang="x-default" href="${origin}/public" />
     <link rel="stylesheet" href="/assets/clan-public.css" />
     <link rel="preload" href="/assets/clan-emblem.png" as="image" fetchpriority="high" />
     <meta property="og:type" content="website" />
@@ -299,7 +307,7 @@ export class PublicClanController {
       .send(renderClanDocument(template, snapshot, origin, locale, isDefaultPage));
   }
 
-  @Get('clan')
+  @Get('public')
   async page(@Req() request: FastifyRequest, @Res() reply: FastifyReply) {
     return this.html(
       reply.header('Vary', 'Accept-Language'),
@@ -308,10 +316,22 @@ export class PublicClanController {
     );
   }
 
-  @Get('clan/:locale')
+  @Get('public/:locale')
   async translated(@Param('locale') locale: string, @Res() reply: FastifyReply) {
     if (locale !== 'uk' && locale !== 'en') throw new NotFoundException();
     return this.html(reply, locale);
+  }
+
+  // Old links shared in chats keep working, while crawlers see the canonical URL.
+  @Get('clan')
+  oldPage(@Res() reply: FastifyReply) {
+    return reply.code(308).header('Location', '/public').send();
+  }
+
+  @Get('clan/:locale')
+  oldTranslated(@Param('locale') locale: string, @Res() reply: FastifyReply) {
+    if (locale !== 'uk' && locale !== 'en') throw new NotFoundException();
+    return reply.code(308).header('Location', '/public/' + locale).send();
   }
 
   @Get('robots.txt')
@@ -319,7 +339,7 @@ export class PublicClanController {
     const origin = (process.env.APP_ORIGIN || 'http://localhost:3000').replace(/\/$/, '');
     return reply
       .type('text/plain; charset=utf-8')
-      .send(`User-agent: *\nDisallow: /api/\nDisallow: /?invite=\nSitemap: ${origin}/sitemap.xml\n`);
+      .send(`User-agent: *\nDisallow: /api/\nDisallow: /invite/\nSitemap: ${origin}/sitemap.xml\n`);
   }
 
   @Get('sitemap.xml')
@@ -327,9 +347,9 @@ export class PublicClanController {
     const origin = (process.env.APP_ORIGIN || 'http://localhost:3000').replace(/\/$/, '');
     return reply.type('application/xml; charset=utf-8').send(`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>${escapeHtml(origin + '/clan')}</loc></url>
-  <url><loc>${escapeHtml(origin + '/clan/en')}</loc></url>
-  <url><loc>${escapeHtml(origin + '/clan/uk')}</loc></url>
+  <url><loc>${escapeHtml(origin + '/public')}</loc></url>
+  <url><loc>${escapeHtml(origin + '/public/en')}</loc></url>
+  <url><loc>${escapeHtml(origin + '/public/uk')}</loc></url>
 </urlset>`);
   }
 }
