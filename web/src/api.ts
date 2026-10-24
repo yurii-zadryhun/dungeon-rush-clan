@@ -55,7 +55,7 @@ export interface Week {
 export interface Dashboard {
   weeks: Week[];
   rankings: {
-    settings: { clanName: string; minimumPoints: number; weights: number[] };
+    settings: { clanName: string; minimumPoints: number; weights: number[]; leaderName: string };
     calculated: Player[];
     allTime: Player[];
     latest: Player[];
@@ -144,6 +144,18 @@ export interface StaffNote {
 export interface PlayerManagement {
   labels: PlayerLabels;
   notes: StaffNote[];
+}
+
+export interface PublicClan {
+  name: string;
+  leader: string;
+  record: { wins: number; losses: number };
+  recentWars: Array<{
+    start: string;
+    opponent: string | null;
+    ourScore: number;
+    opponentScore: number;
+  }>;
 }
 
 export interface OcrPlayer {

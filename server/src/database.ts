@@ -7,7 +7,7 @@ import { join, resolve } from 'node:path';
 export type Role = 'owner' | 'admin' | 'member';
 
 export interface Tables {
-  settings: { id: number; clan_name: string; minimum_points: number; weights_json: string };
+  settings: { id: number; clan_name: string; minimum_points: number; weights_json: string; leader_name: string };
   accounts: {
     id: Generated<number>;
     username: string;
@@ -96,7 +96,7 @@ export class Db implements OnModuleDestroy {
     this.connection.pragma('foreign_keys = OFF');
     this.connection.pragma('busy_timeout = 5000');
     this.connection.exec(`
-      CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY CHECK(id=1), clan_name TEXT NOT NULL, minimum_points INTEGER NOT NULL, weights_json TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY CHECK(id=1), clan_name TEXT NOT NULL, minimum_points INTEGER NOT NULL, weights_json TEXT NOT NULL, leader_name TEXT NOT NULL DEFAULT '');
       CREATE TABLE IF NOT EXISTS accounts (id INTEGER PRIMARY KEY, username TEXT UNIQUE NOT NULL, display_name TEXT NOT NULL, role TEXT NOT NULL, password_hash TEXT NOT NULL, locale TEXT NOT NULL DEFAULT 'uk', active INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS shared_invites (id INTEGER PRIMARY KEY CHECK(id=1), token_hash TEXT UNIQUE NOT NULL, created_by INTEGER NOT NULL REFERENCES accounts(id), active INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE, expires_at INTEGER NOT NULL, extended_at INTEGER NOT NULL);
@@ -131,6 +131,11 @@ export class Db implements OnModuleDestroy {
       CREATE TABLE IF NOT EXISTS war_days (war_id INTEGER NOT NULL REFERENCES wars(id) ON DELETE CASCADE, day_number INTEGER NOT NULL CHECK(day_number BETWEEN 1 AND 6), points INTEGER NOT NULL, winner TEXT NOT NULL, mvp TEXT NOT NULL, PRIMARY KEY(war_id, day_number));
       INSERT OR IGNORE INTO settings(id,clan_name,minimum_points,weights_json) VALUES(1,'Ukrainians',100000,'[0.75,0.25]');
     `);
+    // Older databases already have settings; add the optional public leader field in place.
+    const settingsColumns = this.connection.pragma('table_info(settings)') as { name: string }[];
+    if (!settingsColumns.some((column) => column.name === 'leader_name')) {
+      this.connection.exec("ALTER TABLE settings ADD COLUMN leader_name TEXT NOT NULL DEFAULT ''");
+    }
     // Existing installations used TOTP. Rebuild tables once to remove secrets entirely
     // while preserving account IDs, password hashes, sessions and invitations.
     const accountColumns = this.connection.pragma('table_info(accounts)') as { name: string }[];

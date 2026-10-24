@@ -14,6 +14,7 @@ export function SettingsModal({
 }) {
   const { t } = useI18n();
   const [clanName, setClanName] = React.useState(current.clanName);
+  const [leaderName, setLeaderName] = React.useState(current.leaderName);
   const [minimum, setMinimum] = React.useState(String(current.minimumPoints / 1000));
   const [weights, setWeights] = React.useState(
     current.weights.map((weight) => String(Math.round(weight * 10000) / 100)),
@@ -45,6 +46,7 @@ export function SettingsModal({
         'settings',
         json('PATCH', {
           clanName,
+          leaderName,
           minimumPoints: minimumThousands * 1000,
           weights: list,
         }),
@@ -83,6 +85,16 @@ export function SettingsModal({
           <label>
             {t('clanName')}
             <input value={clanName} onChange={(event) => setClanName(event.target.value)} />
+          </label>
+          <label>
+            {t('publicLeader')}
+            <input
+              value={leaderName}
+              maxLength={80}
+              placeholder={t('publicLeaderFallback')}
+              onChange={(event) => setLeaderName(event.target.value)}
+            />
+            <small className="muted">{t('publicLeaderHelp')}</small>
           </label>
           <label>
             {t('minimumScore')}

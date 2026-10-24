@@ -132,11 +132,12 @@ export class WarsService {
         clanName: z.string().trim().min(2).max(60),
         minimumPoints: z.number().int().min(0).max(1_000_000_000),
         weights: z.array(z.number().positive().finite()).min(1).max(12),
+        leaderName: z.string().trim().max(80).optional(),
       })
       .safeParse(input);
     if (!parsed.success)
       throw new BadRequestException(parsed.error.issues.map((i) => i.message).join('; '));
-    const { clanName, minimumPoints, weights } = parsed.data;
+    const { clanName, minimumPoints, weights, leaderName } = parsed.data;
     const sum = weights.reduce((s, x) => s + x, 0);
     if (Math.abs(sum - 1) > 0.00001) throw new BadRequestException('Weights must sum to 1');
     await this.db.query
