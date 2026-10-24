@@ -256,8 +256,11 @@ export class AccountsService {
       sessionCookie(reply, raw);
     }
     if (session.impersonated_account_id !== null) {
-      if (session.role === 'owner' && session.impersonation_expires_at !== null &&
-          session.impersonation_expires_at > Date.now()) {
+      if (
+        session.role === 'owner' &&
+        session.impersonation_expires_at !== null &&
+        session.impersonation_expires_at > Date.now()
+      ) {
         const target = await this.db.query
           .selectFrom('accounts')
           .select(['id', 'username', 'display_name', 'role', 'locale'])
@@ -348,8 +351,12 @@ export class AccountsService {
       .where('sessions.token_hash', '=', digest(raw))
       .where('sessions.expires_at', '>', now)
       .executeTakeFirst();
-    if (!session || !session.active || session.role !== 'owner' ||
-        session.impersonated_account_id === null) {
+    if (
+      !session ||
+      !session.active ||
+      session.role !== 'owner' ||
+      session.impersonated_account_id === null
+    ) {
       throw new ForbiddenException('No owner impersonation to stop');
     }
     await this.db.query
@@ -860,10 +867,7 @@ export class AuthController {
   // The effective user is not an owner while impersonating; validate the underlying
   // owner session rather than applying an OwnerGuard to the assumed identity.
   @Post('stop-impersonation')
-  stopImpersonation(
-    @Req() request: FastifyRequest,
-    @Res({ passthrough: true }) reply: FastifyReply,
-  ) {
+  stopImpersonation(@Req() request: FastifyRequest, @Res({ passthrough: true }) reply: FastifyReply) {
     const raw = (request as FastifyRequest & { cookies?: Record<string, string> }).cookies?.clan_session;
     return this.auth.stopImpersonation(raw, reply);
   }
