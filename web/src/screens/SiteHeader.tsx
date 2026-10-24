@@ -77,7 +77,7 @@ export function SiteHeader({
           <a
             href="#/archive"
             className={!isWiki && !isPlayers && !isAnalytics ? 'active' : ''}
-            aria-current={!isWiki && !isUsers ? 'page' : undefined}
+            aria-current={!isWiki && !isPlayers && !isAnalytics ? 'page' : undefined}
             onClick={closeMenu}
           >
             <History size={17} /> <span>{t('historyTab')}</span>
