@@ -1,12 +1,22 @@
 import React from 'react';
 import './WarReviewEditor.css';
 import { AlertTriangle, Plus, Trash2, UserMinus } from 'lucide-react';
-import { normalizeName, shortNumber, type OcrPlayer, type OcrResponse, type Roster, type Week } from '../api';
+import {
+  normalizeName,
+  shortNumber,
+  type OcrPlayer,
+  type OcrResponse,
+  type Roster,
+  type Week,
+} from '../api';
 import { localizeOcrWarning, useI18n } from '../i18n';
 
 export type EditableDay = { day: number; points: number; winner: 'ours' | 'opponent' | ''; mvp: string };
 export type EditableResult = {
-  opponent: string; ourScore: string; opponentScore: string; days: EditableDay[];
+  opponent: string;
+  ourScore: string;
+  opponentScore: string;
+  days: EditableDay[];
 };
 export interface WarDraft {
   players: OcrPlayer[];
@@ -37,38 +47,60 @@ export function makeResult(parsed: OcrResponse['result']): EditableResult | null
 export function draftFromWeek(week: Week): WarDraft {
   return {
     players: week.players.map((player) => ({
-      playerId: player.id, position: player.position, name: player.name,
-      points: player.points, source: 0,
+      playerId: player.id,
+      position: player.position,
+      name: player.name,
+      points: player.points,
+      source: 0,
     })),
-    result: makeResult(week.resultImported ? {
-      opponent: week.opponent ?? '', ourScore: week.ourScore,
-      opponentScore: week.opponentScore, days: week.days, warnings: [],
-    } : null),
+    result: makeResult(
+      week.resultImported
+        ? {
+            opponent: week.opponent ?? '',
+            ourScore: week.ourScore,
+            opponentScore: week.opponentScore,
+            days: week.days,
+            warnings: [],
+          }
+        : null,
+    ),
   };
 }
 
 export function warSubmission(start: string, draft: WarDraft, sections: WarSections) {
   return {
     start,
-    ...(sections.players ? { players: draft.players.map((player) => ({
-      position: player.position,
-      name: player.name.trim(),
-      points: player.points,
-      playerId: player.playerId ?? null,
-    })) } : {}),
-    ...(sections.result && draft.result ? { result: {
-      opponent: draft.result.opponent.trim(),
-      ourScore: Number(draft.result.ourScore),
-      opponentScore: Number(draft.result.opponentScore),
-      days: draft.result.days.map((day) => ({
-        day: day.day, points: day.points, winner: day.winner, mvp: day.mvp.trim(),
-      })),
-    } } : {}),
+    ...(sections.players
+      ? {
+          players: draft.players.map((player) => ({
+            position: player.position,
+            name: player.name.trim(),
+            points: player.points,
+            playerId: player.playerId ?? null,
+          })),
+        }
+      : {}),
+    ...(sections.result && draft.result
+      ? {
+          result: {
+            opponent: draft.result.opponent.trim(),
+            ourScore: Number(draft.result.ourScore),
+            opponentScore: Number(draft.result.opponentScore),
+            days: draft.result.days.map((day) => ({
+              day: day.day,
+              points: day.points,
+              winner: day.winner,
+              mvp: day.mvp.trim(),
+            })),
+          },
+        }
+      : {}),
   };
 }
 
 function similarity(left: string, right: string): number {
-  const a = normalizeName(left), b = normalizeName(right);
+  const a = normalizeName(left),
+    b = normalizeName(right);
   const row = Array.from({ length: b.length + 1 }, (_, index) => index);
   for (let i = 1; i <= a.length; i++) {
     let diagonal = row[0];
@@ -82,7 +114,11 @@ function similarity(left: string, right: string): number {
   return row[b.length];
 }
 
-function PlayersPanel({ players, onChange, roster }: {
+function PlayersPanel({
+  players,
+  onChange,
+  roster,
+}: {
   players: OcrPlayer[];
   onChange: (players: OcrPlayer[]) => void;
   roster: Roster;
@@ -93,7 +129,7 @@ function PlayersPanel({ players, onChange, roster }: {
   const departures = roster.previous.filter((player) => !participants.has(player.id));
 
   function update(index: number, patch: Partial<OcrPlayer>) {
-    onChange(players.map((player, position) => position === index ? { ...player, ...patch } : player));
+    onChange(players.map((player, position) => (position === index ? { ...player, ...patch } : player)));
   }
 
   function rename(index: number, name: string) {
@@ -102,14 +138,24 @@ function PlayersPanel({ players, onChange, roster }: {
   }
 
   function add() {
-    onChange([...players, { position: players.length ? Math.max(...players.map(p => p.position)) + 1 : 1,
-      name: '', points: 0, source: 0, playerId: null }]);
+    onChange([
+      ...players,
+      {
+        position: players.length ? Math.max(...players.map((p) => p.position)) + 1 : 1,
+        name: '',
+        points: 0,
+        source: 0,
+        playerId: null,
+      },
+    ]);
   }
 
   return (
     <div className="war-editor-panel">
       <div className="war-editor-toolbar">
-        <strong>{t('players')} · {players.length}</strong>
+        <strong>
+          {t('players')} · {players.length}
+        </strong>
         <button type="button" className="game-button secondary compact-add" onClick={add}>
           <Plus size={15} /> {t('addRow')}
         </button>
@@ -118,22 +164,49 @@ function PlayersPanel({ players, onChange, roster }: {
         {players.map((player, index) => {
           const isNew = !player.playerId || !previousIds.has(player.playerId);
           const near = !player.playerId
-            ? roster.all.map(p => ({ ...p, distance: similarity(player.name, p.name) }))
-              .sort((a, b) => a.distance - b.distance)[0] : undefined;
-          const suggestion = near && near.distance > 0 &&
-            near.distance <= Math.max(2, Math.floor(normalizeName(player.name).length * .3))
-              ? near.name : null;
+            ? roster.all
+                .map((p) => ({ ...p, distance: similarity(player.name, p.name) }))
+                .sort((a, b) => a.distance - b.distance)[0]
+            : undefined;
+          const suggestion =
+            near &&
+            near.distance > 0 &&
+            near.distance <= Math.max(2, Math.floor(normalizeName(player.name).length * 0.3))
+              ? near.name
+              : null;
           return (
             <div className="war-editor-player" key={index}>
               <div className="war-editor-player-fields">
-                <input aria-label={t('rank')} title={t('rank')} type="number" min="1" max="100"
-                  value={player.position} onChange={e => update(index, { position: Number(e.target.value) })}/>
-                <input aria-label={t('name')} title={t('name')} value={player.name}
-                  placeholder={t('name')} onChange={e => rename(index, e.target.value)} />
-                <input aria-label={t('points')} title={t('points')} type="number" min="0"
-                  value={player.points} onChange={e => update(index, { points: Number(e.target.value) })}/>
-                <button type="button" className="icon-button danger" aria-label={t('removeRow')}
-                  onClick={() => onChange(players.filter((_, i) => i !== index))}>
+                <input
+                  aria-label={t('rank')}
+                  title={t('rank')}
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={player.position}
+                  onChange={(e) => update(index, { position: Number(e.target.value) })}
+                />
+                <input
+                  aria-label={t('name')}
+                  title={t('name')}
+                  value={player.name}
+                  placeholder={t('name')}
+                  onChange={(e) => rename(index, e.target.value)}
+                />
+                <input
+                  aria-label={t('points')}
+                  title={t('points')}
+                  type="number"
+                  min="0"
+                  value={player.points}
+                  onChange={(e) => update(index, { points: Number(e.target.value) })}
+                />
+                <button
+                  type="button"
+                  className="icon-button danger"
+                  aria-label={t('removeRow')}
+                  onClick={() => onChange(players.filter((_, i) => i !== index))}
+                >
                   <Trash2 size={16} />
                 </button>
               </div>
@@ -141,16 +214,29 @@ function PlayersPanel({ players, onChange, roster }: {
                 <span className={'tag ' + (isNew ? 'warning' : 'success')}>
                   {t(isNew ? 'new' : 'returning')}
                 </span>
-                <select title={t('pickExisting')} aria-label={t('pickExisting')}
-                  value={player.playerId ?? ''} onChange={e => {
-                    const selected = roster.all.find(p => p.id === Number(e.target.value));
-                    update(index, { playerId: selected?.id ?? null, name: selected?.name ?? player.name });
-                  }}>
+                <select
+                  title={t('pickExisting')}
+                  aria-label={t('pickExisting')}
+                  value={player.playerId ?? ''}
+                  onChange={(e) => {
+                    const selected = roster.all.find((p) => p.id === Number(e.target.value));
+                    update(index, {
+                      playerId: selected?.id ?? null,
+                      name: selected?.name ?? player.name,
+                    });
+                  }}
+                >
                   <option value="">{t('newPlayer')}</option>
-                  {roster.all.map(p => <option value={p.id} key={p.id}>{p.name}</option>)}
+                  {roster.all.map((p) => (
+                    <option value={p.id} key={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
                 </select>
                 <span className="war-editor-short-score">{shortNumber(player.points)}</span>
-                {suggestion && <span className="warning-text tiny">{t('possibleMatch', { name: suggestion })}</span>}
+                {suggestion && (
+                  <span className="warning-text tiny">{t('possibleMatch', { name: suggestion })}</span>
+                )}
               </div>
             </div>
           );
@@ -159,60 +245,105 @@ function PlayersPanel({ players, onChange, roster }: {
       {!!departures.length && (
         <div className="war-editor-departures">
           <UserMinus size={15} /> {t('markedLeft', { count: departures.length })}:
-          <span>{departures.map(p => p.name).join(', ')}</span>
+          <span>{departures.map((p) => p.name).join(', ')}</span>
         </div>
       )}
     </div>
   );
 }
 
-function ResultPanel({ result, onChange, clanName }: {
+function ResultPanel({
+  result,
+  onChange,
+  clanName,
+}: {
   result: EditableResult;
   onChange: (result: EditableResult) => void;
   clanName: string;
 }) {
   const { t } = useI18n();
   const score = (winner: 'ours' | 'opponent') =>
-    result.days.filter(day => day.winner === winner).reduce((sum, day) => sum + day.points, 0);
+    result.days.filter((day) => day.winner === winner).reduce((sum, day) => sum + day.points, 0);
   function updateDay(day: number, patch: Partial<EditableDay>) {
-    onChange({ ...result, days: result.days.map(entry => entry.day === day ? { ...entry, ...patch } : entry) });
+    onChange({
+      ...result,
+      days: result.days.map((entry) => (entry.day === day ? { ...entry, ...patch } : entry)),
+    });
   }
   return (
     <div className="war-editor-panel">
       <div className="war-editor-result-fields">
-        <label>{t('opponent')}
-          <input value={result.opponent} onChange={e => onChange({ ...result, opponent: e.target.value })} />
+        <label>
+          {t('opponent')}
+          <input
+            value={result.opponent}
+            onChange={(e) => onChange({ ...result, opponent: e.target.value })}
+          />
         </label>
-        <label>{clanName}
-          <input type="number" min="0" max="13" value={result.ourScore}
-            onChange={e => onChange({ ...result, ourScore: e.target.value })} />
+        <label>
+          {clanName}
+          <input
+            type="number"
+            min="0"
+            max="13"
+            value={result.ourScore}
+            onChange={(e) => onChange({ ...result, ourScore: e.target.value })}
+          />
         </label>
-        <label>{t('opponent')}
-          <input type="number" min="0" max="13" value={result.opponentScore}
-            onChange={e => onChange({ ...result, opponentScore: e.target.value })} />
+        <label>
+          {t('opponent')}
+          <input
+            type="number"
+            min="0"
+            max="13"
+            value={result.opponentScore}
+            onChange={(e) => onChange({ ...result, opponentScore: e.target.value })}
+          />
         </label>
       </div>
       <div className="war-editor-days">
-        {result.days.map(day => (
+        {result.days.map((day) => (
           <div className="war-editor-day" key={day.day}>
-            <span>{t('day')} {day.day} <small>· {day.points} {t('pts')}</small></span>
-            <select aria-label={t('winner')} title={t('winner')} value={day.winner}
-              onChange={e => updateDay(day.day, { winner: e.target.value as EditableDay['winner'] })}>
+            <span>
+              {t('day')} {day.day}{' '}
+              <small>
+                · {day.points} {t('pts')}
+              </small>
+            </span>
+            <select
+              aria-label={t('winner')}
+              title={t('winner')}
+              value={day.winner}
+              onChange={(e) => updateDay(day.day, { winner: e.target.value as EditableDay['winner'] })}
+            >
               <option value="">{t('selectWinner')}</option>
               <option value="ours">{clanName}</option>
               <option value="opponent">{result.opponent || t('opponent')}</option>
             </select>
-            <input aria-label="MVP" placeholder="MVP" value={day.mvp}
-              onChange={e => updateDay(day.day, { mvp: e.target.value })} />
+            <input
+              aria-label="MVP"
+              placeholder="MVP"
+              value={day.mvp}
+              onChange={(e) => updateDay(day.day, { mvp: e.target.value })}
+            />
           </div>
         ))}
       </div>
-      <p className="tiny muted war-editor-totals">{t('calculatedFromDays')}: {score('ours')} : {score('opponent')}</p>
+      <p className="tiny muted war-editor-totals">
+        {t('calculatedFromDays')}: {score('ours')} : {score('opponent')}
+      </p>
     </div>
   );
 }
 
-export function WarReviewEditor({ draft, onChange, sections, roster, clanName, warnings = [] }: {
+export function WarReviewEditor({
+  draft,
+  onChange,
+  sections,
+  roster,
+  clanName,
+  warnings = [],
+}: {
   draft: WarDraft;
   onChange: (draft: WarDraft) => void;
   sections: WarSections;
@@ -226,25 +357,46 @@ export function WarReviewEditor({ draft, onChange, sections, roster, clanName, w
   return (
     <div className="war-review-editor">
       {warnings.length > 0 && (
-        <div className="war-editor-warnings"><AlertTriangle size={15} />
-          <div>{warnings.map((warning, index) => (
-            <p key={index}>{localizeOcrWarning(warning, locale)}</p>
-          ))}</div>
+        <div className="war-editor-warnings">
+          <AlertTriangle size={15} />
+          <div>
+            {warnings.map((warning, index) => (
+              <p key={index}>{localizeOcrWarning(warning, locale)}</p>
+            ))}
+          </div>
         </div>
       )}
       {sections.players && sections.result && (
         <div className="war-editor-tabs">
-          <button type="button" className={tab === 'players' ? 'selected' : ''}
-            onClick={() => setTab('players')}>{t('players')} · {draft.players.length}</button>
-          <button type="button" className={tab === 'result' ? 'selected' : ''}
-            onClick={() => setTab('result')}>{t('finalResult')}</button>
+          <button
+            type="button"
+            className={tab === 'players' ? 'selected' : ''}
+            onClick={() => setTab('players')}
+          >
+            {t('players')} · {draft.players.length}
+          </button>
+          <button
+            type="button"
+            className={tab === 'result' ? 'selected' : ''}
+            onClick={() => setTab('result')}
+          >
+            {t('finalResult')}
+          </button>
         </div>
       )}
       {sections.players && tab === 'players' && (
-        <PlayersPanel players={draft.players} onChange={players => onChange({ ...draft, players })} roster={roster} />
+        <PlayersPanel
+          players={draft.players}
+          onChange={(players) => onChange({ ...draft, players })}
+          roster={roster}
+        />
       )}
       {sections.result && tab === 'result' && draft.result && (
-        <ResultPanel result={draft.result} onChange={result => onChange({ ...draft, result })} clanName={clanName} />
+        <ResultPanel
+          result={draft.result}
+          onChange={(result) => onChange({ ...draft, result })}
+          clanName={clanName}
+        />
       )}
     </div>
   );

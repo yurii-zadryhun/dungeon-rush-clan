@@ -122,10 +122,8 @@ export function json(method: 'POST' | 'PATCH', value: unknown): RequestInit {
 
 export function shortNumber(value: number): string {
   const magnitude = Math.abs(value);
-  if (magnitude >= 1_000_000)
-    return (value / 1_000_000).toFixed(2).replace(/\.?0+$/, '') + 'M';
-  if (magnitude >= 1_000)
-    return (value / 1_000).toFixed(2).replace(/\.?0+$/, '') + 'K';
+  if (magnitude >= 1_000_000) return (value / 1_000_000).toFixed(2).replace(/\.?0+$/, '') + 'M';
+  if (magnitude >= 1_000) return (value / 1_000).toFixed(2).replace(/\.?0+$/, '') + 'K';
   return String(value);
 }
 

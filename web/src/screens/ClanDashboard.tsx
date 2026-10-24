@@ -509,13 +509,16 @@ export function ClanDashboard({
       )}
 
       {editWeek && canEdit && (
-        <EditWarModal key={editWeek.start} week={editWeek}
+        <EditWarModal
+          key={editWeek.start}
+          week={editWeek}
           clanName={data.rankings.settings.clanName}
           onClose={() => setEditWeek(null)}
           onDone={(next, updatedWeek) => {
             onChange(next);
-            setWeeks(previous => previous.map(week =>
-              week.start === updatedWeek.start ? updatedWeek : week));
+            setWeeks((previous) =>
+              previous.map((week) => (week.start === updatedWeek.start ? updatedWeek : week)),
+            );
             setEditWeek(null);
           }}
         />

@@ -153,8 +153,8 @@ export class ImportService {
             throw new BadRequestException('Player ranking already imported for this war');
           if (mode === 'update' && war.ranking_imported_at === null)
             throw new BadRequestException('Player ranking not imported for this war');
-          if (mode === 'update') await trx.deleteFrom('player_scores')
-            .where('war_id', '=', war.id).execute();
+          if (mode === 'update')
+            await trx.deleteFrom('player_scores').where('war_id', '=', war.id).execute();
           const existingPlayers = await trx
             .selectFrom('players')
             .select(['id', 'normalized_name'])
@@ -277,8 +277,7 @@ export class ImportService {
             })
             .where('id', '=', war.id)
             .execute();
-          if (mode === 'update') await trx.deleteFrom('war_days')
-            .where('war_id', '=', war.id).execute();
+          if (mode === 'update') await trx.deleteFrom('war_days').where('war_id', '=', war.id).execute();
           for (const day of data.result.days)
             await trx
               .insertInto('war_days')
