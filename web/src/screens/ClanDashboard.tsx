@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronsLeft, History, Medal, Swords } from 'lucide-react';
+import { ChevronsLeft, History, Medal, Pencil, Swords } from 'lucide-react';
 import {
   api,
   number,
@@ -13,6 +13,7 @@ import {
 } from '../api';
 import { useI18n, type Locale } from '../i18n';
 import { ImportModal } from './ImportModal';
+import { EditWarModal } from './EditWarModal';
 import { UsersScreen } from './UsersScreen';
 import { SiteHeader } from './SiteHeader';
 import { SettingsModal } from './SettingsModal';
@@ -140,6 +141,7 @@ function useWarLabels() {
 function WarColumn({
   week,
   onImport,
+  onEdit,
   calculated,
   clanName,
   canEdit,
@@ -147,6 +149,7 @@ function WarColumn({
 }: {
   week: Week;
   onImport: (week: Week) => void;
+  onEdit: (week: Week) => void;
   calculated: Map<number, Player>;
   clanName: string;
   canEdit: boolean;
@@ -240,6 +243,11 @@ function WarColumn({
             + {importLabel(week)}
           </button>
         )}
+        {canEdit && imported && (
+          <button className="war-edit-button" onClick={() => onEdit(week)}>
+            <Pencil size={15} /> {t('editWar')}
+          </button>
+        )}
       </div>
     </article>
   );
@@ -267,7 +275,7 @@ function ClanOverview({ data }: { data: Dashboard }) {
       </div>
       <div className="requirement">
         <span>{t('weeklyRequirement')}</span>
-        <b>{data.rankings.settings.minimumPoints / 1000}k</b>
+        <b>{shortNumber(data.rankings.settings.minimumPoints)}</b>
       </div>
     </section>
   );
@@ -298,6 +306,7 @@ export function ClanDashboard({
   const wikiArticleId = wikiMatch?.[1];
   const [dialog, setDialog] = React.useState<'settings' | 'profile' | null>(null);
   const [importWeek, setImportWeek] = React.useState<Week | null>(null);
+  const [editWeek, setEditWeek] = React.useState<Week | null>(null);
   const [loadingOlder, setLoadingOlder] = React.useState(false);
   const [weeks, setWeeks] = React.useState<Week[]>([]);
   const track = React.useRef<HTMLDivElement>(null);
@@ -486,6 +495,7 @@ export function ClanDashboard({
                     key={week.start}
                     week={week}
                     onImport={setImportWeek}
+                    onEdit={setEditWeek}
                     calculated={calculated}
                     canEdit={canEdit}
                     account={user}
@@ -498,6 +508,18 @@ export function ClanDashboard({
         </main>
       )}
 
+      {editWeek && canEdit && (
+        <EditWarModal key={editWeek.start} week={editWeek}
+          clanName={data.rankings.settings.clanName}
+          onClose={() => setEditWeek(null)}
+          onDone={(next, updatedWeek) => {
+            onChange(next);
+            setWeeks(previous => previous.map(week =>
+              week.start === updatedWeek.start ? updatedWeek : week));
+            setEditWeek(null);
+          }}
+        />
+      )}
       {importWeek && canEdit && (
         <ImportModal
           key={importWeek.start}

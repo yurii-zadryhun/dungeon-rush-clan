@@ -120,16 +120,16 @@ export function json(method: 'POST' | 'PATCH', value: unknown): RequestInit {
   };
 }
 
-export function number(value: number): string {
-  return new Intl.NumberFormat('en-US').format(value);
-}
-
 export function shortNumber(value: number): string {
-  if (value >= 1_000_000)
-    return (value / 1_000_000).toFixed(2).replace(/0+$/, '').replace(/\.$/, '') + 'm';
-  if (value >= 1000) return (value / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  const magnitude = Math.abs(value);
+  if (magnitude >= 1_000_000)
+    return (value / 1_000_000).toFixed(2).replace(/\.?0+$/, '') + 'M';
+  if (magnitude >= 1_000)
+    return (value / 1_000).toFixed(2).replace(/\.?0+$/, '') + 'K';
   return String(value);
 }
+
+export const number = shortNumber;
 
 export function normalizeName(s: string) {
   return s.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
