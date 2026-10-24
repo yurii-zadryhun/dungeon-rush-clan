@@ -1,55 +1,90 @@
-/* Keep staff-only annotations compact and consistent with the player profile. */
-.management-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
-  gap: 12px;
+/* Staff-only player management: compact layout with a persistent autosave status. */
+.player-management .management-heading {
+  position: sticky;
+  top: 70px;
+  z-index: 12;
+  min-width: 0;
+  margin: -9px -9px 0;
+  padding: 12px 9px;
+  border-bottom: 1px solid #625e66;
+  background: #302e2f;
+  border-radius: 10px 10px 0 0;
 }
-.management-heading { gap: 8px 16px; }
+.management-heading h2 {
+  margin: 0;
+}
 .management-sync {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  min-height: 32px;
+  max-width: 100%;
+  font-size: 11px;
+  font-weight: 850;
+}
+.management-pending,
+.management-auto {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  color: #afc8b7;
-  font-size: 11px;
-  font-weight: 750;
+  min-height: 29px;
+  border-radius: 7px;
+  padding: 6px 9px;
+  white-space: nowrap;
 }
-.management-pending { color: #d9b875; }
-.management-auto { color: #9cb7aa; }
+.management-pending {
+  color: #ffda95;
+  background: #4a3d28;
+}
+.management-auto {
+  color: #a3e8bd;
+  background: #224634;
+}
 .management-retry {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   min-height: 33px;
+  border: 1px solid #b97573;
+  border-radius: 8px;
   padding: 6px 10px;
-  border: 1px solid #c6886c;
-  border-radius: 7px;
-  background: #4e302e;
-  color: #ffd4bf;
+  color: #ffe6db;
+  background: #66373b;
   font-size: 11px;
-  font-weight: 850;
-  cursor: pointer;
+  font-weight: 900;
 }
-.management-retry:hover { background: #633b36; }
+.management-retry:hover {
+  background: #80454a;
+}
+.management-retry:focus-visible {
+  outline: 2px solid #ffc78e;
+  outline-offset: 2px;
+}
+.management-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  gap: 14px;
+  min-width: 0;
+}
 .management-block {
   display: grid;
-  align-content: start;
   gap: 10px;
+  align-content: start;
   min-width: 0;
-  padding: 13px;
-  border: 1px solid #48454f;
-  border-radius: 11px;
+  padding: 12px;
+  border-radius: 10px;
   background: #25252b;
 }
 .management-block h3 {
   display: flex;
   align-items: center;
   gap: 7px;
-  margin: 0 0 2px;
-  font-size: 13px;
+  margin: 0;
 }
+/* Each contact field stays beside its checkbox, even on mobile. */
 .contact-choice {
   display: grid;
-  grid-template-columns: minmax(100px, 118px) minmax(0, 1fr);
+  grid-template-columns: 102px minmax(0, 1fr);
   align-items: center;
   gap: 9px;
   min-width: 0;
@@ -59,35 +94,32 @@
   align-items: center;
   gap: 8px;
   min-width: 0;
+  white-space: nowrap;
   cursor: pointer;
   font-size: 12px;
-  font-weight: 850;
 }
 .contact-choice input[type='checkbox'] {
-  flex: 0 0 auto;
   width: 17px;
   height: 17px;
-  min-height: 0;
+  flex: 0 0 17px;
   margin: 0;
+  min-height: 0;
   accent-color: #42a8df;
 }
 .contact-choice input:not([type='checkbox']) {
-  min-width: 0;
   width: 100%;
+  min-width: 0;
   min-height: 37px;
-  padding: 8px 10px;
+  padding: 8px 9px;
   font-size: 12px;
-  border-radius: 8px;
 }
 .contact-choice input:disabled {
-  cursor: not-allowed;
-  opacity: 0.48;
+  opacity: 0.45;
 }
 .management-tags {
   display: flex;
-  align-content: start;
-  gap: 6px;
   flex-wrap: wrap;
+  gap: 6px;
 }
 .player-tag-button {
   border: 1px solid #695c59;
@@ -97,65 +129,75 @@
   border-radius: 9px;
   font-size: 11px;
   font-weight: 800;
-  cursor: pointer;
 }
 .player-tag-button.selected {
   border-color: #8fc5d8;
   color: #fff;
   background: #305c71;
 }
-.player-tag-button:focus-visible,
-.management-retry:focus-visible {
-  outline: 2px solid #edc568;
+.player-tag-button:focus-visible {
+  outline: 2px solid #9bcaee;
   outline-offset: 2px;
 }
-.exemption-reason { display: grid; gap: 7px; min-width: 0; }
 .exemption-reason textarea,
 .note-form textarea {
   width: 100%;
+  min-width: 0;
   resize: vertical;
   background: #18191d;
   border: 2px solid #080808;
   border-radius: 9px;
   padding: 10px;
-  color: white;
+  color: #fff;
   font: inherit;
   font-size: 12px;
 }
-.exemption-reason textarea { min-height: 62px; }
+.exemption-reason textarea:focus,
+.note-form textarea:focus {
+  outline: 0;
+  border-color: #3ca4e8;
+  box-shadow: 0 0 0 2px #3aa4e82f;
+}
 .management-save-error {
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 10px;
-  border: 1px solid #9e6561;
-  border-radius: 8px;
-  background: #482c2f;
-  color: #ffd7ce;
+  gap: 8px;
+  border: 1px solid #a45f61;
+  border-radius: 9px;
+  padding: 9px 11px;
+  background: #4b292e;
+  color: #ffd5d4;
   font-size: 12px;
 }
-.management-save-error svg { flex: 0 0 auto; }
+.management-save-error svg {
+  flex: 0 0 auto;
+}
 .note-section {
   display: grid;
   gap: 10px;
   border-top: 1px solid #615961;
-  padding-top: 15px;
+  padding-top: 14px;
+  min-width: 0;
 }
-.note-section h3 { margin: 0; }
+.note-section h3 {
+  margin: 0;
+}
+/* Input at left; category and submit at right, with matching combined height. */
 .note-form {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(135px, 180px);
+  grid-template-columns: minmax(0, 1fr) minmax(126px, 160px);
+  gap: 9px;
   align-items: stretch;
-  gap: 10px;
+  min-width: 0;
 }
 .note-form textarea {
-  height: 88px;
-  min-height: 88px;
-  resize: vertical;
+  height: 92px;
+  min-height: 92px;
+  margin: 0;
 }
 .note-form-actions {
   display: grid;
-  grid-template-rows: 40px 40px;
+  grid-template-rows: 42px 42px;
   gap: 8px;
   min-width: 0;
 }
@@ -163,88 +205,140 @@
 .note-form-actions button {
   width: 100%;
   min-width: 0;
-  min-height: 40px;
-  height: 40px;
+  height: 42px;
+  min-height: 42px;
   margin: 0;
+}
+.note-form-actions select {
+  padding: 6px 8px;
   font-size: 12px;
 }
-.note-form-actions select { padding: 7px 8px; }
 .note-form-actions button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 7px 9px;
-  white-space: nowrap;
+  gap: 5px;
+  padding: 6px;
+  font-size: 11px;
+  white-space: normal;
+  line-height: 1.15;
+  text-align: center;
 }
-.staff-note-list { display: grid; gap: 8px; }
+.note-form-actions button svg {
+  flex: 0 0 auto;
+}
+.staff-note-list {
+  display: grid;
+  gap: 8px;
+}
 .staff-note {
   display: grid;
   gap: 7px;
-  padding: 10px;
   border: 1px solid #5a525b;
   border-left: 4px solid #607d9c;
   border-radius: 9px;
+  padding: 10px;
   background: #24252a;
 }
-.staff-note.note-attention { border-left-color: #d98c62; }
-.staff-note.note-positive { border-left-color: #55cc8c; }
-.staff-note.note-contact { border-left-color: #5c9be1; }
+.staff-note.note-attention {
+  border-left-color: #d98c62;
+}
+.staff-note.note-positive {
+  border-left-color: #55cc8c;
+}
+.staff-note.note-contact {
+  border-left-color: #5c9be1;
+}
 .staff-note-head {
   display: flex;
   align-items: center;
-  gap: 9px;
   flex-wrap: wrap;
+  gap: 9px;
 }
-.staff-note-head strong { font-size: 11px; }
-.staff-note-head small { color: #bcb7bf; font-size: 10px; }
-.staff-note-head button { margin-left: auto; }
+.staff-note-head strong {
+  font-size: 11px;
+}
+.staff-note-head small {
+  font-size: 10px;
+  color: #bcb7bf;
+}
+.staff-note-head button {
+  margin-left: auto;
+}
 .staff-note p {
   margin: 0;
   font-size: 12px;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-
-/* Toast stays visible without scrolling to the end of the notes history. */
+/* Visible independently of scroll position; mobile stays above the bottom nav. */
 .management-toast {
   position: fixed;
-  z-index: 1000;
-  right: 18px;
-  bottom: 20px;
+  right: 20px;
+  bottom: 24px;
+  z-index: 500;
   display: flex;
   align-items: center;
   gap: 9px;
-  max-width: min(420px, calc(100vw - 24px));
-  padding: 12px 17px;
-  border: 1px solid #5a946c;
-  border-radius: 11px;
-  background: #264334;
-  color: #e3ffe9;
-  box-shadow: 0 7px 26px #0009;
-  font-size: 13px;
-  font-weight: 800;
+  max-width: min(430px, calc(100vw - 30px));
+  padding: 13px 16px;
+  border: 1px solid #4f9369;
+  border-radius: 12px;
+  color: #d8ffdf;
+  background: #1e4932;
+  box-shadow: 0 10px 25px #000a;
+  font-size: 12px;
+  font-weight: 900;
 }
-.management-toast svg { flex: 0 0 auto; }
-.management-toast.error { border-color: #c2807d; background: #552f33; color: #ffe5df; }
-@media (max-width: 760px) {
-  .management-grid { grid-template-columns: minmax(0, 1fr); }
+.management-toast svg {
+  flex: 0 0 auto;
+}
+.management-toast.error {
+  border-color: #af6568;
+  color: #ffe4e3;
+  background: #5a3038;
+}
+@media (max-width: 750px) {
+  .management-grid {
+    grid-template-columns: 1fr;
+  }
 }
 @media (max-width: 650px) {
+  .player-management .management-heading {
+    top: 68px;
+    gap: 8px;
+  }
+  .management-heading h2 {
+    font-size: 16px;
+  }
+  .management-sync {
+    font-size: 10px;
+  }
   .management-toast {
     right: 12px;
+    bottom: calc(90px + env(safe-area-inset-bottom, 0px));
     left: 12px;
-    bottom: calc(80px + env(safe-area-inset-bottom, 0px));
     max-width: none;
-    justify-content: center;
-    text-align: center;
   }
-  .management-block { padding: 11px; }
-  .contact-choice { grid-template-columns: minmax(95px, 112px) minmax(0, 1fr); }
-  .note-form { grid-template-columns: minmax(0, 1fr) minmax(126px, 145px); gap: 8px; }
-  .note-form-actions button { font-size: 11px; }
+  .note-form {
+    grid-template-columns: minmax(0, 1fr) minmax(120px, 38%);
+    gap: 8px;
+  }
+  .note-form-actions button {
+    font-size: 10px;
+  }
 }
-@media (max-width: 350px) {
-  .note-form { grid-template-columns: minmax(0, 1fr) 122px; gap: 6px; }
-  .note-form-actions button svg { display: none; }
+@media (max-width: 380px) {
+  .contact-choice {
+    grid-template-columns: 94px minmax(0, 1fr);
+    gap: 5px;
+  }
+  .contact-choice label {
+    gap: 5px;
+    font-size: 11px;
+  }
+  .contact-choice input:not([type='checkbox']) {
+    padding-inline: 6px;
+    font-size: 11px;
+  }
+  .note-form {
+    grid-template-columns: minmax(0, 1fr) 116px;
+  }
 }
