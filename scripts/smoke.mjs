@@ -749,19 +749,38 @@ async function run() {
     'Old alias cannot create a duplicate player',
   );
   // Two different OCR identities in the same war must not duplicate that week's points.
-  const overlapBefore = (await request('dashboard?anchor=' + old + '&count=1',
-    'GET', null, ownerCookie)).body.weeks[0].players;
-  const other = overlapBefore.find(p => p.name === 'HistoricNew');
-  const canonical = overlapBefore.find(p => p.id === oldName.id);
-  ensure((await request('players/merge', 'POST', {
-    sourceId: other.id, targetId: canonical.id, overlap: 'keepTarget',
-  }, ownerCookie)).status, 201, 'Overlapping duplicate rows safely merged');
-  const overlapAfter = (await request('dashboard?anchor=' + old + '&count=1',
-    'GET', null, ownerCookie)).body.weeks[0].players;
-  ensure(overlapAfter.find(p => p.id === canonical.id).points, 250000,
-    'Explicit keepTarget retains the correct score');
-  ensure(overlapAfter.some(p => p.id === other.id), false,
-    'Incorrect overlapping row removed');
+  const overlapBefore = (await request('dashboard?anchor=' + old + '&count=1', 'GET', null, ownerCookie))
+    .body.weeks[0].players;
+  const other = overlapBefore.find((p) => p.name === 'HistoricNew');
+  const canonical = overlapBefore.find((p) => p.id === oldName.id);
+  ensure(
+    (
+      await request(
+        'players/merge',
+        'POST',
+        {
+          sourceId: other.id,
+          targetId: canonical.id,
+          overlap: 'keepTarget',
+        },
+        ownerCookie,
+      )
+    ).status,
+    201,
+    'Overlapping duplicate rows safely merged',
+  );
+  const overlapAfter = (await request('dashboard?anchor=' + old + '&count=1', 'GET', null, ownerCookie))
+    .body.weeks[0].players;
+  ensure(
+    overlapAfter.find((p) => p.id === canonical.id).points,
+    250000,
+    'Explicit keepTarget retains the correct score',
+  );
+  ensure(
+    overlapAfter.some((p) => p.id === other.id),
+    false,
+    'Incorrect overlapping row removed',
+  );
   ensure(overlapAfter.length, overlapBefore.length - 1, 'No duplicated score after overlap merge');
   console.log('Production integration smoke tests passed');
 }
