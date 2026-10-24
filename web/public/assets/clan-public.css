@@ -376,3 +376,14 @@ h1,h2,p { margin-top:0; }
 }
 .guest-contact-link:hover { background: #466786; color: #fff; }
 .guest-contact-link:focus-visible { outline: 3px solid #e9c369; outline-offset: 3px; }
+
+/* Keep all informational text legible on narrow displays. */
+.guest-war-date { font-size: 12px; }
+.guest-war-info strong { font-size: 14px; }
+.guest-versus { font-size: 12px; }
+.guest-war-result small { font-size: 12px; }
+.guest-history h2 { font-size: clamp(19px, 3vw, 25px); }
+.guest-record-item span { font-size: 12px; }
+.guest-hero .guest-leader { font-size: 14px; }
+.guest-brand { font-size: 14px; }
+.guest-empty { font-size: 14px; }

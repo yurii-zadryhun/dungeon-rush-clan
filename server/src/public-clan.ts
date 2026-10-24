@@ -228,6 +228,7 @@ export function renderClanDocument(
     .replace(/<html lang="[^"]*">/, '<html lang="' + locale + '">')
     .replace(/<title>[^<]*<\/title>/, '<title>' + escapeHtml(title) + '</title>')
     .replace(/<meta name="robots"[^>]*>/, '')
+    .replace(/<meta\s+name="description"[\s\S]*?\/>/g, '')
     // Do not ship the authenticated React app or its CSS to public visitors.
     .replace(/<script[^>]*type="module"[^>]*><\/script>/g, '')
     .replace(/<link[^>]*rel="modulepreload"[^>]*>/g, '')
