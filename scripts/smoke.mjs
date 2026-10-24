@@ -33,11 +33,14 @@ function ensure(actual, expected, context) {
 
 async function run() {
   ensure((await request('auth/setup-state')).body.initialized, false, 'Uninitialized');
+  const anonymousSession = await request('auth/session-state');
+  ensure(anonymousSession.status, 200, 'Public session check never returns an expected 401');
+  assert.deepEqual(anonymousSession.body, { account: null, initialized: false });
   const publicBeforeEnrollment = await request('public/clan');
   ensure(publicBeforeEnrollment.status, 200, 'Public profile needs no account');
   assert.deepEqual(
     Object.keys(publicBeforeEnrollment.body).sort(),
-    ['leader', 'name', 'recentWars', 'record'],
+    ['contactUrl', 'leader', 'name', 'recentWars', 'record'],
     'Public API exposes only approved fields',
   );
   ensure(publicBeforeEnrollment.body.name, 'Ukrainians', 'Public clan name');
@@ -50,10 +53,26 @@ async function run() {
   assert.match(guestMarkup, /name="robots" content="index,follow/, 'Guest page is indexable');
   assert.match(
     guestMarkup,
-    /<h1>Ukrainians — Dungeon Rush<\/h1>/,
+    /<h1 id="clan-title">Ukrainians — Dungeon Rush<\/h1>/,
     'Crawler can read clan without JavaScript',
   );
   assert.doesNotMatch(guestMarkup, /noindex,nofollow/, 'No private-app robots tag on guest page');
+  assert.doesNotMatch(guestMarkup, /<script[^>]*type="module"/, 'Public page must ship no React code');
+  assert.doesNotMatch(guestMarkup, /\/assets\/index-[^" ]+\.js/, 'No private JavaScript URL in public HTML');
+  assert.match(guestMarkup, /\/assets\/clan-public\.css/, 'Small standalone guest stylesheet');
+  assert.match(guestMarkup, /hreflang="uk"/, 'Ukrainian alternate language declared');
+  const englishGuest = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan/en');
+  assert.match(await englishGuest.text(), /<html lang="en">/, 'English page served without JavaScript');
+  const ukrainianGuest = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan/uk');
+  assert.match(await ukrainianGuest.text(), /<html lang="uk">/, 'Ukrainian page served without JavaScript');
+  const browserGuest = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan', {
+    headers: { 'Accept-Language': 'en-GB,en;q=0.8,uk;q=0.2' },
+  });
+  assert.match(await browserGuest.text(), /<html lang="en">/, 'Browser language used for default guest URL');
+  ensure(
+    (await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/assets/clan-public.css')).status,
+    200, 'Standalone public stylesheet available',
+  );
   const robots = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/robots.txt');
   assert.match(await robots.text(), /Disallow: \/api\//, 'API excluded from crawl');
   const sitemap = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/sitemap.xml');
@@ -85,6 +104,10 @@ async function run() {
   ensure(owner.status, 201, 'Owner enrolled');
   const ownerCookie = owner.cookie;
   assert.ok(ownerCookie.startsWith('clan_session='), 'Owner cookie was issued');
+  const ownerSession = await request('auth/session-state', 'GET', null, ownerCookie);
+  ensure(ownerSession.status, 200, 'Valid cookie restores via single request');
+  ensure(ownerSession.body.account.role, 'owner', 'Session status returns only signed-in account');
+  ensure(ownerSession.body.initialized, true, 'Existing session confirms setup');
   const aiStatus = await request('wiki-ai/status', 'GET', null, ownerCookie);
   ensure(aiStatus.status, 200, 'AI status available to members');
   ensure(aiStatus.body.enabled, false, 'No-key environment reports disabled AI');
@@ -108,6 +131,9 @@ async function run() {
       minimumPoints: 100000,
       weights: [0.75, 0.25],
       leaderName: 'Clan Captain',
+      telegramUrl: 'https://t.me/ukrainians',
+      discordUrl: 'https://discord.gg/clan',
+      contactUrl: 'https://discord.gg/contact-clan',
     },
     ownerCookie,
   );
@@ -118,6 +144,23 @@ async function run() {
     'Settings return public leader',
   );
   ensure((await request('public/clan')).body.leader, 'Clan Captain', 'Guests see configured leader');
+  ensure((await request('public/clan')).body.contactUrl, 'https://discord.gg/contact-clan',
+    'Guests see only public contact link, not private chat URLs');
+  ensure(publicSetting.body.rankings.settings.telegramUrl, 'https://t.me/ukrainians',
+    'Dashboard contains Telegram');
+  ensure(publicSetting.body.rankings.settings.discordUrl, 'https://discord.gg/clan',
+    'Dashboard contains Discord');
+  ensure((await request('settings', 'PATCH', {
+    clanName: 'Ukrainians', minimumPoints: 100000, weights: [0.75, 0.25],
+    contactUrl: 'javascript:alert(1)',
+  }, ownerCookie)).status, 400, 'Unsafe public contact URL rejected');
+  ensure((await request('settings', 'PATCH', {
+    clanName: 'Ukrainians', minimumPoints: 100000, weights: [0.75, 0.25],
+    discordUrl: 'http://discord.gg/clan',
+  }, ownerCookie)).status, 400, 'Insecure Discord URL rejected');
+  const configuredPublicPage = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan/en');
+  assert.match(await configuredPublicPage.text(), /href="https:\/\/discord.gg\/contact-clan"/,
+    'Public contact link is rendered in the searchable HTML');
   assert.equal(
     (await request('public/clan')).body.rankings,
     undefined,

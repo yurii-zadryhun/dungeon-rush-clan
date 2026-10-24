@@ -8,7 +8,7 @@ const archive = read('web/src/screens/ClanDashboard.tsx');
 const mainCss = read('web/src/styles.css');
 const players = read('web/src/screens/PlayersPage.tsx');
 const playersCss = read('web/src/screens/PlayersPage.css');
-const guest = read('web/src/screens/GuestPage.tsx');
+const guestCss = read('web/public/assets/clan-public.css');
 const publicHtml = read('server/src/public-clan.ts');
 
 assert.match(
@@ -37,12 +37,9 @@ assert.match(
   /\.directory-player\s*\{[\s\S]*?grid-template-columns: var\(--player-columns\)/,
   'Rows align with their headings',
 );
-assert.match(guest, /src="\/assets\/clan-emblem\.png"/, 'Guest page loads proxied assets');
-assert.doesNotMatch(
-  guest,
-  /publicShare|publicIntro|publicResultsOnly|publicCompletedWars|publicClanProfile/,
-  'Guest has no redundant content',
-);
+assert.match(guestCss, /\.guest-languages/, 'Static guest UI supports no-JS language selection');
+assert.match(publicHtml, /\/assets\/clan-public\.css/, 'Server serves public standalone stylesheet');
+assert.doesNotMatch(publicHtml, /<GuestPage|GuestPage\.tsx/, 'Guest route is server-owned');
 assert.match(publicHtml, /\/assets\/og-clan\.jpg/, 'SEO image uses proxied path');
 assert.match(publicHtml, /\/assets\/clan-emblem\.png/, 'Crawler image uses proxied path');
 assert.ok(
