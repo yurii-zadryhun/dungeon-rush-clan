@@ -285,7 +285,9 @@ export function PlayerManagementPanel({ playerId }: { playerId: number }) {
           {saveError && (
             <div className="management-save-error" role="alert">
               <AlertCircle size={17} />
-              <span>{t('autosaveFailed')}: {saveError}</span>
+              <span>
+                {t('autosaveFailed')}: {saveError}
+              </span>
               <button
                 type="button"
                 className="management-retry"
