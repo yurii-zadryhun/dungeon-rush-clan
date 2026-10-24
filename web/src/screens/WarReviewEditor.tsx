@@ -10,6 +10,7 @@ import {
   type Week,
 } from '../api';
 import { localizeOcrWarning, useI18n } from '../i18n';
+import { SearchSelect } from './SearchSelect';
 
 export type EditableDay = { day: number; points: number; winner: 'ours' | 'opponent' | ''; mvp: string };
 export type EditableResult = {
@@ -133,8 +134,10 @@ function PlayersPanel({
   }
 
   function rename(index: number, name: string) {
-    const match = roster.all.find((player) => normalizeName(player.name) === normalizeName(name));
-    update(index, { name, playerId: match?.id ?? null });
+    const existingId = players[index].playerId;
+    const exact = roster.all.find((player) => normalizeName(player.name) === normalizeName(name));
+    // Editing a nickname must retain the original ID. Only unlinked OCR rows auto-match.
+    update(index, { name, playerId: existingId ?? exact?.id ?? null });
   }
 
   function add() {
@@ -214,25 +217,14 @@ function PlayersPanel({
                 <span className={'tag ' + (isNew ? 'warning' : 'success')}>
                   {t(isNew ? 'new' : 'returning')}
                 </span>
-                <select
-                  title={t('pickExisting')}
-                  aria-label={t('pickExisting')}
-                  value={player.playerId ?? ''}
-                  onChange={(e) => {
-                    const selected = roster.all.find((p) => p.id === Number(e.target.value));
-                    update(index, {
-                      playerId: selected?.id ?? null,
-                      name: selected?.name ?? player.name,
-                    });
-                  }}
-                >
-                  <option value="">{t('newPlayer')}</option>
-                  {roster.all.map((p) => (
-                    <option value={p.id} key={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
+                <SearchSelect ariaLabel={t('pickExisting')} placeholder={t('pickExisting')}
+                  value={player.playerId ?? null}
+                  choices={[{ value: null, label: t('newPlayer') },
+                    ...roster.all.map(p => ({ value: p.id, label: p.name }))]}
+                  onChange={id => {
+                    const match = roster.all.find(p => p.id === id);
+                    update(index, { playerId: id, name: match?.name ?? player.name });
+                  }} />
                 <span className="war-editor-short-score">{shortNumber(player.points)}</span>
                 {suggestion && (
                   <span className="warning-text tiny">{t('possibleMatch', { name: suggestion })}</span>
