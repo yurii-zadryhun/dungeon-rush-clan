@@ -50,10 +50,16 @@ async function run() {
   const guestMarkup = await guestHtml.text();
   assert.match(guestMarkup, /property="og:image"/, 'Social preview metadata');
   assert.match(guestMarkup, /rel="canonical"/, 'Canonical public URL');
+  assert.match(guestMarkup, /rel="canonical" href="https:\/\/clan\.example\.com\/clan"/,
+    'Default public URL must be self-canonical, not a hreflang alternate');
+  assert.match(guestMarkup, /class="guest-game">Dungeon Rush<\/p>/, 'Game is a subtitle');
+  assert.match(guestMarkup, /class="guest-crown"/, 'Minimal gold crown marks the leader');
+  assert.doesNotMatch(guestMarkup, /without private player statistics/i,
+    'Public SEO description promotes the clan rather than discussing privacy');
   assert.match(guestMarkup, /name="robots" content="index,follow/, 'Guest page is indexable');
   assert.match(
     guestMarkup,
-    /<h1 id="clan-title">Ukrainians — Dungeon Rush<\/h1>/,
+    /<h1 id="clan-title">Ukrainians<\/h1>/,
     'Crawler can read clan without JavaScript',
   );
   assert.doesNotMatch(guestMarkup, /noindex,nofollow/, 'No private-app robots tag on guest page');
@@ -67,12 +73,19 @@ async function run() {
   assert.match(guestMarkup, /hreflang="uk"/, 'Ukrainian alternate language declared');
   const englishGuest = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan/en');
   assert.match(await englishGuest.text(), /<html lang="en">/, 'English page served without JavaScript');
+  const englishHtml = await (await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan/en')).text();
+  assert.match(englishHtml, /rel="canonical" href="https:\/\/clan\.example\.com\/clan\/en"/,
+    'English page canonical matches its own language');
+
   const ukrainianGuest = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan/uk');
   assert.match(
     await ukrainianGuest.text(),
     /<html lang="uk">/,
     'Ukrainian page served without JavaScript',
   );
+  const ukrainianHtml = await (await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan/uk')).text();
+  assert.match(ukrainianHtml, /rel="canonical" href="https:\/\/clan\.example\.com\/clan\/uk"/,
+    'Ukrainian page canonical matches its own language');
   const browserGuest = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan', {
     headers: { 'Accept-Language': 'en-GB,en;q=0.8,uk;q=0.2' },
   });
@@ -214,6 +227,11 @@ async function run() {
     /href="https:\/\/discord.gg\/contact-clan"/,
     'Public contact link is rendered in the searchable HTML',
   );
+  const contactMarkup = await (await fetch(
+    'http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan/en',
+  )).text();
+  assert.match(contactMarkup, /Get in touch/, 'Public contact uses inviting English copy');
+  assert.doesNotMatch(contactMarkup, />Leader:\s*</, 'No redundant Leader label');
   assert.equal(
     (await request('public/clan')).body.rankings,
     undefined,
@@ -424,6 +442,35 @@ async function run() {
   });
   ensure(member.status, 201, 'Member account registered');
   const memberCookie = member.cookie;
+  ensure((await request('auth/impersonate', 'POST', { accountId: owner.body.id }, memberCookie)).status,
+    403, 'Members cannot impersonate an owner');
+  ensure((await request('auth/stop-impersonation', 'POST', null, memberCookie)).status,
+    403, 'Members cannot return as an owner');
+  ensure((await request('auth/impersonate', 'POST', { accountId: owner.body.id }, ownerCookie)).status,
+    400, 'Owner cannot impersonate self');
+  const assumed = await request('auth/impersonate', 'POST', { accountId: member.body.id }, ownerCookie);
+  ensure(assumed.status, 201, 'Owner can assume an active member account');
+  ensure(assumed.body.id, member.body.id, 'Impersonated account identity is the member');
+  ensure(assumed.body.role, 'member', 'Owner powers are not inherited');
+  ensure(assumed.body.impersonating.ownerId, owner.body.id, 'Original owner identity is recoverable');
+  assert.ok(assumed.body.impersonating.expiresAt <= Date.now() + 30 * 60_000,
+    'Impersonation expires within 30 minutes');
+  ensure((await request('auth/session-state', 'GET', null, ownerCookie)).body.account.id,
+    member.body.id, 'Impersonation persists across page reloads');
+  ensure((await request('auth/accounts', 'GET', null, ownerCookie)).status,
+    403, 'Assumed member cannot access owner management endpoints');
+  ensure((await request('auth/impersonate', 'POST', { accountId: member.body.id }, ownerCookie)).status,
+    403, 'Nested impersonation is blocked');
+  ensure((await request('auth/stop-impersonation', 'POST', null, memberCookie)).status,
+    403, 'Another account cannot stop the owner session');
+  const returned = await request('auth/stop-impersonation', 'POST', null, ownerCookie);
+  ensure(returned.status, 201, 'Owner can return to original account');
+  ensure(returned.body.role, 'owner', 'Owner permissions restored');
+  assert.equal(returned.body.impersonating, undefined, 'Impersonation banner state clears');
+  ensure((await request('auth/accounts', 'GET', null, ownerCookie)).status,
+    200, 'Owner rights restored after return');
+  ensure((await request('auth/stop-impersonation', 'POST', null, ownerCookie)).status,
+    403, 'Stop operation cannot run without an active impersonation');
   ensure((await request('dashboard', 'GET', null, memberCookie)).status, 200, 'Member can view');
   const memberRoster = await request('players', 'GET', null, memberCookie);
   ensure(memberRoster.status, 200, 'Members can browse clan roster');
