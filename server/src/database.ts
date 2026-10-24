@@ -34,7 +34,14 @@ export interface Tables {
     active: number;
     created_at: number;
   };
-  sessions: { token_hash: string; account_id: number; expires_at: number; extended_at: number };
+  sessions: {
+    token_hash: string;
+    account_id: number;
+    expires_at: number;
+    extended_at: number;
+    impersonated_account_id: number | null;
+    impersonation_expires_at: number | null;
+  };
   invites: {
     id: Generated<number>;
     token_hash: string;
@@ -108,7 +115,7 @@ export class Db implements OnModuleDestroy {
       CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY CHECK(id=1), clan_name TEXT NOT NULL, minimum_points INTEGER NOT NULL, weights_json TEXT NOT NULL, leader_name TEXT NOT NULL DEFAULT '', telegram_url TEXT NOT NULL DEFAULT '', discord_url TEXT NOT NULL DEFAULT '', contact_url TEXT NOT NULL DEFAULT '');
       CREATE TABLE IF NOT EXISTS accounts (id INTEGER PRIMARY KEY, username TEXT UNIQUE NOT NULL, display_name TEXT NOT NULL, role TEXT NOT NULL, password_hash TEXT NOT NULL, locale TEXT NOT NULL DEFAULT 'uk', active INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS shared_invites (id INTEGER PRIMARY KEY CHECK(id=1), token_hash TEXT UNIQUE NOT NULL, created_by INTEGER NOT NULL REFERENCES accounts(id), active INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL);
-      CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE, expires_at INTEGER NOT NULL, extended_at INTEGER NOT NULL);
+      CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE, expires_at INTEGER NOT NULL, extended_at INTEGER NOT NULL, impersonated_account_id INTEGER, impersonation_expires_at INTEGER);
       CREATE INDEX IF NOT EXISTS sessions_by_account ON sessions(account_id);
       CREATE TABLE IF NOT EXISTS invites (id INTEGER PRIMARY KEY, token_hash TEXT UNIQUE NOT NULL, label TEXT NOT NULL, role TEXT NOT NULL, expires_at INTEGER NOT NULL, used_at INTEGER, created_by INTEGER NOT NULL REFERENCES accounts(id));
       CREATE TABLE IF NOT EXISTS clans (id INTEGER PRIMARY KEY, name TEXT NOT NULL, normalized_name TEXT UNIQUE NOT NULL);
@@ -149,6 +156,13 @@ export class Db implements OnModuleDestroy {
       if (!settingsColumns.some((column) => column.name === field)) {
         this.connection.exec(`ALTER TABLE settings ADD COLUMN ${field} TEXT NOT NULL DEFAULT ''`);
       }
+    }
+    const sessionColumns = this.connection.pragma('table_info(sessions)') as { name: string }[];
+    if (!sessionColumns.some((column) => column.name === 'impersonated_account_id')) {
+      this.connection.exec('ALTER TABLE sessions ADD COLUMN impersonated_account_id INTEGER');
+    }
+    if (!sessionColumns.some((column) => column.name === 'impersonation_expires_at')) {
+      this.connection.exec('ALTER TABLE sessions ADD COLUMN impersonation_expires_at INTEGER');
     }
     // Existing installations used TOTP. Rebuild tables once to remove secrets entirely
     // while preserving account IDs, password hashes, sessions and invitations.
