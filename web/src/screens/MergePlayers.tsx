@@ -3,6 +3,7 @@ import { GitMerge, ShieldAlert } from 'lucide-react';
 import { api, json, type Dashboard } from '../api';
 import { useI18n } from '../i18n';
 import { SearchSelect } from './SearchSelect';
+import './MergePlayers.css';
 
 interface PlayerIdentity {
   id: number;
