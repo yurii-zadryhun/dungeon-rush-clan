@@ -1,7 +1,7 @@
 import React from 'react';
 import { Activity, ArrowUpRight, Search, ShieldCheck, UserRound, Users } from 'lucide-react';
 import { api, shortNumber, type Account, type Dashboard, type Player } from '../api';
-import { useI18n } from '../i18n';
+import { nChoice, useI18n } from '../i18n';
 const UsersScreen = React.lazy(() => import('./UsersScreen').then((m) => ({ default: m.UsersScreen })));
 import './PlayersPage.css';
 
@@ -40,13 +40,14 @@ export function PlayersPage({
   onMerged: (data: Dashboard) => void;
   initialAccess?: boolean;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const isStaff = account.role !== 'member';
   const [tab, setTab] = React.useState<'roster' | 'access'>(
     initialAccess && isStaff ? 'access' : 'roster',
   );
   const [members, setMembers] = React.useState<DirectoryPlayer[]>([]);
   const [standaloneAccounts, setStandaloneAccounts] = React.useState<StandaloneAccount[]>([]);
+  const [accountsTotal, setAccountsTotal] = React.useState<number | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
   const [revision, setRevision] = React.useState(0);
@@ -66,7 +67,9 @@ export function PlayersPage({
       .then(([players, accounts]) => {
         if (!alive) return;
         setMembers(players);
-        setStandaloneAccounts(accounts.filter((item) => !players.some((p) => p.accountId === item.id)));
+        setAccountsTotal(isStaff ? accounts.filter((item) => item.active).length : null);
+        const linked = new Set(players.map((player) => player.accountId).filter((id) => id != null));
+        setStandaloneAccounts(accounts.filter((item) => !linked.has(item.id)));
       })
       .catch((failure) => {
         if (alive) setError((failure as Error).message);
@@ -97,9 +100,15 @@ export function PlayersPage({
       return (bScore?.score ?? 0) - (aScore?.score ?? 0) || a.name.localeCompare(b.name);
     });
   const activeCount = members.filter((player) => player.active).length;
-  const registeredCount = members.filter(
+  const linkedCount = members.filter(
     (player) => player.active && player.hasAccount && player.accountActive,
   ).length;
+  const matchingUnlinked = isStaff && membership !== 'left' && registration !== 'unregistered'
+    ? standaloneAccounts.filter((item) =>
+      (membership !== 'active' || !!item.active) &&
+      item.display_name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()),
+    )
+    : [];
 
   function merged(next: Dashboard) {
     onMerged(next);
@@ -118,12 +127,20 @@ export function PlayersPage({
         <div className="players-overview">
           <span>
             <b>{activeCount}</b>
-            {t('activePlayer')}
+            {nChoice(locale, activeCount, t('activeCountOne'), t('activeCountFew'), t('activeCountMany'))}
           </span>
           <span>
-            <b>{registeredCount}</b>
-            {t('registered')}
+            <b>{accountsTotal ?? linkedCount}</b>
+            {accountsTotal === null
+              ? t('registeredPlayers')
+              : nChoice(locale, accountsTotal, t('accountCountOne'), t('accountCountFew'), t('accountCountMany'))}
           </span>
+          {isStaff && (
+            <span>
+              <b>{linkedCount}</b>
+              {nChoice(locale, linkedCount, t('linkedCountOne'), t('linkedCountFew'), t('linkedCountMany'))}
+            </span>
+          )}
         </div>
       </header>
 
@@ -176,7 +193,7 @@ export function PlayersPage({
                   >
                     {t(
                       value === 'active'
-                        ? 'activePlayer'
+                        ? 'activePlayersTab'
                         : value === 'left'
                           ? 'formerPlayers'
                           : 'allPlayers',
@@ -191,7 +208,7 @@ export function PlayersPage({
                   onChange={(event) => setRegistration(event.target.value as Registration)}
                 >
                   <option value="all">{t('allAccounts')}</option>
-                  <option value="registered">{t('registered')}</option>
+                  <option value="registered">{t('registeredPlayers')}</option>
                   <option value="unregistered">{t('notRegistered')}</option>
                 </select>
               </label>
@@ -222,33 +239,23 @@ export function PlayersPage({
                   <DirectoryRow key={player.id} player={player} stat={stats.get(player.id)} />
                 ))}
               </div>
-              {isStaff &&
-                standaloneAccounts.length > 0 &&
-                membership !== 'left' &&
-                registration !== 'unregistered' &&
-                !search && (
-                  <div className="players-unlinked">
-                    <h2>
-                      <ShieldCheck size={17} /> {t('siteOnlyAccounts')} ({standaloneAccounts.length})
-                    </h2>
-                    <p className="muted">{t('siteOnlyHelp')}</p>
-                    {standaloneAccounts.map((item) => (
-                      <div className="players-unlinked-entry" key={item.id}>
-                        <span>{item.display_name}</span>
-                        <small>
-                          {t(
-                            item.role === 'owner'
-                              ? 'ownerRole'
-                              : item.role === 'admin'
-                                ? 'adminRole'
-                                : 'memberRole',
-                          )}
-                          {!item.active && ' · ' + t('revoked')}
-                        </small>
-                      </div>
-                    ))}
-                  </div>
-                )}
+              {matchingUnlinked.length > 0 && (
+                <div className="players-unlinked">
+                  <h2>
+                    <ShieldCheck size={17} /> {t('siteOnlyAccounts')} ({matchingUnlinked.length})
+                  </h2>
+                  <p className="muted">{t('siteOnlyHelp')}</p>
+                  {matchingUnlinked.map((item) => (
+                    <div className="players-unlinked-entry" key={item.id}>
+                      <span>{item.display_name}</span>
+                      <small>
+                        {t(item.role === 'owner' ? 'ownerRole' : item.role === 'admin' ? 'adminRole' : 'memberRole')}
+                        {!item.active && ' · ' + t('revoked')}
+                      </small>
+                    </div>
+                  ))}
+                </div>
+              )}
             </>
           )}
         </section>
