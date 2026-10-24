@@ -37,7 +37,13 @@ interface AccessData {
   shared: SharedInvite;
 }
 
-export function UsersScreen({ account, onMerged }: { account: Account; onMerged: (data: Dashboard) => void }) {
+export function UsersScreen({
+  account,
+  onMerged,
+}: {
+  account: Account;
+  onMerged: (data: Dashboard) => void;
+}) {
   const { t, locale } = useI18n();
   const [data, setData] = React.useState<AccessData | null>(null);
   const [label, setLabel] = React.useState('');

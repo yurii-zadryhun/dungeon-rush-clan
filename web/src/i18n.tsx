@@ -5,7 +5,8 @@ export type Locale = 'uk' | 'en';
 const en = {
   appTitle: 'Clan War Archive',
   mergeComplete: 'Players merged. All war rankings have been recalculated.',
-  mergeConfirm: 'Merge {old} into {correct}? This transfers past wars and removes the incorrect identity.',
+  mergeConfirm:
+    'Merge {old} into {correct}? This transfers past wars and removes the incorrect identity.',
   mergeAccountWarning: 'Both identities have accounts. Resolve account ownership before merging.',
   keepIncorrectScores: 'Keep incorrect player’s scores',
   keepCorrectScores: 'Keep correct player’s scores',
@@ -15,7 +16,8 @@ const en = {
   selectPlayer: 'Search players…',
   correctPlayer: 'Correct player',
   incorrectPlayer: 'Incorrect player',
-  mergeHelp: 'Choose the incorrectly recognized player first, then the correct existing identity. The old player’s scores and war history will move to the correct player.',
+  mergeHelp:
+    'Choose the incorrectly recognized player first, then the correct existing identity. The old player’s scores and war history will move to the correct player.',
   mergePlayers: 'Merge duplicate players',
   loading: 'Loading...',
   save: 'Save',
@@ -210,7 +212,8 @@ type MessageKey = keyof typeof en;
 const uk: Record<MessageKey, string> = {
   appTitle: 'Історія війн клану',
   mergeComplete: 'Гравців об’єднано. Рейтинги війн перераховано.',
-  mergeConfirm: 'Об’єднати {old} з {correct}? Історія перейде до правильного гравця, а помилковий запис буде видалено.',
+  mergeConfirm:
+    'Об’єднати {old} з {correct}? Історія перейде до правильного гравця, а помилковий запис буде видалено.',
   mergeAccountWarning: 'Обидва гравці мають акаунти. Спершу виріши, кому належать акаунти.',
   keepIncorrectScores: 'Залишити очки помилкового',
   keepCorrectScores: 'Залишити очки правильного',
@@ -220,7 +223,8 @@ const uk: Record<MessageKey, string> = {
   selectPlayer: 'Пошук гравця…',
   correctPlayer: 'Правильний гравець',
   incorrectPlayer: 'Помилковий гравець',
-  mergeHelp: 'Спочатку обери помилково розпізнаного гравця, потім правильного. Його очки та історія перейдуть до правильного гравця.',
+  mergeHelp:
+    'Спочатку обери помилково розпізнаного гравця, потім правильного. Його очки та історія перейдуть до правильного гравця.',
   mergePlayers: 'Об’єднати дублікати гравців',
   loading: 'Завантаження...',
   save: 'Зберегти',

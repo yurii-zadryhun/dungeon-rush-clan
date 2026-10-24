@@ -132,8 +132,10 @@ export function ImportModal({
         players: recognized.players.map((player) => ({
           ...player,
           playerId:
-            available.all.find(existing => normalizeName(existing.name) === normalizeName(player.name))?.id ??
-            available.aliases?.find(alias => alias.normalizedName === normalizeName(player.name))?.playerId ??
+            available.all.find((existing) => normalizeName(existing.name) === normalizeName(player.name))
+              ?.id ??
+            available.aliases?.find((alias) => alias.normalizedName === normalizeName(player.name))
+              ?.playerId ??
             null,
         })),
         result: makeResult(recognized.result),

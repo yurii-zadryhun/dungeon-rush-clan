@@ -9,7 +9,14 @@ import { PlayersController, PlayersService } from './players';
 import { WikiAiController, WikiAiService } from './ai/wiki-ai';
 
 @Module({
-  controllers: [AuthController, WarsController, OcrController, ImportController, PlayersController, WikiAiController],
+  controllers: [
+    AuthController,
+    WarsController,
+    OcrController,
+    ImportController,
+    PlayersController,
+    WikiAiController,
+  ],
   providers: [
     Db,
     AccountsService,

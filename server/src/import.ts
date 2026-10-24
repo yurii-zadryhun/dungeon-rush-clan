@@ -75,8 +75,10 @@ export class ImportService {
       : [];
     const [all, aliases] = await Promise.all([
       this.db.query.selectFrom('players').select(['id', 'name', 'active']).execute(),
-      this.db.query.selectFrom('player_aliases')
-        .select(['normalized_name as normalizedName', 'player_id as playerId']).execute(),
+      this.db.query
+        .selectFrom('player_aliases')
+        .select(['normalized_name as normalizedName', 'player_id as playerId'])
+        .execute(),
     ]);
     return { previousStart: last?.start_date || null, previous, all, aliases };
   }
@@ -168,8 +170,10 @@ export class ImportService {
           const names = new Map(existingPlayers.map((p) => [p.normalized_name, p.id]));
           const ids = new Set<number>();
           for (const player of data.players) {
-            let playerId = player.playerId ?? names.get(normalizeName(player.name)) ??
-              await this.identities.resolve(trx, player.name);
+            let playerId =
+              player.playerId ??
+              names.get(normalizeName(player.name)) ??
+              (await this.identities.resolve(trx, player.name));
             if (playerId && !existingPlayers.some((p) => p.id === playerId))
               throw new BadRequestException('Unknown player ID ' + playerId);
             if (!playerId) {

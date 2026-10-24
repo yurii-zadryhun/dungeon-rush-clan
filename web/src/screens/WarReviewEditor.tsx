@@ -135,8 +135,8 @@ function PlayersPanel({
 
   function rename(index: number, name: string) {
     const existingId = players[index].playerId;
-    const exact = roster.all.find(player => normalizeName(player.name) === normalizeName(name));
-    const alias = roster.aliases?.find(entry => entry.normalizedName === normalizeName(name));
+    const exact = roster.all.find((player) => normalizeName(player.name) === normalizeName(name));
+    const alias = roster.aliases?.find((entry) => entry.normalizedName === normalizeName(name));
     // A manual name correction retains the linked identity. Unlinked OCR rows may auto-match.
     update(index, { name, playerId: existingId ?? exact?.id ?? alias?.playerId ?? null });
   }
@@ -218,14 +218,19 @@ function PlayersPanel({
                 <span className={'tag ' + (isNew ? 'warning' : 'success')}>
                   {t(isNew ? 'new' : 'returning')}
                 </span>
-                <SearchSelect ariaLabel={t('pickExisting')} placeholder={t('pickExisting')}
+                <SearchSelect
+                  ariaLabel={t('pickExisting')}
+                  placeholder={t('pickExisting')}
                   value={player.playerId ?? null}
-                  choices={[{ value: null, label: t('newPlayer') },
-                    ...roster.all.map(p => ({ value: p.id, label: p.name }))]}
-                  onChange={id => {
-                    const match = roster.all.find(p => p.id === id);
+                  choices={[
+                    { value: null, label: t('newPlayer') },
+                    ...roster.all.map((p) => ({ value: p.id, label: p.name })),
+                  ]}
+                  onChange={(id) => {
+                    const match = roster.all.find((p) => p.id === id);
                     update(index, { playerId: id, name: match?.name ?? player.name });
-                  }} />
+                  }}
+                />
                 <span className="war-editor-short-score">{shortNumber(player.points)}</span>
                 {suggestion && (
                   <span className="warning-text tiny">{t('possibleMatch', { name: suggestion })}</span>

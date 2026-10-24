@@ -449,7 +449,13 @@ export function ClanDashboard({
       {isWiki ? (
         <WikiScreen articleId={wikiArticleId} />
       ) : isUsers ? (
-        <UsersScreen account={user} onMerged={next => { setWeeks([]); onChange(next); }} />
+        <UsersScreen
+          account={user}
+          onMerged={(next) => {
+            setWeeks([]);
+            onChange(next);
+          }}
+        />
       ) : (
         <main className="dashboard">
           {error && <div className="error-strip">{error}</div>}

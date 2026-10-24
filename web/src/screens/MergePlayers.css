@@ -1,11 +1,54 @@
-.player-merge-panel{grid-column:1/-1;display:grid;gap:11px}
-.player-merge-panel h2{margin:0}
-.player-merge-panel p{margin:0}
-.player-merge-panel .game-button{justify-self:start}
-.merge-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.merge-fields>label{min-width:0;display:grid;gap:6px;font-size:12px;font-weight:800}
-.merge-preview{border:1px solid #575058;border-radius:9px;padding:9px;display:grid;gap:8px;font-size:11px}
-.merge-overlap{display:flex;align-items:center;flex-wrap:wrap;gap:8px;color:#ebc675}
-.merge-overlap select{width:auto;min-width:180px;padding:6px}
-.merge-success{color:#a4eaa4}
-@media(max-width:600px){.merge-fields{grid-template-columns:1fr}}
+.player-merge-panel {
+  grid-column: 1/-1;
+  display: grid;
+  gap: 11px;
+}
+.player-merge-panel h2 {
+  margin: 0;
+}
+.player-merge-panel p {
+  margin: 0;
+}
+.player-merge-panel .game-button {
+  justify-self: start;
+}
+.merge-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.merge-fields > label {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 800;
+}
+.merge-preview {
+  border: 1px solid #575058;
+  border-radius: 9px;
+  padding: 9px;
+  display: grid;
+  gap: 8px;
+  font-size: 11px;
+}
+.merge-overlap {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #ebc675;
+}
+.merge-overlap select {
+  width: auto;
+  min-width: 180px;
+  padding: 6px;
+}
+.merge-success {
+  color: #a4eaa4;
+}
+@media (max-width: 600px) {
+  .merge-fields {
+    grid-template-columns: 1fr;
+  }
+}
