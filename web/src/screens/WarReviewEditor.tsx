@@ -135,9 +135,10 @@ function PlayersPanel({
 
   function rename(index: number, name: string) {
     const existingId = players[index].playerId;
-    const exact = roster.all.find((player) => normalizeName(player.name) === normalizeName(name));
-    // Editing a nickname must retain the original ID. Only unlinked OCR rows auto-match.
-    update(index, { name, playerId: existingId ?? exact?.id ?? null });
+    const exact = roster.all.find(player => normalizeName(player.name) === normalizeName(name));
+    const alias = roster.aliases?.find(entry => entry.normalizedName === normalizeName(name));
+    // A manual name correction retains the linked identity. Unlinked OCR rows may auto-match.
+    update(index, { name, playerId: existingId ?? exact?.id ?? alias?.playerId ?? null });
   }
 
   function add() {
