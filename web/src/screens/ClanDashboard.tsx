@@ -15,6 +15,7 @@ import { formatWarRange } from '../date-format';
 import { nChoice, useI18n, type Locale } from '../i18n';
 
 import { SiteHeader } from './SiteHeader';
+import { ClanSocialLinks } from './ClanSocialLinks';
 
 // Route-only screens and heavy editors should not be bundled into the archive's first paint.
 const WikiScreen = React.lazy(() =>
@@ -309,6 +310,12 @@ function ClanOverview({ data }: { data: Dashboard }) {
     <section className="panel clan-widget">
       <div className="eyebrow">
         <Swords size={15} /> {t('clanOverview')}
+      </div>
+      <div className="clan-heading-line">
+        <ClanSocialLinks
+          telegramUrl={data.rankings.settings.telegramUrl}
+          discordUrl={data.rankings.settings.discordUrl}
+        />
       </div>
       <div className="clan-summary-line">
         <h1>{data.rankings.settings.clanName}</h1>

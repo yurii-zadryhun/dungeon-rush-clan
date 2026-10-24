@@ -4,6 +4,12 @@ import { initialLocale, rememberLocale, type Locale } from './locale';
 export type { Locale } from './locale';
 
 const en = {
+  clanLinksTitle: 'Clan links',
+  clanTelegram: 'Telegram',
+  clanDiscord: 'Discord',
+  clanContactLink: 'Public contact link',
+  clanContactHint: 'Shown on the public clan page; use an invitation or contact URL (Discord, Telegram, etc.).',
+  clanContactAction: 'Contact us',
   playerColumn: 'Player',
   scoreColumn: 'Calculated',
   lastWarColumn: 'Last war',
@@ -319,6 +325,12 @@ const en = {
 
 type MessageKey = keyof typeof en;
 const uk: Record<MessageKey, string> = {
+  clanLinksTitle: 'Посилання клану',
+  clanTelegram: 'Telegram',
+  clanDiscord: 'Discord',
+  clanContactLink: 'Публічний контакт',
+  clanContactHint: 'Відображається на публічній сторінці. Вкажіть посилання на Discord, Telegram або інший спосіб зв’язку.',
+  clanContactAction: 'Зв’язатися з нами',
   playerColumn: 'Гравець',
   scoreColumn: 'Рейтинг',
   lastWarColumn: 'Остання',

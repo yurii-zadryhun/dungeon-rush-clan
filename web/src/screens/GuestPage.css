@@ -322,3 +322,22 @@
     padding: 8px;
   }
 }
+
+.guest-contact-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  width: fit-content;
+  min-height: 39px;
+  margin-top: 16px;
+  padding: 8px 12px;
+  border: 1px solid #7b95b0;
+  border-radius: 9px;
+  background: #34475e;
+  color: #f8f9ff;
+  font-size: 12px;
+  font-weight: 900;
+  text-decoration: none;
+}
+.guest-contact-link:hover { background: #466786; color: #fff; }
+.guest-contact-link:focus-visible { outline: 3px solid #e9c369; outline-offset: 3px; }

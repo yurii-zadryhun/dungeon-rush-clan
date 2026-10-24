@@ -97,6 +97,7 @@ export function renderClanDocument(template: string, clan: PublicClanSnapshot, o
     <img src="/assets/clan-emblem.png" alt="" width="90" height="95">
     <h1>${escapeHtml(clan.name)} — Dungeon Rush</h1>
     <p>Leader: ${escapeHtml(clan.leader)}</p>
+    ${clan.contactUrl ? `<p><a href="${escapeHtml(clan.contactUrl)}" rel="noopener noreferrer" target="_blank">Contact the clan</a></p>` : ''}
     <p>Wins: ${clan.record.wins} · Losses: ${clan.record.losses}</p>
     <h2>Recent clan wars</h2>
     <ol>${clan.recentWars

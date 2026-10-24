@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Crown, History } from 'lucide-react';
+import { ArrowRight, Crown, History, MessageCircle } from 'lucide-react';
 import { api, type PublicClan } from '../api';
 import { formatWarRange } from '../date-format';
 import { LanguagePicker, useI18n } from '../i18n';
@@ -67,6 +67,11 @@ export function GuestPage() {
                   <div className="guest-leader">
                     <Crown size={18} /> {t('publicLeaderLabel')}: <strong>{clan.leader}</strong>
                   </div>
+                  {clan.contactUrl && (
+                    <a className="guest-contact-link" href={clan.contactUrl} target="_blank" rel="noopener noreferrer">
+                      <MessageCircle size={17} aria-hidden="true" /> {t('clanContactAction')} <ArrowRight size={14} aria-hidden="true" />
+                    </a>
+                  )}
                 </div>
               </div>
             </section>
