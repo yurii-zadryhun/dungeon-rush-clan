@@ -535,7 +535,7 @@ async function run() {
           start: old,
           players: [{ position: 1, name: 'КРОСТ', points: 500 }],
         },
-        memberCookie,
+        groupSecond.cookiememberCookie,
       )
     ).status,
     403,
