@@ -206,9 +206,9 @@ export function PlayerInsightsPage({
 
   return (
     <main className="player-insights-page">
-      <a href="#/archive" className="player-back">
+      <a href="#/players" className="player-back">
         <ArrowLeft size={17} />
-        {t('historyTab')}
+        {t('playersDirectory')}
       </a>
       {working && <div className="panel profile-placeholder">{t('loading')}</div>}
       {error && (

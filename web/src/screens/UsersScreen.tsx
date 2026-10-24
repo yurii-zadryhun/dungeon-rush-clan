@@ -169,7 +169,7 @@ export function UsersScreen({
     data?.invites.filter((invite) => !invite.used_at && invite.expires_at > Date.now()) ?? [];
 
   return (
-    <main className="users-page">
+    <section className="users-page">
       <div className="users-heading">
         <h1>
           <Users size={24} /> {t('userManagement')}
@@ -404,6 +404,6 @@ export function UsersScreen({
           </section>
         </div>
       )}
-    </main>
+    </section>
   );
 }
