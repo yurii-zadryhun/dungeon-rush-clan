@@ -55,6 +55,24 @@ export interface Tables {
     created_at: number;
   };
   player_aliases: { normalized_name: string; player_id: number };
+  player_labels: {
+    player_id: number;
+    telegram: number;
+    discord: number;
+    telegram_handle: string;
+    discord_handle: string;
+    tags_json: string;
+    exception_reason: string;
+    updated_at: number;
+  };
+  player_notes: {
+    id: Generated<number>;
+    player_id: number;
+    author_id: number | null;
+    body: string;
+    category: 'note' | 'attention' | 'contact' | 'positive';
+    created_at: number;
+  };
   player_scores: { war_id: number; player_id: number; position: number; points: number };
   war_days: {
     war_id: number;
@@ -91,6 +109,25 @@ export class Db implements OnModuleDestroy {
       CREATE INDEX IF NOT EXISTS scores_by_player ON player_scores(player_id);
       CREATE TABLE IF NOT EXISTS player_aliases (normalized_name TEXT PRIMARY KEY, player_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE);
       CREATE INDEX IF NOT EXISTS player_aliases_by_player ON player_aliases(player_id);
+      CREATE TABLE IF NOT EXISTS player_labels (
+        player_id INTEGER PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
+        telegram INTEGER NOT NULL DEFAULT 0,
+        discord INTEGER NOT NULL DEFAULT 0,
+        telegram_handle TEXT NOT NULL DEFAULT '',
+        discord_handle TEXT NOT NULL DEFAULT '',
+        tags_json TEXT NOT NULL DEFAULT '[]',
+        exception_reason TEXT NOT NULL DEFAULT '',
+        updated_at INTEGER NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS player_notes (
+        id INTEGER PRIMARY KEY,
+        player_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+        author_id INTEGER REFERENCES accounts(id) ON DELETE SET NULL,
+        body TEXT NOT NULL,
+        category TEXT NOT NULL DEFAULT 'note',
+        created_at INTEGER NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS player_notes_by_player ON player_notes(player_id, created_at DESC);
       CREATE TABLE IF NOT EXISTS war_days (war_id INTEGER NOT NULL REFERENCES wars(id) ON DELETE CASCADE, day_number INTEGER NOT NULL CHECK(day_number BETWEEN 1 AND 6), points INTEGER NOT NULL, winner TEXT NOT NULL, mvp TEXT NOT NULL, PRIMARY KEY(war_id, day_number));
       INSERT OR IGNORE INTO settings(id,clan_name,minimum_points,weights_json) VALUES(1,'Ukrainians',100000,'[0.75,0.25]');
     `);
