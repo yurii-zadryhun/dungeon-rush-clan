@@ -71,9 +71,8 @@ export class PlayersService {
         id: player.id,
         name: player.name,
         active: !!player.active,
-        hasAccount: player.account_id !== null && !!player.account_active,
-        // A revoked account is still linked, but must not appear as registered and available.
-        accountLinked: player.account_id !== null,
+        hasAccount: player.account_id !== null,
+        accountActive: !!player.account_active,
         accountRole: player.account_id !== null ? player.account_role : null,
         ...(isStaff ? { accountId: player.account_id } : {}),
         weeks: weeksByPlayer.get(player.id) ?? [],
@@ -371,7 +370,7 @@ export class PlayersController {
 
   @Get()
   list(@Req() request: AuthenticatedRequest) {
-    return this.players.list(request.account?.role !== 'member');
+    return this.players.list(request.account?.role === 'owner' || request.account?.role === 'admin');
   }
 
   @UseGuards(AdminGuard)
