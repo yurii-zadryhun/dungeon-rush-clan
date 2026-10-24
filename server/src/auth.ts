@@ -157,6 +157,7 @@ export class AccountsService {
       z.object({
         username: usernameSchema,
         password: z.string(),
+        locale: localeSchema.optional(),
       }),
       input,
     );
@@ -172,6 +173,10 @@ export class AccountsService {
       throw new UnauthorizedException('Invalid username or password');
     }
     this.loginAttempts.delete(attemptKey);
+    if (data.locale && data.locale !== account.locale) {
+      await this.db.query.updateTable('accounts').set({ locale: data.locale })
+        .where('id', '=', account.id).execute();
+    }
     return this.createSession(account.id, reply);
   }
 
