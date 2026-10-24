@@ -347,6 +347,7 @@ export function ClanDashboard({
   onStopImpersonation,
   onLocaleChange,
   onProfileChange,
+  onAccountDeleted,
   error,
 }: {
   user: Account;
@@ -357,6 +358,7 @@ export function ClanDashboard({
   onStopImpersonation: () => Promise<void>;
   onLocaleChange: (locale: Locale) => void;
   onProfileChange: (account: Account) => Promise<void>;
+  onAccountDeleted: () => void;
   error: string;
 }) {
   const { t } = useI18n();
@@ -645,7 +647,12 @@ export function ClanDashboard({
           />
         )}
         {dialog === 'profile' && (
-          <ProfileModal account={user} onClose={() => setDialog(null)} onSaved={onProfileChange} />
+          <ProfileModal
+            account={user}
+            onClose={() => setDialog(null)}
+            onSaved={onProfileChange}
+            onDeleted={onAccountDeleted}
+          />
         )}
       </React.Suspense>
     </div>

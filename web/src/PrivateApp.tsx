@@ -90,6 +90,14 @@ export function PrivateApp() {
     }
   }
 
+  function accountDeleted() {
+    setAccount(null);
+    setDashboard(null);
+    setPhase('login');
+    setError('');
+    history.replaceState(null, '', '/login');
+  }
+
   async function saveLanguage(next: Locale) {
     if (!account || next === account.locale) return;
     try {
@@ -132,6 +140,7 @@ export function PrivateApp() {
         onImpersonate={assumeAccount}
         onStopImpersonation={returnToOwner}
         onLocaleChange={saveLanguage}
+        onAccountDeleted={accountDeleted}
         onProfileChange={async (updated) => {
           setAccount(updated);
           const refreshed = await api<Dashboard>('dashboard');
