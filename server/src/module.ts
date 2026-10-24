@@ -6,6 +6,8 @@ import { WarsController, WarsService } from './wars';
 import { OcrController, VisionService } from './ocr';
 import { ImportController, ImportService } from './import';
 import { PlayersController, PlayersService } from './players';
+import { PlayerManagementController, PlayerManagementService } from './player-management';
+import { InsightsController, InsightsService } from './insights';
 import { WikiAiController, WikiAiService } from './ai/wiki-ai';
 
 @Module({
@@ -15,6 +17,8 @@ import { WikiAiController, WikiAiService } from './ai/wiki-ai';
     OcrController,
     ImportController,
     PlayersController,
+    PlayerManagementController,
+    InsightsController,
     WikiAiController,
   ],
   providers: [
@@ -28,6 +32,8 @@ import { WikiAiController, WikiAiService } from './ai/wiki-ai';
     VisionService,
     ImportService,
     PlayersService,
+    PlayerManagementService,
+    InsightsService,
     WikiAiService,
   ],
 })

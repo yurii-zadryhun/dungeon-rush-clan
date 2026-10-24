@@ -214,6 +214,34 @@ export class PlayersService {
         .set({ player_id: targetId })
         .where('player_id', '=', sourceId)
         .execute();
+      // Preserve private leadership context when an OCR duplicate is merged.
+      const [oldLabels, canonicalLabels] = await Promise.all([
+        trx.selectFrom('player_labels').selectAll().where('player_id', '=', sourceId).executeTakeFirst(),
+        trx.selectFrom('player_labels').selectAll().where('player_id', '=', targetId).executeTakeFirst(),
+      ]);
+      if (oldLabels) {
+        const tags = [...new Set([
+          ...(JSON.parse(oldLabels.tags_json) as string[]),
+          ...(canonicalLabels ? JSON.parse(canonicalLabels.tags_json) as string[] : []),
+        ])];
+        const reasons = [canonicalLabels?.exception_reason, oldLabels.exception_reason]
+          .filter((text): text is string => !!text?.trim());
+        const mergedLabels = {
+          telegram: Number(!!oldLabels.telegram || !!canonicalLabels?.telegram),
+          discord: Number(!!oldLabels.discord || !!canonicalLabels?.discord),
+          telegram_handle: canonicalLabels?.telegram_handle || oldLabels.telegram_handle,
+          discord_handle: canonicalLabels?.discord_handle || oldLabels.discord_handle,
+          tags_json: JSON.stringify(tags),
+          exception_reason: [...new Set(reasons)].join('\n'),
+          updated_at: Date.now(),
+        };
+        await trx.insertInto('player_labels').values({
+          player_id: targetId, ...mergedLabels,
+        }).onConflict(oc => oc.column('player_id').doUpdateSet(mergedLabels)).execute();
+        await trx.deleteFrom('player_labels').where('player_id', '=', sourceId).execute();
+      }
+      await trx.updateTable('player_notes').set({ player_id: targetId })
+        .where('player_id', '=', sourceId).execute();
       await trx.deleteFrom('players').where('id', '=', sourceId).execute();
       await trx
         .insertInto('player_aliases')
