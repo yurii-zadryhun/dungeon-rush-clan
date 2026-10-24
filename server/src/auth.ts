@@ -24,6 +24,7 @@ import type { Transaction } from 'kysely';
 
 const SESSION_TTL = 7 * 24 * 60 * 60 * 1000;
 const SESSION_RENEWAL_INTERVAL = 24 * 60 * 60 * 1000;
+const IMPERSONATION_TTL = 30 * 60 * 1000;
 const INVITATION_TTL = SESSION_TTL;
 const usernameSchema = z.string().trim().min(2).max(50);
 const passwordSchema = z.string().min(12).max(200);
@@ -36,6 +37,7 @@ export interface AuthenticatedAccount {
   role: Role;
   locale: 'uk' | 'en';
   playerId: number | null;
+  impersonating?: { ownerId: number; ownerName: string; expiresAt: number };
 }
 export type AuthenticatedRequest = FastifyRequest & { account?: AuthenticatedAccount };
 
@@ -193,6 +195,8 @@ export class AccountsService {
         account_id: accountId,
         expires_at: now + SESSION_TTL,
         extended_at: now,
+        impersonated_account_id: null,
+        impersonation_expires_at: null,
       })
       .execute();
     sessionCookie(reply, raw);
@@ -227,6 +231,8 @@ export class AccountsService {
       .select([
         'sessions.expires_at',
         'sessions.extended_at',
+        'sessions.impersonated_account_id',
+        'sessions.impersonation_expires_at',
         'accounts.id',
         'accounts.username',
         'accounts.display_name',
@@ -249,6 +255,43 @@ export class AccountsService {
         .execute();
       sessionCookie(reply, raw);
     }
+    if (session.impersonated_account_id !== null) {
+      if (session.role === 'owner' && session.impersonation_expires_at !== null &&
+          session.impersonation_expires_at > Date.now()) {
+        const target = await this.db.query
+          .selectFrom('accounts')
+          .select(['id', 'username', 'display_name', 'role', 'locale'])
+          .where('id', '=', session.impersonated_account_id)
+          .where('active', '=', 1)
+          .executeTakeFirst();
+        if (target) {
+          const player = await this.db.query
+            .selectFrom('players')
+            .select('id')
+            .where('account_id', '=', target.id)
+            .executeTakeFirst();
+          return {
+            id: target.id,
+            username: target.username,
+            displayName: target.display_name,
+            role: target.role,
+            locale: target.locale,
+            playerId: player?.id ?? null,
+            impersonating: {
+              ownerId: session.id,
+              ownerName: session.display_name,
+              expiresAt: session.impersonation_expires_at,
+            },
+          };
+        }
+      }
+      // Expired sessions or deactivated target accounts return to the original owner.
+      await this.db.query
+        .updateTable('sessions')
+        .set({ impersonated_account_id: null, impersonation_expires_at: null })
+        .where('token_hash', '=', digest(raw))
+        .execute();
+    }
     const player = await this.db.query
       .selectFrom('players')
       .select('id')
@@ -262,6 +305,61 @@ export class AccountsService {
       locale: session.locale,
       playerId: player?.id ?? null,
     };
+  }
+
+  async impersonate(
+    raw: string | undefined,
+    ownerId: number,
+    input: unknown,
+    reply: FastifyReply,
+  ): Promise<AuthenticatedAccount> {
+    if (!raw) throw new UnauthorizedException();
+    const { accountId } = validate(z.object({ accountId: z.number().int().positive() }), input);
+    if (ownerId === accountId) throw new BadRequestException('Cannot impersonate yourself');
+    const target = await this.db.query
+      .selectFrom('accounts')
+      .select(['id', 'role', 'active'])
+      .where('id', '=', accountId)
+      .executeTakeFirst();
+    if (!target || !target.active) throw new BadRequestException('Account not available');
+    if (target.role === 'owner') throw new ForbiddenException('Cannot impersonate another owner');
+    const now = Date.now();
+    const updated = await this.db.query
+      .updateTable('sessions')
+      .set({ impersonated_account_id: accountId, impersonation_expires_at: now + IMPERSONATION_TTL })
+      .where('token_hash', '=', digest(raw))
+      .where('account_id', '=', ownerId)
+      .where('expires_at', '>', now)
+      .where('impersonated_account_id', 'is', null)
+      .executeTakeFirstOrThrow();
+    if (updated.numUpdatedRows !== 1n) throw new ForbiddenException('Switching is not available');
+    const active = await this.resolveSession(raw, reply);
+    if (!active?.impersonating) throw new UnauthorizedException();
+    return active;
+  }
+
+  async stopImpersonation(raw: string | undefined, reply: FastifyReply): Promise<AuthenticatedAccount> {
+    if (!raw) throw new UnauthorizedException();
+    const now = Date.now();
+    const session = await this.db.query
+      .selectFrom('sessions')
+      .innerJoin('accounts', 'accounts.id', 'sessions.account_id')
+      .select(['accounts.role', 'accounts.active', 'sessions.impersonated_account_id'])
+      .where('sessions.token_hash', '=', digest(raw))
+      .where('sessions.expires_at', '>', now)
+      .executeTakeFirst();
+    if (!session || !session.active || session.role !== 'owner' ||
+        session.impersonated_account_id === null) {
+      throw new ForbiddenException('No owner impersonation to stop');
+    }
+    await this.db.query
+      .updateTable('sessions')
+      .set({ impersonated_account_id: null, impersonation_expires_at: null })
+      .where('token_hash', '=', digest(raw))
+      .execute();
+    const restored = await this.resolveSession(raw, reply);
+    if (!restored) throw new UnauthorizedException();
+    return restored;
   }
 
   async logout(raw?: string): Promise<void> {
@@ -746,6 +844,28 @@ export class AuthController {
     @Res({ passthrough: true }) reply: FastifyReply,
   ) {
     return this.auth.login(body, request.ip, reply);
+  }
+
+  @UseGuards(SessionGuard, OwnerGuard)
+  @Post('impersonate')
+  impersonate(
+    @Body() body: unknown,
+    @Req() request: AuthenticatedRequest,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ) {
+    const raw = (request as FastifyRequest & { cookies?: Record<string, string> }).cookies?.clan_session;
+    return this.auth.impersonate(raw, request.account!.id, body, reply);
+  }
+
+  // The effective user is not an owner while impersonating; validate the underlying
+  // owner session rather than applying an OwnerGuard to the assumed identity.
+  @Post('stop-impersonation')
+  stopImpersonation(
+    @Req() request: FastifyRequest,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ) {
+    const raw = (request as FastifyRequest & { cookies?: Record<string, string> }).cookies?.clan_session;
+    return this.auth.stopImpersonation(raw, reply);
   }
 
   @UseGuards(SessionGuard)
