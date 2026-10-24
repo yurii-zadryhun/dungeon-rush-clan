@@ -724,6 +724,19 @@ export class AuthController {
   async setupState() {
     return { initialized: await this.auth.initialized() };
   }
+  // One non-error request handles session restoration and first-time setup.
+  // It never exposes another account: the account belongs to this session cookie.
+  @Get('session-state')
+  async sessionState(
+    @Req() request: FastifyRequest,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ) {
+    reply.header('Cache-Control', 'no-store');
+    const raw = (request as FastifyRequest & { cookies?: Record<string, string> }).cookies
+      ?.clan_session;
+    const account = await this.auth.resolveSession(raw, reply);
+    return { account, initialized: account ? true : await this.auth.initialized() };
+  }
 
   @Post('bootstrap')
   bootstrap(@Body() body: unknown, @Res({ passthrough: true }) reply: FastifyReply) {

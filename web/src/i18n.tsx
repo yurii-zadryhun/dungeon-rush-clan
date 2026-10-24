@@ -705,7 +705,7 @@ export function LanguagePicker({ onSelect }: { onSelect?: (locale: Locale) => vo
       className="language-picker language-toggle"
       type="button"
       title={t('language')}
-      aria-label={t('language')}
+      aria-label={t('language') + ': 🇺🇦 UA 🇬🇧 EN'}
       onClick={toggle}
     >
       <span className={'locale-option' + (locale === 'uk' ? ' active' : '')}>

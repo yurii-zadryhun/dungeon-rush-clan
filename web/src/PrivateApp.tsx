@@ -23,25 +23,27 @@ export function PrivateApp() {
     let mounted = true;
     async function restore() {
       try {
-        const current = await api<Account>('auth/me');
+        const state = await api<{ account: Account | null; initialized: boolean }>(
+          'auth/session-state',
+        );
         if (!mounted) return;
-        setAccount(current);
-        setLocale(current.locale);
-        setPhase('ready');
-      } catch {
-        try {
-          const status = await api<{ initialized: boolean }>('auth/setup-state');
-          if (!mounted) return;
-          if (!status.initialized) setPhase('setup');
-          else
-            setPhase(
-              invite && new URLSearchParams(location.search).get('login') !== '1' ? 'invite' : 'login',
-            );
-        } catch (failure) {
-          if (!mounted) return;
-          setError((failure as Error).message);
-          setPhase('login');
+        if (state.account) {
+          setAccount(state.account);
+          setLocale(state.account.locale);
+          setPhase('ready');
+        } else if (!state.initialized) {
+          setPhase('setup');
+        } else {
+          setPhase(
+            invite && new URLSearchParams(location.search).get('login') !== '1'
+              ? 'invite'
+              : 'login',
+          );
         }
+      } catch (failure) {
+        if (!mounted) return;
+        setError((failure as Error).message);
+        setPhase('login');
       }
     }
     void restore();
