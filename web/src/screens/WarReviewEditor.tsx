@@ -1,4 +1,5 @@
 import React from 'react';
+import './WarReviewEditor.css';
 import { AlertTriangle, Plus, Trash2, UserMinus } from 'lucide-react';
 import { normalizeName, shortNumber, type OcrPlayer, type OcrResponse, type Roster, type Week } from '../api';
 import { localizeOcrWarning, useI18n } from '../i18n';
