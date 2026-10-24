@@ -353,6 +353,15 @@ export class PublicClanController {
   <url><loc>${escapeHtml(origin + '/public')}</loc></url>
   <url><loc>${escapeHtml(origin + '/public/en')}</loc></url>
   <url><loc>${escapeHtml(origin + '/public/uk')}</loc></url>
+  <url><loc>${escapeHtml(origin + '/about')}</loc></url>
+  <url><loc>${escapeHtml(origin + '/about/en')}</loc></url>
+  <url><loc>${escapeHtml(origin + '/about/uk')}</loc></url>
+  <url><loc>${escapeHtml(origin + '/privacy')}</loc></url>
+  <url><loc>${escapeHtml(origin + '/privacy/en')}</loc></url>
+  <url><loc>${escapeHtml(origin + '/privacy/uk')}</loc></url>
+  <url><loc>${escapeHtml(origin + '/terms')}</loc></url>
+  <url><loc>${escapeHtml(origin + '/terms/en')}</loc></url>
+  <url><loc>${escapeHtml(origin + '/terms/uk')}</loc></url>
 </urlset>`);
   }
 }
