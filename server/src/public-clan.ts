@@ -204,8 +204,12 @@ export function renderClanDocument(
                 </svg>
                 <strong>${escapeHtml(clan.leader)}</strong>
               </div>
-              ${clan.contactUrl ? `<a class="guest-contact-link" href="${escapeHtml(clan.contactUrl)}"
-                rel="noopener noreferrer" target="_blank"><span>${escapeHtml(messages.contact)}</span><span class="guest-contact-arrow" aria-hidden="true">↗</span></a>` : ''}
+              ${
+                clan.contactUrl
+                  ? `<a class="guest-contact-link" href="${escapeHtml(clan.contactUrl)}"
+                rel="noopener noreferrer" target="_blank"><span>${escapeHtml(messages.contact)}</span><span class="guest-contact-arrow" aria-hidden="true">↗</span></a>`
+                  : ''
+              }
             </div>
           </div>
         </div>
