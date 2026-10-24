@@ -2,6 +2,7 @@ import React from 'react';
 import { ClipboardList, MessageCircle, Plus, Save, ShieldCheck, Trash2 } from 'lucide-react';
 import { api, json, type NoteCategory, type PlayerLabels, type PlayerManagement, type PlayerTag } from '../api';
 import { useI18n } from '../i18n';
+import './PlayerManagementPanel.css';
 
 const tagOptions: PlayerTag[] = ['family', 'exception', 'attention', 'inactive', 'plan', 'reliable'];
 const initialLabels: PlayerLabels = {
