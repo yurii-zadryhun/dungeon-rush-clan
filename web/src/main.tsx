@@ -4,17 +4,12 @@ import { LanguageProvider } from './i18n';
 import { initialLocale } from './locale';
 import './styles.css';
 
-// The guest page never fetches a session or private dashboard.
-// Guest and member areas are separate entry chunks.
-const GuestPage = React.lazy(() =>
-  import('./screens/GuestPage').then((module) => ({ default: module.GuestPage })),
-);
+// Public /clan pages are rendered by Nest as lightweight HTML without client JavaScript.
 const PrivateApp = React.lazy(() =>
   import('./PrivateApp').then((module) => ({ default: module.PrivateApp })),
 );
 const firstLocale = initialLocale();
 document.documentElement.lang = firstLocale;
-const isPublicClan = location.pathname === '/clan' || location.pathname === '/clan/';
 
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -26,7 +21,7 @@ createRoot(document.getElementById('root')!).render(
           </div>
         }
       >
-        {isPublicClan ? <GuestPage /> : <PrivateApp />}
+        <PrivateApp />
       </React.Suspense>
     </LanguageProvider>
   </React.StrictMode>,
