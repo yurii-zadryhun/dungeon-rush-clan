@@ -103,12 +103,14 @@ export function PlayersPage({
   const linkedCount = members.filter(
     (player) => player.active && player.hasAccount && player.accountActive,
   ).length;
-  const matchingUnlinked = isStaff && membership !== 'left' && registration !== 'unregistered'
-    ? standaloneAccounts.filter((item) =>
-      (membership !== 'active' || !!item.active) &&
-      item.display_name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()),
-    )
-    : [];
+  const matchingUnlinked =
+    isStaff && membership !== 'left' && registration !== 'unregistered'
+      ? standaloneAccounts.filter(
+          (item) =>
+            (membership !== 'active' || !!item.active) &&
+            item.display_name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()),
+        )
+      : [];
 
   function merged(next: Dashboard) {
     onMerged(next);
@@ -127,18 +129,36 @@ export function PlayersPage({
         <div className="players-overview">
           <span>
             <b>{activeCount}</b>
-            {nChoice(locale, activeCount, t('activeCountOne'), t('activeCountFew'), t('activeCountMany'))}
+            {nChoice(
+              locale,
+              activeCount,
+              t('activeCountOne'),
+              t('activeCountFew'),
+              t('activeCountMany'),
+            )}
           </span>
           <span>
             <b>{accountsTotal ?? linkedCount}</b>
             {accountsTotal === null
               ? t('registeredPlayers')
-              : nChoice(locale, accountsTotal, t('accountCountOne'), t('accountCountFew'), t('accountCountMany'))}
+              : nChoice(
+                  locale,
+                  accountsTotal,
+                  t('accountCountOne'),
+                  t('accountCountFew'),
+                  t('accountCountMany'),
+                )}
           </span>
           {isStaff && (
             <span>
               <b>{linkedCount}</b>
-              {nChoice(locale, linkedCount, t('linkedCountOne'), t('linkedCountFew'), t('linkedCountMany'))}
+              {nChoice(
+                locale,
+                linkedCount,
+                t('linkedCountOne'),
+                t('linkedCountFew'),
+                t('linkedCountMany'),
+              )}
             </span>
           )}
         </div>
@@ -249,7 +269,13 @@ export function PlayersPage({
                     <div className="players-unlinked-entry" key={item.id}>
                       <span>{item.display_name}</span>
                       <small>
-                        {t(item.role === 'owner' ? 'ownerRole' : item.role === 'admin' ? 'adminRole' : 'memberRole')}
+                        {t(
+                          item.role === 'owner'
+                            ? 'ownerRole'
+                            : item.role === 'admin'
+                              ? 'adminRole'
+                              : 'memberRole',
+                        )}
                         {!item.active && ' · ' + t('revoked')}
                       </small>
                     </div>

@@ -19,7 +19,13 @@ const isPublicClan = location.pathname === '/clan' || location.pathname === '/cl
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <LanguageProvider initial={firstLocale}>
-      <React.Suspense fallback={<div className="loading-page"><span className="spinner" /></div>}>
+      <React.Suspense
+        fallback={
+          <div className="loading-page">
+            <span className="spinner" />
+          </div>
+        }
+      >
         {isPublicClan ? <GuestPage /> : <PrivateApp />}
       </React.Suspense>
     </LanguageProvider>

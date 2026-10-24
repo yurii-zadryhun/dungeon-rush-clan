@@ -7,7 +7,13 @@ import { join, resolve } from 'node:path';
 export type Role = 'owner' | 'admin' | 'member';
 
 export interface Tables {
-  settings: { id: number; clan_name: string; minimum_points: number; weights_json: string; leader_name: string };
+  settings: {
+    id: number;
+    clan_name: string;
+    minimum_points: number;
+    weights_json: string;
+    leader_name: string;
+  };
   accounts: {
     id: Generated<number>;
     username: string;

@@ -102,20 +102,19 @@ export function PrivateApp() {
   if (!account) return null;
   return (
     <React.Suspense fallback={<main className="loading-page">{t('loading')}</main>}>
-    <ClanDashboard
-      user={account}
-      data={dashboard}
-      onChange={setDashboard}
-      onLogout={logout}
-      onLocaleChange={saveLanguage}
-      onProfileChange={async (updated) => {
-        setAccount(updated);
-        const refreshed = await api<Dashboard>('dashboard');
-        setDashboard(refreshed);
-      }}
-      error={error}
-    />
+      <ClanDashboard
+        user={account}
+        data={dashboard}
+        onChange={setDashboard}
+        onLogout={logout}
+        onLocaleChange={saveLanguage}
+        onProfileChange={async (updated) => {
+          setAccount(updated);
+          const refreshed = await api<Dashboard>('dashboard');
+          setDashboard(refreshed);
+        }}
+        error={error}
+      />
     </React.Suspense>
   );
 }
-

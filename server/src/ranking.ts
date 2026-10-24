@@ -66,7 +66,12 @@ export class RankingService {
       };
     });
     return {
-      settings: { clanName: settings.clan_name, minimumPoints: settings.minimum_points, weights, leaderName: settings.leader_name },
+      settings: {
+        clanName: settings.clan_name,
+        minimumPoints: settings.minimum_points,
+        weights,
+        leaderName: settings.leader_name,
+      },
       calculated: ranking.slice().sort((a, b) => b.score - a.score),
       allTime: ranking.slice().sort((a, b) => b.average - a.average || b.appearances - a.appearances),
       latest: ranking

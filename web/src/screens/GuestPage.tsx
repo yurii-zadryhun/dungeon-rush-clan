@@ -20,7 +20,9 @@ export function GuestPage() {
       .catch((failure) => {
         if (alive) setError((failure as Error).message);
       });
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, []);
 
   React.useEffect(() => {
@@ -39,15 +41,28 @@ export function GuestPage() {
   return (
     <div className="guest-page">
       <header className="guest-header">
-        <a href="/clan" className="guest-brand"><Swords size={21} /> DUNGEON RUSH</a>
+        <a href="/clan" className="guest-brand">
+          <Swords size={21} /> DUNGEON RUSH
+        </a>
         <div className="guest-actions">
           <LanguagePicker />
-          <a href="/?login=1" className="guest-signin">{t('login')} <ArrowRight size={15} /></a>
+          <a href="/?login=1" className="guest-signin">
+            {t('login')} <ArrowRight size={15} />
+          </a>
         </div>
       </header>
       <main className="guest-main">
-        {error && <div className="error-strip" role="alert">{error}</div>}
-        {!clan && !error && <div className="guest-loading"><span className="spinner" />{t('loading')}</div>}
+        {error && (
+          <div className="error-strip" role="alert">
+            {error}
+          </div>
+        )}
+        {!clan && !error && (
+          <div className="guest-loading">
+            <span className="spinner" />
+            {t('loading')}
+          </div>
+        )}
         {clan && (
           <>
             <section className="guest-hero panel">
@@ -56,10 +71,14 @@ export function GuestPage() {
                   <img src="/clan-emblem.png" alt="" width="132" height="144" />
                 </div>
                 <div className="guest-hero-text">
-                  <span className="guest-eyebrow"><Shield size={15} /> {t('publicClanProfile')}</span>
+                  <span className="guest-eyebrow">
+                    <Shield size={15} /> {t('publicClanProfile')}
+                  </span>
                   <h1>{clan.name}</h1>
                   <span className="guest-game">Dungeon Rush</span>
-                  <div className="guest-leader"><Crown size={18} /> {t('publicLeaderLabel')}: <strong>{clan.leader}</strong></div>
+                  <div className="guest-leader">
+                    <Crown size={18} /> {t('publicLeaderLabel')}: <strong>{clan.leader}</strong>
+                  </div>
                 </div>
               </div>
               <div className="guest-hero-bottom">
@@ -70,24 +89,52 @@ export function GuestPage() {
               </div>
             </section>
             <div className="guest-stats">
-              <div className="panel guest-stat won"><Trophy size={22}/><strong>{clan.record.wins}</strong><span>{t('wins')}</span></div>
-              <div className="panel guest-stat lost"><Swords size={22}/><strong>{clan.record.losses}</strong><span>{t('losses')}</span></div>
-              <div className="panel guest-stat total"><History size={22}/><strong>{clan.record.wins + clan.record.losses}</strong><span>{t('publicCompletedWars')}</span></div>
+              <div className="panel guest-stat won">
+                <Trophy size={22} />
+                <strong>{clan.record.wins}</strong>
+                <span>{t('wins')}</span>
+              </div>
+              <div className="panel guest-stat lost">
+                <Swords size={22} />
+                <strong>{clan.record.losses}</strong>
+                <span>{t('losses')}</span>
+              </div>
+              <div className="panel guest-stat total">
+                <History size={22} />
+                <strong>{clan.record.wins + clan.record.losses}</strong>
+                <span>{t('publicCompletedWars')}</span>
+              </div>
             </div>
             <section className="panel guest-history">
-              <div className="guest-section-head"><h2><History size={21}/>{t('warHistory')}</h2><span className="guest-history-note">{t('publicResultsOnly')}</span></div>
-              {clan.recentWars.length === 0 ? <p className="empty">{t('publicNoWars')}</p> : (
+              <div className="guest-section-head">
+                <h2>
+                  <History size={21} />
+                  {t('warHistory')}
+                </h2>
+                <span className="guest-history-note">{t('publicResultsOnly')}</span>
+              </div>
+              {clan.recentWars.length === 0 ? (
+                <p className="empty">{t('publicNoWars')}</p>
+              ) : (
                 <div className="guest-wars">
                   {clan.recentWars.map((war) => {
                     const victory = war.ourScore > war.opponentScore;
                     return (
-                      <article key={war.start} className={'guest-war ' + (victory ? 'victory' : 'defeat')}>
+                      <article
+                        key={war.start}
+                        className={'guest-war ' + (victory ? 'victory' : 'defeat')}
+                      >
                         <div className="guest-war-info">
                           <span className="guest-war-date">{formatWarRange(war.start, locale)}</span>
-                          <strong>{clan.name} <span className="guest-versus">vs</span> {war.opponent ?? t('unknownOpponent')}</strong>
+                          <strong>
+                            {clan.name} <span className="guest-versus">vs</span>{' '}
+                            {war.opponent ?? t('unknownOpponent')}
+                          </strong>
                         </div>
                         <div className="guest-war-result">
-                          <b>{war.ourScore} : {war.opponentScore}</b>
+                          <b>
+                            {war.ourScore} : {war.opponentScore}
+                          </b>
                           <small>{t(victory ? 'victory' : 'defeat')}</small>
                         </div>
                       </article>
@@ -97,8 +144,11 @@ export function GuestPage() {
               )}
             </section>
             <footer className="guest-footer">
-              <Shield size={17}/>{t('publicPrivacyNotice')}
-              <a href="/?login=1">{t('publicMemberArea')} <ArrowRight size={14}/></a>
+              <Shield size={17} />
+              {t('publicPrivacyNotice')}
+              <a href="/?login=1">
+                {t('publicMemberArea')} <ArrowRight size={14} />
+              </a>
             </footer>
           </>
         )}

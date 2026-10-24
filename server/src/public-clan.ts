@@ -24,12 +24,21 @@ export class PublicClanService {
 
   async snapshot(): Promise<PublicClanSnapshot> {
     const [settings, owner, results] = await Promise.all([
-      this.db.query.selectFrom('settings').select(['clan_name', 'leader_name']).where('id', '=', 1)
+      this.db.query
+        .selectFrom('settings')
+        .select(['clan_name', 'leader_name'])
+        .where('id', '=', 1)
         .executeTakeFirstOrThrow(),
-      this.db.query.selectFrom('accounts').select('display_name')
-        .where('role', '=', 'owner').where('active', '=', 1)
-        .orderBy('created_at', 'asc').orderBy('id', 'asc').executeTakeFirst(),
-      this.db.query.selectFrom('wars')
+      this.db.query
+        .selectFrom('accounts')
+        .select('display_name')
+        .where('role', '=', 'owner')
+        .where('active', '=', 1)
+        .orderBy('created_at', 'asc')
+        .orderBy('id', 'asc')
+        .executeTakeFirst(),
+      this.db.query
+        .selectFrom('wars')
         .leftJoin('clans', 'wars.opponent_clan_id', 'clans.id')
         .select([
           'wars.start_date as start',
@@ -65,7 +74,11 @@ export class PublicClanService {
 const escapeHtml = (input: string) =>
   input.replace(/[&<>"']/g, (character) => {
     const entities: Record<string, string> = {
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
     };
     return entities[character];
   });
@@ -74,7 +87,9 @@ export function renderClanDocument(template: string, clan: PublicClanSnapshot, o
   const pageUrl = origin + '/clan';
   const imageUrl = origin + '/og-clan.jpg';
   const title = clan.name + ' | Dungeon Rush Clan';
-  const description = 'Explore ' + clan.name +
+  const description =
+    'Explore ' +
+    clan.name +
     ' in Dungeon Rush: clan leader, victory record and completed clan war results.';
   const markup = `<main style="max-width:860px;margin:40px auto;padding:20px;font-family:system-ui,sans-serif;color:#f9f8fa">
     <img src="/clan-emblem.png" alt="" width="90" height="95">
@@ -82,10 +97,13 @@ export function renderClanDocument(template: string, clan: PublicClanSnapshot, o
     <p>Leader: ${escapeHtml(clan.leader)}</p>
     <p>Wins: ${clan.record.wins} · Losses: ${clan.record.losses}</p>
     <h2>Recent clan wars</h2>
-    <ol>${clan.recentWars.map((war) =>
-      `<li>${escapeHtml(war.start)} · ${escapeHtml(war.opponent ?? 'Unknown opponent')} ·
-      ${war.ourScore} : ${war.opponentScore} — ${war.ourScore > war.opponentScore ? 'Victory' : 'Defeat'}</li>`
-    ).join('')}</ol>
+    <ol>${clan.recentWars
+      .map(
+        (war) =>
+          `<li>${escapeHtml(war.start)} · ${escapeHtml(war.opponent ?? 'Unknown opponent')} ·
+      ${war.ourScore} : ${war.opponentScore} — ${war.ourScore > war.opponentScore ? 'Victory' : 'Defeat'}</li>`,
+      )
+      .join('')}</ol>
     <p><a href="/?login=1">Sign in to the private clan archive</a></p>
   </main>`;
   const jsonLd = JSON.stringify({
@@ -150,15 +168,15 @@ export class PublicClanController {
   @Get('robots.txt')
   robots(@Res() reply: FastifyReply) {
     const origin = (process.env.APP_ORIGIN || 'http://localhost:3000').replace(/\/$/, '');
-    return reply.type('text/plain; charset=utf-8')
+    return reply
+      .type('text/plain; charset=utf-8')
       .send(`User-agent: *\nDisallow: /api/\nDisallow: /?invite=\nSitemap: ${origin}/sitemap.xml\n`);
   }
 
   @Get('sitemap.xml')
   sitemap(@Res() reply: FastifyReply) {
     const origin = (process.env.APP_ORIGIN || 'http://localhost:3000').replace(/\/$/, '');
-    return reply.type('application/xml; charset=utf-8')
-      .send(`<?xml version="1.0" encoding="UTF-8"?>
+    return reply.type('application/xml; charset=utf-8').send(`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>${escapeHtml(origin + '/clan')}</loc></url>
 </urlset>`);
