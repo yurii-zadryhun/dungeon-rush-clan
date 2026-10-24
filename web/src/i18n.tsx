@@ -1,6 +1,7 @@
 import React from 'react';
+import { initialLocale, rememberLocale, type Locale } from './locale';
 
-export type Locale = 'uk' | 'en';
+export type { Locale } from './locale';
 
 const en = {
   appTitle: 'Clan War Archive',
@@ -417,23 +418,23 @@ const uk: Record<MessageKey, string> = {
 
 type Interpolations = Record<string, string | number>;
 const dictionaries: Record<Locale, Record<MessageKey, string>> = { uk, en };
-const STORAGE_KEY = 'clan.language';
 const LanguageContext = React.createContext<{
   locale: Locale;
   setLocale: (value: Locale) => void;
   t: (key: MessageKey, params?: Interpolations) => string;
 } | null>(null);
 
-function preferredLocale(): Locale {
-  const value = localStorage.getItem(STORAGE_KEY);
-  return value === 'uk' || value === 'en' ? value : 'uk';
-}
-
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [locale, updateLocale] = React.useState<Locale>(preferredLocale);
+export function LanguageProvider({
+  children,
+  initial = initialLocale(),
+}: {
+  children: React.ReactNode;
+  initial?: Locale;
+}) {
+  const [locale, updateLocale] = React.useState<Locale>(initial);
   const setLocale = React.useCallback((next: Locale) => {
     updateLocale(next);
-    localStorage.setItem(STORAGE_KEY, next);
+    rememberLocale(next);
     document.documentElement.lang = next;
   }, []);
   React.useEffect(() => {
