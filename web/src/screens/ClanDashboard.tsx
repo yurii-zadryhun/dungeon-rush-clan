@@ -17,6 +17,8 @@ import { ImportModal } from './ImportModal';
 import { EditWarModal } from './EditWarModal';
 import { UsersScreen } from './UsersScreen';
 import { SiteHeader } from './SiteHeader';
+import { PlayerInsightsPage } from './PlayerInsightsPage';
+import { ClanHealthWidget, DayOutcomesWidget } from './InsightsWidgets';
 import { SettingsModal } from './SettingsModal';
 import { ProfileModal } from './ProfileModal';
 import { WikiScreen } from '../wiki/WikiScreen';
@@ -62,7 +64,7 @@ function Leaders({
           >
             <span className={'place place-' + index}>{index + 1}</span>
             <div className="leader-name">
-              <strong>{player.name}</strong>
+              <a className="player-profile-link" href={'#/players/' + player.id}>{player.name}</a>
               <small>
                 {player.appearances} {t(player.appearances === 1 ? 'warsSingular' : 'warsPlural')}{' '}
                 {!player.active && '· ' + t('left')}
@@ -228,9 +230,8 @@ function WarColumn({
                     .join(' ')}
                 >
                   <span className="rank-number">{player.position}</span>
-                  <span className="roster-name" title={player.name}>
-                    {player.name}
-                  </span>
+                  <a className="roster-name player-profile-link" title={player.name}
+                    href={'#/players/' + player.id}>{player.name}</a>
                   <b>{shortNumber(player.points)}</b>
                 </div>
               );
@@ -304,6 +305,8 @@ export function ClanDashboard({
   const wikiMatch = route.match(/^#\/wiki(?:\/([a-z0-9-]+))?\/?$/);
   const isWiki = Boolean(wikiMatch);
   const isUsers = route === '#/users' && user.role !== 'member';
+  const playerMatch = route.match(/^#\/players\/(\d+)\/?$/);
+  const playerId = playerMatch ? Number(playerMatch[1]) : null;
   const wikiArticleId = wikiMatch?.[1];
   const [dialog, setDialog] = React.useState<'settings' | 'profile' | null>(null);
   const [importWeek, setImportWeek] = React.useState<Week | null>(null);
@@ -352,11 +355,11 @@ export function ClanDashboard({
   }, [data]);
 
   React.useEffect(() => {
-    if (isWiki || isUsers) positioned.current = false;
-  }, [isWiki, isUsers]);
+    if (isWiki || isUsers || playerId !== null) positioned.current = false;
+  }, [isWiki, isUsers, playerId]);
 
   React.useLayoutEffect(() => {
-    if (!data || isWiki || isUsers || positioned.current) return;
+    if (!data || isWiki || isUsers || playerId !== null || positioned.current) return;
     if (!visibleWeeks.some((week) => week.start === data.currentStart)) return;
     const container = track.current;
     const selected = [...(container?.querySelectorAll<HTMLElement>('.war-column') ?? [])].find(
@@ -366,7 +369,7 @@ export function ClanDashboard({
     const relativeLeft = selected.getBoundingClientRect().left - container.getBoundingClientRect().left;
     container.scrollLeft += relativeLeft - (container.clientWidth - selected.clientWidth) / 2;
     positioned.current = true;
-  }, [data?.currentStart, visibleWeeks, isWiki, isUsers]);
+  }, [data?.currentStart, visibleWeeks, isWiki, isUsers, playerId]);
 
   React.useLayoutEffect(() => {
     const container = track.current;
@@ -449,13 +452,10 @@ export function ClanDashboard({
       {isWiki ? (
         <WikiScreen articleId={wikiArticleId} />
       ) : isUsers ? (
-        <UsersScreen
-          account={user}
-          onMerged={(next) => {
-            setWeeks([]);
-            onChange(next);
-          }}
-        />
+        <UsersScreen account={user} onMerged={next => { setWeeks([]); onChange(next); }} />
+      ) : playerId !== null ? (
+        <PlayerInsightsPage key={playerId} playerId={playerId} account={user}
+          candidates={data.rankings.calculated} />
       ) : (
         <main className="dashboard">
           {error && <div className="error-strip">{error}</div>}
@@ -473,6 +473,10 @@ export function ClanDashboard({
               metric="lastPoints"
               account={user}
             />
+          </div>
+          <div className="insights-grid">
+            {canEdit && <ClanHealthWidget />}
+            <DayOutcomesWidget />
           </div>
           <section className="panel history-widget">
             <header className="widget-head timeline-heading">
