@@ -178,39 +178,6 @@
   margin: 5px 6px;
   background: #535057;
 }
-@media (max-width: 950px) {
-  .site-header.shell-header {
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-rows: 57px 45px;
-    height: 106px;
-    min-height: 106px;
-    gap: 0 8px;
-    padding: 0 12px 4px;
-  }
-  .shell-header .shell-brand {
-    grid-column: 1;
-    grid-row: 1;
-  }
-  .shell-header .shell-tools {
-    grid-column: 2;
-    grid-row: 1;
-  }
-  .shell-header .shell-navigation {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    width: 100%;
-    justify-self: stretch;
-    order: initial;
-    flex: initial;
-    margin: 0;
-    padding: 3px;
-  }
-  .shell-header .shell-navigation a {
-    flex: 1 1 0;
-    min-width: 0;
-    padding: 8px;
-  }
-}
 @media (max-width: 440px) {
   .site-header.shell-header {
     padding-inline: 9px;
