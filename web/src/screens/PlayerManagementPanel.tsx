@@ -1,5 +1,14 @@
 import React from 'react';
-import { ClipboardList, MessageCircle, Plus, Save, ShieldCheck, Trash2 } from 'lucide-react';
+import {
+  AlertCircle,
+  CheckCircle2,
+  ClipboardList,
+  MessageCircle,
+  Plus,
+  RotateCcw,
+  ShieldCheck,
+  Trash2,
+} from 'lucide-react';
 import {
   api,
   json,
@@ -12,6 +21,7 @@ import { useI18n } from '../i18n';
 import './PlayerManagementPanel.css';
 
 const tagOptions: PlayerTag[] = ['family', 'exception', 'attention', 'inactive', 'plan', 'reliable'];
+
 const initialLabels: PlayerLabels = {
   telegram: false,
   discord: false,
@@ -21,95 +31,189 @@ const initialLabels: PlayerLabels = {
   exceptionReason: '',
 };
 
+type Toast = { message: string; kind: 'success' | 'error'; id: number };
+
 export function PlayerManagementPanel({ playerId }: { playerId: number }) {
   const { t, locale } = useI18n();
   const [data, setData] = React.useState<PlayerManagement | null>(null);
   const [labels, setLabels] = React.useState<PlayerLabels>(initialLabels);
+  const [savedLabels, setSavedLabels] = React.useState<string | null>(null);
   const [body, setBody] = React.useState('');
   const [category, setCategory] = React.useState<NoteCategory>('note');
-  const [busy, setBusy] = React.useState(false);
-  const [error, setError] = React.useState('');
-  const [notice, setNotice] = React.useState('');
+  const [saving, setSaving] = React.useState(false);
+  const [notesBusy, setNotesBusy] = React.useState(false);
+  const [loadError, setLoadError] = React.useState('');
+  const [saveError, setSaveError] = React.useState('');
+  const [noteError, setNoteError] = React.useState('');
+  const [toast, setToast] = React.useState<Toast | null>(null);
+  const latestLabels = React.useRef(labels);
+  const playerEpoch = React.useRef(0);
+  const autosaveTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  latestLabels.current = labels;
+
+  function notify(message: string, kind: Toast['kind'] = 'success') {
+    setToast({ message, kind, id: Date.now() });
+  }
 
   React.useEffect(() => {
+    if (!toast) return;
+    const timeout = setTimeout(() => setToast(null), 3200);
+    return () => clearTimeout(timeout);
+  }, [toast]);
+
+  React.useEffect(() => {
+    const epoch = ++playerEpoch.current;
     let alive = true;
     setData(null);
+    setSavedLabels(null);
+    setSaving(false);
+    setLoadError('');
+    setSaveError('');
+    setNoteError('');
+    setToast(null);
+    setBody('');
     api<PlayerManagement>('player-management/' + playerId)
       .then((value) => {
-        if (!alive) return;
+        if (!alive || playerEpoch.current !== epoch) return;
         setData(value);
         setLabels(value.labels);
+        setSavedLabels(JSON.stringify(value.labels));
       })
       .catch((failure) => {
-        if (alive) setError((failure as Error).message);
+        if (alive && playerEpoch.current === epoch) setLoadError((failure as Error).message);
       });
     return () => {
       alive = false;
+      ++playerEpoch.current;
+      if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
     };
   }, [playerId]);
 
   function setValue<K extends keyof PlayerLabels>(field: K, value: PlayerLabels[K]) {
     setLabels((previous) => ({ ...previous, [field]: value }));
-    setNotice('');
+    setSaveError('');
   }
 
   function toggleTag(tag: PlayerTag) {
-    setValue(
-      'tags',
-      labels.tags.includes(tag) ? labels.tags.filter((value) => value !== tag) : [...labels.tags, tag],
-    );
+    setLabels((previous) => ({
+      ...previous,
+      tags: previous.tags.includes(tag)
+        ? previous.tags.filter((value) => value !== tag)
+        : [...previous.tags, tag],
+    }));
+    setSaveError('');
   }
 
-  async function action(operation: () => Promise<PlayerManagement>) {
-    setBusy(true);
-    setError('');
-    setNotice('');
+  const draft = JSON.stringify(labels);
+  const unsaved = savedLabels !== null && draft !== savedLabels;
+
+  // Only one labels PATCH can be in flight at a time. If the user edits while it is
+  // saving, the effect sends the newest values afterwards instead of overwriting them.
+  const saveLabels = React.useCallback(() => {
+    if (!data || saving || savedLabels === null || draft === savedLabels) return;
+    setSaving(true);
+    setSaveError('');
+    const epoch = playerEpoch.current;
+    const sent = draft;
+    void api<PlayerManagement>('player-management/' + playerId, json('PATCH', labels))
+      .then((next) => {
+        if (playerEpoch.current !== epoch) return;
+        const canonical = JSON.stringify(next.labels);
+        setSavedLabels(canonical);
+        setData((previous) => (previous ? { ...previous, labels: next.labels } : next));
+        if (JSON.stringify(latestLabels.current) === sent) {
+          setLabels(next.labels);
+          notify(t('changesSaved'));
+        }
+      })
+      .catch((failure) => {
+        if (playerEpoch.current !== epoch) return;
+        const message = (failure as Error).message;
+        setSaveError(message);
+        notify(t('autosaveFailed'), 'error');
+      })
+      .finally(() => {
+        if (playerEpoch.current === epoch) setSaving(false);
+      });
+  }, [data, draft, labels, playerId, savedLabels, saving, t]);
+
+  React.useEffect(() => {
+    if (!unsaved || saving || saveError) return;
+    const timer = setTimeout(saveLabels, 600);
+    autosaveTimer.current = timer;
+    return () => clearTimeout(timer);
+  }, [unsaved, saving, saveError, saveLabels]);
+
+  async function updateNotes(operation: () => Promise<PlayerManagement>, after?: () => void) {
+    setNotesBusy(true);
+    setNoteError('');
     try {
       const next = await operation();
-      setData(next);
-      setLabels(next.labels);
-      setNotice(t('changesSaved'));
+      setData((previous) => (previous ? { ...previous, notes: next.notes } : next));
+      after?.();
+      notify(t('changesSaved'));
     } catch (failure) {
-      setError((failure as Error).message);
+      setNoteError((failure as Error).message);
+      notify(t('noteSaveFailed'), 'error');
     } finally {
-      setBusy(false);
+      setNotesBusy(false);
     }
-  }
-
-  function saveLabels() {
-    void action(() => api<PlayerManagement>('player-management/' + playerId, json('PATCH', labels)));
   }
 
   function addNote(event: React.FormEvent) {
     event.preventDefault();
-    if (!body.trim()) return;
-    void action(async () => {
-      const next = await api<PlayerManagement>(
-        'player-management/' + playerId + '/notes',
-        json('POST', { body: body.trim(), category }),
-      );
-      setBody('');
-      return next;
-    });
+    if (!body.trim() || notesBusy) return;
+    const noteText = body.trim();
+    void updateNotes(
+      () =>
+        api<PlayerManagement>(
+          'player-management/' + playerId + '/notes',
+          json('POST', { body: noteText, category }),
+        ),
+      () => setBody(''),
+    );
   }
 
   function removeNote(noteId: number) {
-    if (!window.confirm(t('confirmDeleteNote'))) return;
-    void action(() =>
+    if (!window.confirm(t('confirmDeleteNote')) || notesBusy) return;
+    void updateNotes(() =>
       api<PlayerManagement>(`player-management/${playerId}/notes/${noteId}`, { method: 'DELETE' }),
     );
   }
 
   return (
     <section className="panel player-management">
-      <div className="player-section-heading">
+      <div className="player-section-heading management-heading">
         <h2>
           <ShieldCheck size={19} />
           {t('managementNotes')}
         </h2>
-        <small className="staff-only">{t('staffOnly')}</small>
+        {data && (
+          <div className="management-sync" role="status">
+            {saveError ? (
+              <button
+                type="button"
+                className="management-retry"
+                onClick={() => {
+                  setSaveError('');
+                  saveLabels();
+                }}
+              >
+                <RotateCcw size={14} />
+                {t('retrySave')}
+              </button>
+            ) : saving || unsaved ? (
+              <span className="management-pending">{t(saving ? 'savingChanges' : 'pendingAutosave')}</span>
+            ) : (
+              <span className="management-auto">{t('autosaveEnabled')}</span>
+            )}
+          </div>
+        )}
       </div>
-      {!data && !error && <p className="muted">{t('loading')}</p>}
+
+      {!data && !loadError && <p className="muted">{t('loading')}</p>}
+      {loadError && <div className="error-strip" role="alert">{loadError}</div>}
       {data && (
         <>
           <div className="management-grid">
@@ -119,40 +223,44 @@ export function PlayerManagementPanel({ playerId }: { playerId: number }) {
                 {t('contactChannels')}
               </h3>
               <div className="contact-choice">
-                <label>
+                <label htmlFor={'telegram-' + playerId}>
                   <input
+                    id={'telegram-' + playerId}
                     type="checkbox"
                     checked={labels.telegram}
-                    onChange={(e) => setValue('telegram', e.target.checked)}
-                  />{' '}
+                    onChange={(event) => setValue('telegram', event.target.checked)}
+                  />
                   Telegram
                 </label>
-                {labels.telegram && (
-                  <input
-                    value={labels.telegramHandle}
-                    placeholder={t('contactOptional')}
-                    maxLength={100}
-                    onChange={(e) => setValue('telegramHandle', e.target.value)}
-                  />
-                )}
+                <input
+                  aria-label={t('telegramContact')}
+                  value={labels.telegramHandle}
+                  disabled={!labels.telegram}
+                  placeholder={t('contactOptional')}
+                  maxLength={100}
+                  onChange={(event) => setValue('telegramHandle', event.target.value)}
+                  onBlur={saveLabels}
+                />
               </div>
               <div className="contact-choice">
-                <label>
+                <label htmlFor={'discord-' + playerId}>
                   <input
+                    id={'discord-' + playerId}
                     type="checkbox"
                     checked={labels.discord}
-                    onChange={(e) => setValue('discord', e.target.checked)}
-                  />{' '}
+                    onChange={(event) => setValue('discord', event.target.checked)}
+                  />
                   Discord
                 </label>
-                {labels.discord && (
-                  <input
-                    value={labels.discordHandle}
-                    placeholder={t('contactOptional')}
-                    maxLength={100}
-                    onChange={(e) => setValue('discordHandle', e.target.value)}
-                  />
-                )}
+                <input
+                  aria-label={t('discordContact')}
+                  value={labels.discordHandle}
+                  disabled={!labels.discord}
+                  placeholder={t('contactOptional')}
+                  maxLength={100}
+                  onChange={(event) => setValue('discordHandle', event.target.value)}
+                  onBlur={saveLabels}
+                />
               </div>
             </div>
             <div className="management-block">
@@ -190,44 +298,54 @@ export function PlayerManagementPanel({ playerId }: { playerId: number }) {
               maxLength={600}
               value={labels.exceptionReason}
               placeholder={t('exceptionPlaceholder')}
-              onChange={(e) => setValue('exceptionReason', e.target.value)}
+              onChange={(event) => setValue('exceptionReason', event.target.value)}
+              onBlur={saveLabels}
             />
           </label>
-          <div className="management-save">
-            <button className="game-button blue" disabled={busy} onClick={saveLabels}>
-              <Save size={15} />
-              {t('save')}
-            </button>
-          </div>
+          {saveError && (
+            <div className="management-save-error" role="alert">
+              <AlertCircle size={17} />
+              {t('autosaveFailed')}: {saveError}
+            </div>
+          )}
+
           <div className="note-section">
             <h3>{t('noteHistory')}</h3>
             <form className="note-form" onSubmit={addNote}>
-              <select
-                value={category}
-                aria-label={t('noteType')}
-                onChange={(e) => setCategory(e.target.value as NoteCategory)}
-              >
-                {(['note', 'attention', 'contact', 'positive'] as const).map((value) => (
-                  <option value={value} key={value}>
-                    {t(
-                      ('note_' + value) as
-                        'note_note' | 'note_attention' | 'note_contact' | 'note_positive',
-                    )}
-                  </option>
-                ))}
-              </select>
               <textarea
-                rows={2}
+                rows={3}
                 maxLength={700}
+                aria-label={t('newNote')}
                 value={body}
                 placeholder={t('newNote')}
-                onChange={(e) => setBody(e.target.value)}
+                onChange={(event) => setBody(event.target.value)}
               />
-              <button type="submit" className="game-button blue" disabled={busy || !body.trim()}>
-                <Plus size={15} />
-                {t('addNote')}
-              </button>
+              <div className="note-form-actions">
+                <select
+                  value={category}
+                  aria-label={t('noteType')}
+                  onChange={(event) => setCategory(event.target.value as NoteCategory)}
+                >
+                  {(['note', 'attention', 'contact', 'positive'] as const).map((value) => (
+                    <option value={value} key={value}>
+                      {t(
+                        ('note_' + value) as
+                          'note_note' | 'note_attention' | 'note_contact' | 'note_positive',
+                      )}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="submit"
+                  className="game-button blue"
+                  disabled={notesBusy || !body.trim()}
+                >
+                  <Plus size={15} />
+                  {t('addNote')}
+                </button>
+              </div>
             </form>
+            {noteError && <div className="error-strip" role="alert">{noteError}</div>}
             <div className="staff-note-list">
               {data.notes.map((note) => (
                 <div className={'staff-note note-' + note.category} key={note.id}>
@@ -243,10 +361,11 @@ export function PlayerManagementPanel({ playerId }: { playerId: number }) {
                     </small>
                     <small>{note.author || t('formerMember')}</small>
                     <button
+                      type="button"
                       className="icon-button danger"
                       title={t('deleteNote')}
                       aria-label={t('deleteNote')}
-                      disabled={busy}
+                      disabled={notesBusy}
                       onClick={() => removeNote(note.id)}
                     >
                       <Trash2 size={15} />
@@ -260,15 +379,15 @@ export function PlayerManagementPanel({ playerId }: { playerId: number }) {
           </div>
         </>
       )}
-      {error && (
-        <div className="error-strip" role="alert">
-          {error}
+      {toast && (
+        <div
+          key={toast.id}
+          className={'management-toast ' + toast.kind}
+          role={toast.kind === 'error' ? 'alert' : 'status'}
+        >
+          {toast.kind === 'error' ? <AlertCircle size={18} /> : <CheckCircle2 size={18} />}
+          <span>{toast.message}</span>
         </div>
-      )}
-      {notice && (
-        <p className="management-success" role="status">
-          {notice}
-        </p>
       )}
     </section>
   );
