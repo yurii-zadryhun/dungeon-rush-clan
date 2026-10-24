@@ -1,4 +1,5 @@
 import { localizeError, type Locale } from './i18n';
+import { initialLocale } from './locale';
 export type Role = 'owner' | 'admin' | 'member';
 
 export interface Account {
@@ -107,8 +108,7 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
     const message = Array.isArray(data.message) ? data.message.join('; ') : data.message;
-    const chosen = localStorage.getItem('clan.language');
-    const locale: Locale = chosen === 'en' ? 'en' : 'uk';
+    const locale = initialLocale();
     throw new Error(localizeError(String(message || 'Request failed'), locale, response.status));
   }
   return (await response.json()) as T;
