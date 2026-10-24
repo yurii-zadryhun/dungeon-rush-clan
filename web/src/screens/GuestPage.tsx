@@ -19,7 +19,9 @@ export function GuestPage() {
       .catch((failure) => {
         if (alive) setError((failure as Error).message);
       });
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, []);
 
   React.useEffect(() => {
@@ -41,9 +43,16 @@ export function GuestPage() {
         </div>
       </header>
       <main className="guest-main">
-        {error && <div className="error-strip" role="alert">{error}</div>}
+        {error && (
+          <div className="error-strip" role="alert">
+            {error}
+          </div>
+        )}
         {!clan && !error && (
-          <div className="guest-loading"><span className="spinner" />{t('loading')}</div>
+          <div className="guest-loading">
+            <span className="spinner" />
+            {t('loading')}
+          </div>
         )}
         {clan && (
           <>
@@ -74,14 +83,22 @@ export function GuestPage() {
             </div>
             <section className="panel guest-history">
               <div className="guest-section-head">
-                <h2><History size={21} />{t('warHistory')}</h2>
+                <h2>
+                  <History size={21} />
+                  {t('warHistory')}
+                </h2>
               </div>
-              {clan.recentWars.length === 0 ? <p className="empty">{t('publicNoWars')}</p> : (
+              {clan.recentWars.length === 0 ? (
+                <p className="empty">{t('publicNoWars')}</p>
+              ) : (
                 <div className="guest-wars">
                   {clan.recentWars.map((war) => {
                     const victory = war.ourScore > war.opponentScore;
                     return (
-                      <article key={war.start} className={'guest-war ' + (victory ? 'victory' : 'defeat')}>
+                      <article
+                        key={war.start}
+                        className={'guest-war ' + (victory ? 'victory' : 'defeat')}
+                      >
                         <div className="guest-war-info">
                           <span className="guest-war-date">{formatWarRange(war.start, locale)}</span>
                           <strong>
@@ -90,7 +107,9 @@ export function GuestPage() {
                           </strong>
                         </div>
                         <div className="guest-war-result">
-                          <b>{war.ourScore} : {war.opponentScore}</b>
+                          <b>
+                            {war.ourScore} : {war.opponentScore}
+                          </b>
                           <small>{t(victory ? 'victory' : 'defeat')}</small>
                         </div>
                       </article>

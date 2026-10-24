@@ -535,11 +535,7 @@ export function ClanDashboard({
             {error && <div className="error-strip">{error}</div>}
             <div className="dashboard-top dashboard-top-compact">
               <ClanOverview data={data} />
-              <Leaders
-                allTime={data.rankings.allTime}
-                latest={data.rankings.latest}
-                account={user}
-              />
+              <Leaders allTime={data.rankings.allTime} latest={data.rankings.latest} account={user} />
             </div>
             <section className="panel history-widget">
               <header className="widget-head timeline-heading">

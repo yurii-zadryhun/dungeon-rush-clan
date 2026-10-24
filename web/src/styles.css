@@ -2038,7 +2038,9 @@ b {
   flex-wrap: wrap;
   gap: 10px;
 }
-.leaderboard-heading h2 { margin-right: auto; }
+.leaderboard-heading h2 {
+  margin-right: auto;
+}
 .leaderboard-tabs {
   display: inline-flex;
   flex: 0 1 auto;
@@ -2058,16 +2060,33 @@ b {
   font-weight: 900;
   white-space: nowrap;
 }
-.leaderboard-tabs button.selected { background: #3d6687; color: #fff; }
-.leaderboard-tabs button:hover:not(.selected) { color: #fff; background: #343137; }
-.leaderboard-tabs button:focus-visible { outline: 2px solid #f4cc62; outline-offset: 2px; }
+.leaderboard-tabs button.selected {
+  background: #3d6687;
+  color: #fff;
+}
+.leaderboard-tabs button:hover:not(.selected) {
+  color: #fff;
+  background: #343137;
+}
+.leaderboard-tabs button:focus-visible {
+  outline: 2px solid #f4cc62;
+  outline-offset: 2px;
+}
 @media (max-width: 1000px) {
-  .dashboard-top.dashboard-top-compact .clan-widget { grid-column: auto; }
+  .dashboard-top.dashboard-top-compact .clan-widget {
+    grid-column: auto;
+  }
 }
 @media (max-width: 720px) {
-  .dashboard-top.dashboard-top-compact { grid-template-columns: minmax(0, 1fr); }
-  .leaderboard-tabs { width: 100%; }
-  .leaderboard-tabs button { flex: 1; }
+  .dashboard-top.dashboard-top-compact {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .leaderboard-tabs {
+    width: 100%;
+  }
+  .leaderboard-tabs button {
+    flex: 1;
+  }
 }
 
 /* Authentication styles must live in the entry stylesheet, not in lazy Players CSS. */
@@ -2079,4 +2098,6 @@ b {
   font-size: 12px;
   font-weight: 800;
 }
-.auth-public-link:hover { color: #fff; }
+.auth-public-link:hover {
+  color: #fff;
+}

@@ -69,8 +69,14 @@
   outline-offset: 2px;
 }
 @media (min-width: 951px) and (max-width: 1180px) {
-  .site-header.shell-header { grid-template-columns: minmax(0, 0.5fr) auto minmax(0, 0.5fr); }
-  .shell-header .shell-navigation a { font-size: 10px; padding-inline: 7px; gap: 5px; }
+  .site-header.shell-header {
+    grid-template-columns: minmax(0, 0.5fr) auto minmax(0, 0.5fr);
+  }
+  .shell-header .shell-navigation a {
+    font-size: 10px;
+    padding-inline: 7px;
+    gap: 5px;
+  }
 }
 .shell-header .shell-tools {
   display: flex;

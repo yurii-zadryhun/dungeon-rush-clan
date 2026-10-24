@@ -225,9 +225,15 @@ export function PlayersPage({
                 <div className="players-table" role="table" aria-label={t('clanRoster')}>
                   <div className="players-column-head" role="row">
                     <span role="columnheader">{t('playerColumn')}</span>
-                    <span role="columnheader" title={t('calculatedScore')}>{t('scoreColumn')}</span>
-                    <span role="columnheader" title={t('latestPoints')}>{t('lastWarColumn')}</span>
-                    <span role="columnheader" title={t('weeksParticipated')}>{t('warsColumn')}</span>
+                    <span role="columnheader" title={t('calculatedScore')}>
+                      {t('scoreColumn')}
+                    </span>
+                    <span role="columnheader" title={t('latestPoints')}>
+                      {t('lastWarColumn')}
+                    </span>
+                    <span role="columnheader" title={t('weeksParticipated')}>
+                      {t('warsColumn')}
+                    </span>
                   </div>
                   <div className="players-directory-list" role="rowgroup">
                     {visible.map((player) => (
@@ -307,7 +313,11 @@ function DirectoryRow({ player, stat }: { player: DirectoryPlayer; stat?: Player
           )}
           {player.attention && <span className="directory-flag caution">{t('health_attention')}</span>}
           {stat?.belowRequirement && player.active && (
-            <span className="directory-player-low" title={t('underMinimum')} aria-label={t('underMinimum')}>
+            <span
+              className="directory-player-low"
+              title={t('underMinimum')}
+              aria-label={t('underMinimum')}
+            >
               <Activity size={14} />
             </span>
           )}
