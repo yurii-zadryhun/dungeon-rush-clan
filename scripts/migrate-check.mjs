@@ -14,6 +14,11 @@ async function run() {
   try {
     const legacy = new Database(join(directory, 'clan.sqlite'));
     legacy.exec(`
+      CREATE TABLE settings (
+        id INTEGER PRIMARY KEY CHECK(id=1), clan_name TEXT NOT NULL,
+        minimum_points INTEGER NOT NULL, weights_json TEXT NOT NULL
+      );
+      INSERT INTO settings VALUES (1, 'Original clan', 250000, '[1]');
       CREATE TABLE accounts (
         id INTEGER PRIMARY KEY, username TEXT UNIQUE NOT NULL, display_name TEXT NOT NULL,
         role TEXT NOT NULL, password_hash TEXT NOT NULL, totp_secret TEXT NOT NULL,
@@ -55,6 +60,11 @@ async function run() {
       password_hash: 'salt:hash',
       locale: 'uk',
     });
+    assert.deepEqual(
+      sql.prepare('SELECT clan_name, minimum_points, leader_name FROM settings WHERE id = 1').get(),
+      { clan_name: 'Original clan', minimum_points: 250000, leader_name: '' },
+      'Existing settings acquire blank leader without losing config',
+    );
     const player = sql.prepare('SELECT id, account_id FROM players WHERE id = 8').get();
     assert.deepEqual(player, { id: 8, account_id: 42 }, 'Legacy player linked to owner');
     const session = sql.prepare('SELECT token_hash, account_id FROM sessions').get();

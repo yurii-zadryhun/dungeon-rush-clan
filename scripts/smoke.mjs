@@ -33,6 +33,31 @@ function ensure(actual, expected, context) {
 
 async function run() {
   ensure((await request('auth/setup-state')).body.initialized, false, 'Uninitialized');
+  const publicBeforeEnrollment = await request('public/clan');
+  ensure(publicBeforeEnrollment.status, 200, 'Public profile needs no account');
+  assert.deepEqual(
+    Object.keys(publicBeforeEnrollment.body).sort(),
+    ['leader', 'name', 'recentWars', 'record'],
+    'Public API exposes only approved fields',
+  );
+  ensure(publicBeforeEnrollment.body.name, 'Ukrainians', 'Public clan name');
+  ensure(publicBeforeEnrollment.body.leader, '—', 'Uninitialized clan has no leader');
+  const guestHtml = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan');
+  ensure(guestHtml.status, 200, 'Public clan HTML is server-rendered');
+  const guestMarkup = await guestHtml.text();
+  assert.match(guestMarkup, /property="og:image"/, 'Social preview metadata');
+  assert.match(guestMarkup, /rel="canonical"/, 'Canonical public URL');
+  assert.match(guestMarkup, /name="robots" content="index,follow/, 'Guest page is indexable');
+  assert.match(guestMarkup, /<h1>Ukrainians — Dungeon Rush<\/h1>/, 'Crawler can read clan without JavaScript');
+  assert.doesNotMatch(guestMarkup, /noindex,nofollow/, 'No private-app robots tag on guest page');
+  const robots = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/robots.txt');
+  assert.match(await robots.text(), /Disallow: \/api\//, 'API excluded from crawl');
+  const sitemap = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/sitemap.xml');
+  assert.match(await sitemap.text(), /clan<\/loc>/, 'Only public clan in sitemap');
+  const privateHtml = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/');
+  assert.match(await privateHtml.text(), /noindex,nofollow/, 'Private sign-in is noindex');
+  ensure((await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan-emblem.png')).status, 200, 'Public emblem available');
+  ensure((await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/og-clan.jpg')).status, 200, 'Open Graph image available');
   ensure((await request('dashboard')).status, 401, 'Dashboard guarded');
   ensure((await request('wiki-ai/status')).status, 401, 'AI endpoint guarded');
   ensure(
@@ -58,6 +83,17 @@ async function run() {
     'No-key environment rejects AI requests without contacting Google',
   );
   ensure((await request('auth/me', 'GET', null, ownerCookie)).body.role, 'owner', 'Owner role');
+  ensure((await request('public/clan')).body.leader, 'owner', 'First active owner is default public leader');
+  const publicSetting = await request('settings', 'PATCH', {
+    clanName: 'Ukrainians',
+    minimumPoints: 100000,
+    weights: [0.75, 0.25],
+    leaderName: 'Clan Captain',
+  }, ownerCookie);
+  ensure(publicSetting.status, 200, 'Staff can set public leader');
+  ensure(publicSetting.body.rankings.settings.leaderName, 'Clan Captain', 'Settings return public leader');
+  ensure((await request('public/clan')).body.leader, 'Clan Captain', 'Guests see configured leader');
+  assert.equal((await request('public/clan')).body.rankings, undefined, 'Public response excludes rankings');
   ensure(
     (await request('auth/locale', 'PATCH', { locale: 'en' }, ownerCookie)).status,
     200,
@@ -852,6 +888,14 @@ async function run() {
   const dayStats = await request('insights/days', 'GET', null, groupSecond.cookie);
   ensure(dayStats.status, 200, 'Any member can view day outcome statistics');
   ensure(dayStats.body.days.length, 6, 'Six game days analyzed');
+  const publicAfterImport = await request('public/clan');
+  ensure(publicAfterImport.status, 200, 'Guest endpoint works after imports');
+  assert.ok(publicAfterImport.body.recentWars.length > 0, 'Public completed-war history populated');
+  assert.ok(publicAfterImport.body.recentWars.every((war) =>
+    Object.keys(war).sort().join(',') === 'opponent,opponentScore,ourScore,start'
+  ), 'Public wars contain only opponent and final scores');
+  assert.ok(!JSON.stringify(publicAfterImport.body).includes('playerId'), 'No private player identifiers');
+  assert.ok(!JSON.stringify(publicAfterImport.body).includes('player_scores'), 'No internal score data');
   ensure(dayStats.body.days[0].total, 2, 'Both completed wars counted');
   ensure(dayStats.body.days[0].winRate, 100, 'Day one win rate derived from actual wins');
   ensure(
