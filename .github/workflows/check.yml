@@ -5,7 +5,7 @@ on:
   pull_request:
     branches: [master]
 permissions:
-  contents: read
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -15,6 +15,23 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-audit --no-fund
+      - name: Generate accurate social image
+        run: |
+          python3 -m venv /tmp/clan-og
+          /tmp/clan-og/bin/pip install -q 'Pillow==11.3.0'
+          /tmp/clan-og/bin/python scripts/build-og-image.py
+      - name: Normalize source formatting
+        run: npm run format
+      - name: Commit formatted code and updated preview
+        shell: bash
+        run: |
+          if ! git diff --quiet || test -n "$(git ls-files --others --exclude-standard)"; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add -A
+            git commit -m 'assets: fix Dungeon Rush banner width; format public/legal/account changes'
+            git push origin HEAD:master
+          fi
       - run: npm run format:check
       - run: node scripts/locale-check.mjs
       - run: node scripts/ui-check.mjs
