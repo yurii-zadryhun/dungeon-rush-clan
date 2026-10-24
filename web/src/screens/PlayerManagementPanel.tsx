@@ -204,7 +204,9 @@ export function PlayerManagementPanel({ playerId }: { playerId: number }) {
                 {t('retrySave')}
               </button>
             ) : saving || unsaved ? (
-              <span className="management-pending">{t(saving ? 'savingChanges' : 'pendingAutosave')}</span>
+              <span className="management-pending">
+                {t(saving ? 'savingChanges' : 'pendingAutosave')}
+              </span>
             ) : (
               <span className="management-auto">{t('autosaveEnabled')}</span>
             )}
@@ -213,7 +215,11 @@ export function PlayerManagementPanel({ playerId }: { playerId: number }) {
       </div>
 
       {!data && !loadError && <p className="muted">{t('loading')}</p>}
-      {loadError && <div className="error-strip" role="alert">{loadError}</div>}
+      {loadError && (
+        <div className="error-strip" role="alert">
+          {loadError}
+        </div>
+      )}
       {data && (
         <>
           <div className="management-grid">
@@ -335,17 +341,17 @@ export function PlayerManagementPanel({ playerId }: { playerId: number }) {
                     </option>
                   ))}
                 </select>
-                <button
-                  type="submit"
-                  className="game-button blue"
-                  disabled={notesBusy || !body.trim()}
-                >
+                <button type="submit" className="game-button blue" disabled={notesBusy || !body.trim()}>
                   <Plus size={15} />
                   {t('addNote')}
                 </button>
               </div>
             </form>
-            {noteError && <div className="error-strip" role="alert">{noteError}</div>}
+            {noteError && (
+              <div className="error-strip" role="alert">
+                {noteError}
+              </div>
+            )}
             <div className="staff-note-list">
               {data.notes.map((note) => (
                 <div className={'staff-note note-' + note.category} key={note.id}>

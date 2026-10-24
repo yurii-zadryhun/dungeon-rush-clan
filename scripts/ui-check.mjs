@@ -55,8 +55,24 @@ assert.ok(
 assert.doesNotMatch(management, /t\('staffOnly'\)/, 'Remove redundant staff-only badge');
 assert.match(management, /setTimeout\(saveLabels, 600\)/, 'Player labels autosave after edits');
 assert.match(management, /className=\{'management-toast '/, 'Save confirmations appear in a toast');
-assert.match(managementCss, /\.management-toast\s*\{[\s\S]*?position: fixed;/, 'Toast is visible without scrolling');
-assert.match(managementCss, /\.contact-choice\s*\{[\s\S]*?grid-template-columns:/, 'Channel handle aligns with checkbox');
-assert.match(managementCss, /\.note-form-actions\s*\{[\s\S]*?grid-template-rows: 40px 40px;/, 'Note category and button are stacked right of textarea');
-assert.match(managementCss, /\.note-form textarea\s*\{[\s\S]*?height: 88px;/, 'Note textarea matches stacked controls height');
+assert.match(
+  managementCss,
+  /\.management-toast\s*\{[\s\S]*?position: fixed;/,
+  'Toast is visible without scrolling',
+);
+assert.match(
+  managementCss,
+  /\.contact-choice\s*\{[\s\S]*?grid-template-columns:/,
+  'Channel handle aligns with checkbox',
+);
+assert.match(
+  managementCss,
+  /\.note-form-actions\s*\{[\s\S]*?grid-template-rows: 40px 40px;/,
+  'Note category and button are stacked right of textarea',
+);
+assert.match(
+  managementCss,
+  /\.note-form textarea\s*\{[\s\S]*?height: 88px;/,
+  'Note textarea matches stacked controls height',
+);
 console.log('UI regression checks passed');
