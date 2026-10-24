@@ -503,6 +503,55 @@ async function run() {
     401,
     'Revoked owner session invalidated',
   );
+  // Editing must preserve the historical player IDs and recalculate derived values.
+  const changedWar = await request('import/war', 'PATCH', {
+    start: old,
+    result: {
+      opponent: 'NewEnemy', ourScore: 1, opponentScore: 12,
+      days: dayPoints.map((points, index) => ({
+        day: index + 1, points, winner: index === 0 ? 'ours' : 'opponent',
+        mvp: index === 0 ? 'КРОСТ' : 'enemy MVP',
+      })),
+    },
+  }, ownerCookie);
+  ensure(changedWar.status, 200, 'Edit imported war result');
+  ensure(changedWar.body.record.wins, 1, 'Win record recalculated');
+  ensure(changedWar.body.record.losses, 1, 'Loss record recalculated');
+  ensure((await request('import/war', 'PATCH', {
+    start: old, players: [{ position: 1, name: 'КРОСТ', points: 500 }],
+  }, memberCookie)).status, 403, 'Member cannot edit archived war');
+
+  const changedRanking = await request('import/war', 'PATCH', {
+    start: old,
+    players: [
+      { position: 1, name: 'КРОСТ', playerId: oldName.id, points: 250000 },
+      { position: 2, name: 'Someone', playerId: oldPlayer.id, points: 200000 },
+      { position: 3, name: 'HistoricNew', points: 7777 },
+    ],
+  }, ownerCookie);
+  ensure(changedRanking.status, 200, 'Update imported player scores');
+  ensure(changedRanking.body.rankings.calculated.find(p => p.id === oldName.id).score,
+    362500, 'Rank score recalculated after historical edit');
+  ensure(changedRanking.body.rankings.calculated.find(p => p.id === oldName.id).active,
+    true, 'Editing an old roster does not replace latest active roster');
+  const oldAfterEdit = await request('dashboard?anchor=' + old + '&count=1', 'GET', null, ownerCookie);
+  ensure(oldAfterEdit.body.weeks[0].opponent, 'NewEnemy', 'Opponent correction persisted');
+  ensure(oldAfterEdit.body.weeks[0].players.length, 3, 'Edited historical roster persisted');
+  ensure(oldAfterEdit.body.weeks[0].players.find(p => p.id === oldName.id).points,
+    250000, 'Historical identity preserved');
+  ensure((await request('import/war', 'PATCH', {
+    start: old,
+    players: [
+      { position: 1, name: 'КРОСТ', playerId: oldName.id, points: 1 },
+      { position: 1, name: 'Someone', playerId: oldPlayer.id, points: 2 },
+    ],
+  }, ownerCookie)).status, 400, 'Duplicate corrected ranks rejected atomically');
+  ensure((await request('dashboard?anchor=' + old + '&count=1', 'GET', null, ownerCookie))
+    .body.weeks[0].players.length, 3, 'Invalid edit did not delete existing scores');
+  ensure((await request('import/war', 'PATCH', {
+    start: weekOffset(startFor(new Date()), -5),
+    players: [{ position: 1, name: 'Ghost', points: 100 }],
+  }, ownerCookie)).status, 400, 'Cannot edit a war that was never imported');
   console.log('Production integration smoke tests passed');
 }
 
