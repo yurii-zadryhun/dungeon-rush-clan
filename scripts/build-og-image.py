@@ -33,10 +33,16 @@ font_regular = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
 def bold(size):
     return ImageFont.truetype(font_bold, size)
 draw.text((469, 171), 'UKRAINIANS', font=bold(79), fill=(252, 250, 246))
-draw.rounded_rectangle((471, 282, 782, 330), radius=11, fill=(47, 100, 143))
-draw.text((492, 291), 'DUNGEON RUSH', font=bold(34), fill=(255, 252, 243))
+badge_font = bold(34)
+badge_text = 'DUNGEON RUSH'
+# Measure the rendered text instead of guessing a fixed badge width.
+# This keeps the trailing H inside the blue highlight on all platforms.
+bbox = draw.textbbox((0, 0), badge_text, font=badge_font)
+badge_width = bbox[2] - bbox[0]
+draw.rounded_rectangle((471, 282, 492 + badge_width + 18, 337), radius=11, fill=(47, 100, 143))
+draw.text((492, 291), badge_text, font=badge_font, fill=(255, 252, 243))
 draw.text((473, 368), 'CLAN WAR HISTORY', font=bold(40), fill=(243, 205, 117))
 draw.text((473, 443), 'Public war results',
           font=ImageFont.truetype(font_regular, 28), fill=(187, 199, 217))
 image.save(PUBLIC / 'assets' / 'og-clan.jpg', quality=70, optimize=True, subsampling=2)
-print('Generated:', PUBLIC / 'og-clan.jpg')
+print('Generated:', PUBLIC / 'assets' / 'og-clan.jpg')

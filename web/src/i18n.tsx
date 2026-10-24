@@ -4,6 +4,15 @@ import { initialLocale, rememberLocale, type Locale } from './locale';
 export type { Locale } from './locale';
 
 const en = {
+  deleteAccount: 'Delete account',
+  deleteAccountExplanation: 'This deletes your website account, sessions, contact labels and management notes associated with your player. Historical war scores and game nicknames remain in the clan archive; contact the administrator to discuss those records separately.',
+  deleteAccountConfirm: 'I understand that this cannot be undone and that historic clan results remain.',
+  confirmWithPassword: 'Confirm with your website password',
+  notGamePassword: 'Use a password for this website — not your Dungeon Rush password.',
+  siteInformation: 'Site information',
+  aboutLink: 'About',
+  privacyLink: 'Privacy',
+  termsLink: 'Terms',
   viewAsPlayer: 'Sign in as {name}',
   impersonationConfirm:
     'Temporarily sign in as {name}? You will have their permissions for up to 30 minutes. You can return to your Owner account at any time.',
@@ -336,6 +345,15 @@ const en = {
 
 type MessageKey = keyof typeof en;
 const uk: Record<MessageKey, string> = {
+  deleteAccount: 'Видалити акаунт',
+  deleteAccountExplanation: 'Буде видалено ваш акаунт на сайті, сесії, контактні позначки й нотатки про пов’язаного гравця. Історичні результати воєн та ігрові ніки залишаться в архіві; щодо них можна звернутися до адміністратора окремо.',
+  deleteAccountConfirm: 'Я розумію, що цю дію неможливо скасувати, а історія воєн залишиться.',
+  confirmWithPassword: 'Підтвердьте паролем від цього сайту',
+  notGamePassword: 'Використовуйте пароль для цього сайту, не від Dungeon Rush.',
+  siteInformation: 'Інформація про сайт',
+  aboutLink: 'Про сайт',
+  privacyLink: 'Конфіденційність',
+  termsLink: 'Умови',
   viewAsPlayer: 'Увійти як {name}',
   impersonationConfirm:
     'Тимчасово увійти як {name}? Ви матимете його права до 30 хвилин і зможете будь-коли повернутися до свого акаунта власника.',
