@@ -551,7 +551,8 @@ export function ClanDashboard({
           </section>
         </main>
       )}
-
+      </React.Suspense>
+      <React.Suspense fallback={null}>
       {editWeek && canEdit && (
         <EditWarModal
           key={editWeek.start}
