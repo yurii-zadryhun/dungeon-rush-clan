@@ -17,7 +17,9 @@ export function PrivateApp() {
   const [account, setAccount] = React.useState<Account | null>(null);
   const [dashboard, setDashboard] = React.useState<Dashboard | null>(null);
   const [error, setError] = React.useState('');
-  const invite = new URLSearchParams(location.search).get('invite');
+  const invite =
+    location.pathname.match(/^\/invite\/([A-Za-z0-9_-]{8,256})\/?$/)?.[1] ??
+    new URLSearchParams(location.search).get('invite'); // Older invitation links still work.
 
   React.useEffect(() => {
     let mounted = true;
@@ -33,7 +35,7 @@ export function PrivateApp() {
           setPhase('setup');
         } else {
           setPhase(
-            invite && new URLSearchParams(location.search).get('login') !== '1' ? 'invite' : 'login',
+            invite && location.pathname !== '/login' ? 'invite' : 'login',
           );
         }
       } catch (failure) {
@@ -64,7 +66,7 @@ export function PrivateApp() {
     setLocale(current.locale);
     setPhase('ready');
     setError('');
-    history.replaceState(null, '', location.pathname + location.hash);
+    history.replaceState(null, '', '/' + location.hash);
   }
 
   function assumeAccount(next: Account) {

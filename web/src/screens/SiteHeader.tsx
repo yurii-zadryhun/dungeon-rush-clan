@@ -156,8 +156,11 @@ export function SiteHeader({
                     <Settings size={18} /> {t('clanSettings')}
                   </button>
                 )}
-                <a role="menuitem" href="/clan">
+                <a role="menuitem" href="/public">
                   <Globe2 size={18} /> {t('publicGuestLink')}
+                </a>
+                <a role="menuitem" href="/about">
+                  <Globe2 size={18} /> {t('aboutLink')}
                 </a>
                 <div className="shell-menu-language">
                   <LanguagePicker onSelect={onLocaleChange} />

@@ -420,7 +420,7 @@ export class AccountsService {
       .returning('id')
       .executeTakeFirstOrThrow();
     const url = new URL(
-      '/?invite=' + encodeURIComponent(raw),
+      '/invite/' + encodeURIComponent(raw),
       process.env.APP_ORIGIN || 'http://localhost:5173',
     ).toString();
     return { id: created.id, url, label, role };
@@ -451,7 +451,7 @@ export class AccountsService {
       )
       .execute();
     const url = new URL(
-      '/?invite=' + encodeURIComponent(raw),
+      '/invite/' + encodeURIComponent(raw),
       process.env.APP_ORIGIN || 'http://localhost:5173',
     ).toString();
     return { url, active: true, createdAt };

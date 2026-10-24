@@ -21,9 +21,14 @@ function AuthLayout({
         </div>
         <h1>Dungeon Rush</h1>
         <h2>{t('appTitle')}</h2>
-        <a className="auth-public-link" href="/clan">
+        <a className="auth-public-link" href="/public">
           {t('publicGuestLink')} ↗
         </a>
+        <nav className="auth-info-links" aria-label={t('siteInformation')}>
+          <a href="/about">{t('aboutLink')}</a>
+          <a href="/privacy">{t('privacyLink')}</a>
+          <a href="/terms">{t('termsLink')}</a>
+        </nav>
         {children}
       </div>
     </main>
@@ -89,6 +94,7 @@ function CredentialsForm({
           onChange={(event) => setPassword(event.target.value)}
           required
         />
+        <small className="auth-password-note">{t('notGamePassword')}</small>
       </label>
       {error && (
         <div className="error-strip" role="alert">
@@ -193,7 +199,7 @@ function InvitationScreen({ token, onDone }: { token: string; onDone: (account: 
           )
         }
       />
-      <a className="auth-login-link" href="?login=1">
+      <a className="auth-login-link" href="/login">
         {t('alreadyHaveAccount')}
       </a>
     </>
