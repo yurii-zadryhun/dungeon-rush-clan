@@ -13,15 +13,25 @@ import {
 } from '../api';
 import { formatWarRange } from '../date-format';
 import { useI18n, type Locale } from '../i18n';
-import { ImportModal } from './ImportModal';
-import { EditWarModal } from './EditWarModal';
-import { UsersScreen } from './UsersScreen';
+
+
+
 import { SiteHeader } from './SiteHeader';
-import { PlayerInsightsPage } from './PlayerInsightsPage';
-import { ClanHealthWidget, DayOutcomesWidget } from './InsightsWidgets';
-import { SettingsModal } from './SettingsModal';
-import { ProfileModal } from './ProfileModal';
-import { WikiScreen } from '../wiki/WikiScreen';
+
+
+
+
+
+
+// Route-only screens and heavy editors should not be bundled into the archive's first paint.
+const WikiScreen = React.lazy(() => import('../wiki/WikiScreen').then((m) => ({ default: m.WikiScreen })));
+const PlayersPage = React.lazy(() => import('./PlayersPage').then((m) => ({ default: m.PlayersPage })));
+const AnalyticsPage = React.lazy(() => import('./AnalyticsPage').then((m) => ({ default: m.AnalyticsPage })));
+const PlayerInsightsPage = React.lazy(() => import('./PlayerInsightsPage').then((m) => ({ default: m.PlayerInsightsPage })));
+const ImportModal = React.lazy(() => import('./ImportModal').then((m) => ({ default: m.ImportModal })));
+const EditWarModal = React.lazy(() => import('./EditWarModal').then((m) => ({ default: m.EditWarModal })));
+const SettingsModal = React.lazy(() => import('./SettingsModal').then((m) => ({ default: m.SettingsModal })));
+const ProfileModal = React.lazy(() => import('./ProfileModal').then((m) => ({ default: m.ProfileModal })));
 
 type PlayerMetric = 'average' | 'lastPoints';
 
@@ -311,9 +321,12 @@ export function ClanDashboard({
   const [route, setRoute] = React.useState(() => window.location.hash);
   const wikiMatch = route.match(/^#\/wiki(?:\/([a-z0-9-]+))?\/?$/);
   const isWiki = Boolean(wikiMatch);
-  const isUsers = route === '#/users' && user.role !== 'member';
   const playerMatch = route.match(/^#\/players\/(\d+)\/?$/);
   const playerId = playerMatch ? Number(playerMatch[1]) : null;
+  const isAnalytics = route === '#/analytics';
+  const legacyAccessRoute = route === '#/users';
+  const isPlayers = route === '#/players' || legacyAccessRoute || playerId !== null;
+  const isArchive = !isWiki && !isPlayers && !isAnalytics;
   const wikiArticleId = wikiMatch?.[1];
   const [dialog, setDialog] = React.useState<'settings' | 'profile' | null>(null);
   const [importWeek, setImportWeek] = React.useState<Week | null>(null);
@@ -362,11 +375,11 @@ export function ClanDashboard({
   }, [data]);
 
   React.useEffect(() => {
-    if (isWiki || isUsers || playerId !== null) positioned.current = false;
-  }, [isWiki, isUsers, playerId]);
+    if (!isArchive) positioned.current = false;
+  }, [isArchive]);
 
   React.useLayoutEffect(() => {
-    if (!data || isWiki || isUsers || playerId !== null || positioned.current) return;
+    if (!data || !isArchive || positioned.current) return;
     if (!visibleWeeks.some((week) => week.start === data.currentStart)) return;
     const container = track.current;
     const selected = [...(container?.querySelectorAll<HTMLElement>('.war-column') ?? [])].find(
@@ -376,16 +389,16 @@ export function ClanDashboard({
     const relativeLeft = selected.getBoundingClientRect().left - container.getBoundingClientRect().left;
     container.scrollLeft += relativeLeft - (container.clientWidth - selected.clientWidth) / 2;
     positioned.current = true;
-  }, [data?.currentStart, visibleWeeks, isWiki, isUsers, playerId]);
+  }, [data?.currentStart, visibleWeeks, isArchive]);
 
   React.useLayoutEffect(() => {
     const container = track.current;
     const snapshot = restore.current;
-    if (!container || !snapshot || isWiki || isUsers) return;
+    if (!container || !snapshot || !isArchive) return;
     // Keep the same card under the pointer when older data is prepended.
     container.scrollLeft = snapshot.left + container.scrollWidth - snapshot.width;
     restore.current = null;
-  }, [weeks, isWiki, isUsers]);
+  }, [weeks, isArchive]);
 
   async function loadOlder() {
     if (!weeks.length || loadingOlder) return;
@@ -449,29 +462,36 @@ export function ClanDashboard({
       <SiteHeader
         user={user}
         isWiki={isWiki}
-        isUsers={isUsers}
+        isPlayers={isPlayers}
+        isAnalytics={isAnalytics}
         onSettings={() => setDialog('settings')}
         onProfile={() => setDialog('profile')}
         onLogout={onLogout}
         onLocaleChange={onLocaleChange}
       />
 
+      <React.Suspense fallback={<main className="loading-page"><span className="spinner" /> {t('loading')}</main>}>
       {isWiki ? (
         <WikiScreen articleId={wikiArticleId} />
-      ) : isUsers ? (
-        <UsersScreen
-          account={user}
-          onMerged={(next) => {
-            setWeeks([]);
-            onChange(next);
-          }}
-        />
       ) : playerId !== null ? (
         <PlayerInsightsPage
           key={playerId}
           playerId={playerId}
           account={user}
           candidates={data.rankings.calculated}
+        />
+      ) : isAnalytics ? (
+        <AnalyticsPage account={user} />
+      ) : isPlayers ? (
+        <PlayersPage
+          key={legacyAccessRoute ? 'access' : 'roster'}
+          initialAccess={legacyAccessRoute}
+          account={user}
+          dashboard={data}
+          onMerged={(next) => {
+            setWeeks([]);
+            onChange(next);
+          }}
         />
       ) : (
         <main className="dashboard">
@@ -490,10 +510,6 @@ export function ClanDashboard({
               metric="lastPoints"
               account={user}
             />
-          </div>
-          <div className="insights-grid">
-            {canEdit && <ClanHealthWidget />}
-            <DayOutcomesWidget />
           </div>
           <section className="panel history-widget">
             <header className="widget-head timeline-heading">
@@ -576,6 +592,7 @@ export function ClanDashboard({
       {dialog === 'profile' && (
         <ProfileModal account={user} onClose={() => setDialog(null)} onSaved={onProfileChange} />
       )}
+      </React.Suspense>
     </div>
   );
 }
