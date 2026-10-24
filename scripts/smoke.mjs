@@ -264,6 +264,31 @@ async function run() {
   ensure(member.status, 201, 'Member account registered');
   const memberCookie = member.cookie;
   ensure((await request('dashboard', 'GET', null, memberCookie)).status, 200, 'Member can view');
+  const memberRoster = await request('players', 'GET', null, memberCookie);
+  ensure(memberRoster.status, 200, 'Members can browse clan roster');
+  assert.ok(memberRoster.body.length > 0, 'Roster includes imported game identities');
+  assert.equal(
+    Object.hasOwn(memberRoster.body[0], 'accountId'), false,
+    'Member roster must not expose internal account IDs',
+  );
+  assert.equal(
+    Object.hasOwn(memberRoster.body[0], 'telegram'), false,
+    'Private contact flags are visible to staff only',
+  );
+  ensure(
+    (await request('players/merge', 'POST', {
+      sourceId: 1, targetId: 2, overlap: 'keepTarget',
+    }, memberCookie)).status,
+    403,
+    'Members cannot merge player identities',
+  );
+  const staffRoster = await request('players', 'GET', null, ownerCookie);
+  ensure(staffRoster.status, 200, 'Staff can list roster');
+  assert.ok(staffRoster.body.every((person) => Object.hasOwn(person, 'hasAccount')),
+    'Every game identity includes account registration status');
+  assert.ok(staffRoster.body.every((person) => Object.hasOwn(person, 'weeks')),
+    'Roster retains war histories for merge previews');
+
   ensure(
     (
       await request(
