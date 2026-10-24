@@ -141,8 +141,14 @@
 .management-save-error svg {
   flex: 0 0 auto;
 }
-.management-save-error span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-.management-save-error .management-retry { flex: 0 0 auto; }
+.management-save-error span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.management-save-error .management-retry {
+  flex: 0 0 auto;
+}
 .note-section {
   display: grid;
   gap: 10px;

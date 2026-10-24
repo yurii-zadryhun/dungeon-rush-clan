@@ -186,7 +186,6 @@ export function PlayerManagementPanel({ playerId }: { playerId: number }) {
           <ShieldCheck size={19} />
           {t('managementNotes')}
         </h2>
-
       </div>
 
       {!data && !loadError && <p className="muted">{t('loading')}</p>}
