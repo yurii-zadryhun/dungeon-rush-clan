@@ -5,10 +5,11 @@ import { RankingService } from './ranking';
 import { WarsController, WarsService } from './wars';
 import { OcrController, VisionService } from './ocr';
 import { ImportController, ImportService } from './import';
+import { PlayersController, PlayersService } from './players';
 import { WikiAiController, WikiAiService } from './ai/wiki-ai';
 
 @Module({
-  controllers: [AuthController, WarsController, OcrController, ImportController, WikiAiController],
+  controllers: [AuthController, WarsController, OcrController, ImportController, PlayersController, WikiAiController],
   providers: [
     Db,
     AccountsService,
@@ -19,6 +20,7 @@ import { WikiAiController, WikiAiService } from './ai/wiki-ai';
     WarsService,
     VisionService,
     ImportService,
+    PlayersService,
     WikiAiService,
   ],
 })

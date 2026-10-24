@@ -14,6 +14,7 @@ import { DAY_POINTS, importPermission, warStart } from './calendar';
 import { AdminGuard, SessionGuard } from './auth';
 import { Db, normalizeName } from './database';
 import { WarsService } from './wars';
+import { PlayersService } from './players';
 
 const name = z.string().trim().min(1).max(80);
 const rankingItem = z.object({
@@ -50,6 +51,7 @@ export class ImportService {
   constructor(
     private readonly db: Db,
     private readonly wars: WarsService,
+    private readonly identities: PlayersService,
   ) {}
 
   async matchingPlayers(start: string) {
@@ -162,7 +164,8 @@ export class ImportService {
           const names = new Map(existingPlayers.map((p) => [p.normalized_name, p.id]));
           const ids = new Set<number>();
           for (const player of data.players) {
-            let playerId = player.playerId ?? names.get(normalizeName(player.name));
+            let playerId = player.playerId ?? names.get(normalizeName(player.name)) ??
+              await this.identities.resolve(trx, player.name);
             if (playerId && !existingPlayers.some((p) => p.id === playerId))
               throw new BadRequestException('Unknown player ID ' + playerId);
             if (!playerId) {
@@ -184,6 +187,9 @@ export class ImportService {
             if (ids.has(playerId))
               throw new BadRequestException('Same player assigned to multiple ranks');
             ids.add(playerId);
+            if (mode === 'update' && player.playerId != null) {
+              await this.identities.rename(trx, playerId, player.name);
+            }
             await trx
               .insertInto('player_scores')
               .values({
@@ -220,7 +226,7 @@ export class ImportService {
           }
           await trx
             .updateTable('wars')
-            .set({ ranking_imported_at: Date.now() })
+            .set({ ranking_imported_at: war.ranking_imported_at ?? Date.now() })
             .where('id', '=', war.id)
             .execute();
           // Roster status is always based on the most recent imported ranking by war date.
@@ -273,7 +279,7 @@ export class ImportService {
               opponent_clan_id: opponent.id,
               our_score: data.result.ourScore,
               opponent_score: data.result.opponentScore,
-              result_imported_at: Date.now(),
+              result_imported_at: war.result_imported_at ?? Date.now(),
             })
             .where('id', '=', war.id)
             .execute();
