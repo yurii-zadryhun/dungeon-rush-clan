@@ -10,6 +10,8 @@ const players = read('web/src/screens/PlayersPage.tsx');
 const playersCss = read('web/src/screens/PlayersPage.css');
 const guestCss = read('web/public/assets/clan-public.css');
 const publicHtml = read('server/src/public-clan.ts');
+const management = read('web/src/screens/PlayerManagementPanel.tsx');
+const managementCss = read('web/src/screens/PlayerManagementPanel.css');
 
 assert.match(
   header,
@@ -50,4 +52,11 @@ assert.ok(
   existsSync(new URL('../web/public/assets/clan-emblem.png', import.meta.url)),
   'Clan emblem committed',
 );
+assert.doesNotMatch(management, /t\('staffOnly'\)/, 'Remove redundant staff-only badge');
+assert.match(management, /setTimeout\(saveLabels, 600\)/, 'Player labels autosave after edits');
+assert.match(management, /className=\{'management-toast '/, 'Save confirmations appear in a toast');
+assert.match(managementCss, /\.management-toast\s*\{[\s\S]*?position: fixed;/, 'Toast is visible without scrolling');
+assert.match(managementCss, /\.contact-choice\s*\{[\s\S]*?grid-template-columns:/, 'Channel handle aligns with checkbox');
+assert.match(managementCss, /\.note-form-actions\s*\{[\s\S]*?grid-template-rows: 42px 42px;/, 'Note category and button are stacked right of textarea');
+assert.match(managementCss, /\.note-form textarea\s*\{[\s\S]*?height: 92px;/, 'Note textarea matches stacked controls height');
 console.log('UI regression checks passed');
