@@ -14,7 +14,7 @@ const PrivateApp = React.lazy(() =>
 );
 const firstLocale = initialLocale();
 document.documentElement.lang = firstLocale;
-const isPublicClan = /^\\/clan\\/?$/.test(location.pathname);
+const isPublicClan = location.pathname === '/clan' || location.pathname === '/clan/';
 
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
