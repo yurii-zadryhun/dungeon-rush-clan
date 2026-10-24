@@ -2,6 +2,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Account, api, Dashboard, json } from './api';
 import { LanguageProvider, useI18n, type Locale } from './i18n';
+import { initialLocale } from './locale';
 import { AuthScreen, type AuthMode } from './screens/AuthScreen';
 import { ClanDashboard } from './screens/ClanDashboard';
 import './styles.css';
@@ -109,9 +110,13 @@ function App() {
   );
 }
 
+// Resolve the first-visit locale before React renders any translated content.
+const firstLocale = initialLocale();
+document.documentElement.lang = firstLocale;
+
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <LanguageProvider>
+    <LanguageProvider initial={firstLocale}>
       <App />
     </LanguageProvider>
   </React.StrictMode>,
