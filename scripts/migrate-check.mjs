@@ -79,10 +79,14 @@ async function run() {
     const player = sql.prepare('SELECT id, account_id FROM players WHERE id = 8').get();
     assert.deepEqual(player, { id: 8, account_id: 42 }, 'Legacy player linked to owner');
     const impersonationColumns = sql.pragma('table_info(sessions)').map((column) => column.name);
-    assert.ok(impersonationColumns.includes('impersonated_account_id'),
-      'Existing sessions get impersonation target column');
-    assert.ok(impersonationColumns.includes('impersonation_expires_at'),
-      'Existing sessions get bounded impersonation expiry column');
+    assert.ok(
+      impersonationColumns.includes('impersonated_account_id'),
+      'Existing sessions get impersonation target column',
+    );
+    assert.ok(
+      impersonationColumns.includes('impersonation_expires_at'),
+      'Existing sessions get bounded impersonation expiry column',
+    );
     const session = sql.prepare('SELECT token_hash, account_id FROM sessions').get();
     assert.deepEqual(session, { token_hash: 'session-hash', account_id: 42 });
     const invitation = sql.prepare('SELECT token_hash, created_by FROM invites').get();
