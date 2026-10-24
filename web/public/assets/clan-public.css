@@ -494,3 +494,87 @@ p {
 .guest-empty {
   font-size: 14px;
 }
+
+/* Public identity: the clan is the headline; game title is supporting context. */
+.guest-hero h1 {
+  font-size: clamp(31px, 5vw, 54px);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.guest-hero .guest-game {
+  margin: 9px 0 23px;
+  color: #c2c7d1;
+  font-size: clamp(15px, 2.1vw, 19px);
+  font-weight: 600;
+  line-height: 1.35;
+}
+.guest-identity-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 11px 18px;
+}
+.guest-identity-actions .guest-leader {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  min-height: 42px;
+}
+.guest-crown {
+  flex: 0 0 auto;
+  color: #f1b94e;
+  filter: drop-shadow(0 1px 0 #654415);
+}
+.guest-identity-actions .guest-leader strong {
+  font-size: 15px;
+  font-weight: 900;
+  color: #fff5e0;
+}
+.guest-identity-actions .guest-contact-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 43px;
+  margin: 0;
+  padding: 4px 5px 4px 17px;
+  border: 1px solid #e5ad56;
+  border-radius: 999px;
+  background: linear-gradient(125deg, #f6d58a 0%, #e5a450 100%);
+  color: #302112;
+  box-shadow: 0 3px 0 #98612d, inset 0 1px 0 #fff7d4a8;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 950;
+  text-shadow: none;
+  transition: background-color 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+}
+.guest-identity-actions .guest-contact-link:hover {
+  color: #201509;
+  background: linear-gradient(125deg, #ffebbc 0%, #f4b95b 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 #98612d, inset 0 1px 0 #fff9e5;
+}
+.guest-identity-actions .guest-contact-link:focus-visible {
+  outline: 3px solid #fff2b7;
+  outline-offset: 4px;
+}
+.guest-contact-arrow {
+  display: inline-grid;
+  place-items: center;
+  height: 33px;
+  width: 33px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #4e3721;
+  color: #ffe8a9;
+  font-size: 19px;
+  line-height: 1;
+  font-weight: 700;
+}
+@media (max-width: 650px) {
+  .guest-hero .guest-game { margin: 5px 0 14px; }
+  .guest-identity-actions { gap: 8px 12px; }
+  .guest-identity-actions .guest-contact-link { font-size: 12px; }
+}
