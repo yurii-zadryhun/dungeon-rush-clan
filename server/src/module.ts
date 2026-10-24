@@ -9,6 +9,7 @@ import { PlayersController, PlayersService } from './players';
 import { PlayerManagementController, PlayerManagementService } from './player-management';
 import { InsightsController, InsightsService } from './insights';
 import { WikiAiController, WikiAiService } from './ai/wiki-ai';
+import { PublicClanController, PublicClanService } from './public-clan';
 
 @Module({
   controllers: [
@@ -20,6 +21,7 @@ import { WikiAiController, WikiAiService } from './ai/wiki-ai';
     PlayerManagementController,
     InsightsController,
     WikiAiController,
+    PublicClanController,
   ],
   providers: [
     Db,
@@ -35,6 +37,7 @@ import { WikiAiController, WikiAiService } from './ai/wiki-ai';
     PlayerManagementService,
     InsightsService,
     WikiAiService,
+    PublicClanService,
   ],
 })
 export class AppModule {}
