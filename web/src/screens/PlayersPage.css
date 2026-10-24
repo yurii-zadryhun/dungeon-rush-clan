@@ -394,3 +394,16 @@
     padding-inline: 5px;
   }
 }
+
+/* Contact flags are compact, consistent with the existing status icon scale. */
+.directory-flag.social-icon {
+  box-sizing: border-box;
+  justify-content: center;
+  width: 23px;
+  height: 20px;
+  padding: 2px 4px;
+  line-height: 1;
+}
+.directory-flag.social-icon svg { width: 14px; height: 14px; flex: none; }
+.directory-flag.telegram-icon { color: #a9dffa; background: #26485c; }
+.directory-flag.discord-icon { color: #c4c6ff; background: #3b3b62; }

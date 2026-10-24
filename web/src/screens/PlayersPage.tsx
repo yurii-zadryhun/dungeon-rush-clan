@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, ArrowUpRight, Search, ShieldCheck, UserRound, Users } from 'lucide-react';
+import { Activity, ArrowUpRight, Gamepad2, Search, Send, ShieldCheck, UserRound, Users } from 'lucide-react';
 import { api, shortNumber, type Account, type Dashboard, type Player } from '../api';
 import { useI18n } from '../i18n';
 const UsersScreen = React.lazy(() => import('./UsersScreen').then((m) => ({ default: m.UsersScreen })));
@@ -306,8 +306,26 @@ function DirectoryRow({ player, stat }: { player: DirectoryPlayer; stat?: Player
               </span>
             )}
           {!player.active && <span className="directory-flag">{t('left')}</span>}
-          {player.telegram && <span className="directory-flag">TG</span>}
-          {player.discord && <span className="directory-flag">Discord</span>}
+          {player.telegram && (
+            <span
+              className="directory-flag social-icon telegram-icon"
+              role="img"
+              aria-label={t('clanTelegram')}
+              title={t('clanTelegram')}
+            >
+              <Send size={14} aria-hidden="true" />
+            </span>
+          )}
+          {player.discord && (
+            <span
+              className="directory-flag social-icon discord-icon"
+              role="img"
+              aria-label={t('clanDiscord')}
+              title={t('clanDiscord')}
+            >
+              <Gamepad2 size={14} aria-hidden="true" />
+            </span>
+          )}
           {player.protected && (
             <span className="directory-flag protected">
               <ShieldCheck size={12} /> {t('protectedPlayer')}
