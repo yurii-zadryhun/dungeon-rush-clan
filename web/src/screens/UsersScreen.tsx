@@ -2,6 +2,8 @@ import React from 'react';
 import { Copy, Link2, Pencil, Trash2, UserPlus, Users, X } from 'lucide-react';
 import { api, json, type Account, type Role } from '../api';
 import { useI18n } from '../i18n';
+import { MergePlayers } from './MergePlayers';
+import type { Dashboard } from '../api';
 
 interface ManagedAccount {
   id: number;
@@ -35,7 +37,7 @@ interface AccessData {
   shared: SharedInvite;
 }
 
-export function UsersScreen({ account }: { account: Account }) {
+export function UsersScreen({ account, onMerged }: { account: Account; onMerged: (data: Dashboard) => void }) {
   const { t, locale } = useI18n();
   const [data, setData] = React.useState<AccessData | null>(null);
   const [label, setLabel] = React.useState('');
@@ -330,6 +332,7 @@ export function UsersScreen({ account }: { account: Account }) {
             </div>
           </section>
         </div>
+        <MergePlayers onMerged={onMerged} />
       </div>
       {editing && (
         <div
