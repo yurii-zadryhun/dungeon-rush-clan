@@ -6,11 +6,12 @@ import {
   Injectable,
   Post,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { Transaction } from 'kysely';
 import { z } from 'zod';
-import { AdminGuard, SessionGuard } from './auth';
+import { AdminGuard, SessionGuard, type AuthenticatedRequest } from './auth';
 import { Db, normalizeName, type Tables } from './database';
 import { WarsService } from './wars';
 
@@ -23,26 +24,69 @@ export class PlayersService {
     private readonly wars: WarsService,
   ) {}
 
-  async list() {
-    const [players, scores] = await Promise.all([
+  async list(isStaff: boolean) {
+    const [players, scores, labels] = await Promise.all([
       this.db.query
         .selectFrom('players')
-        .select(['id', 'name', 'active', 'account_id'])
-        .orderBy('name')
+        .leftJoin('accounts', 'accounts.id', 'players.account_id')
+        .select([
+          'players.id',
+          'players.name',
+          'players.active',
+          'players.account_id',
+          'accounts.active as account_active',
+          'accounts.role as account_role',
+        ])
+        .orderBy('players.name')
         .execute(),
       this.db.query
         .selectFrom('player_scores')
         .innerJoin('wars', 'wars.id', 'player_scores.war_id')
         .select(['player_scores.player_id', 'wars.start_date'])
         .execute(),
+      isStaff
+        ? this.db.query
+            .selectFrom('player_labels')
+            .select([
+              'player_id',
+              'telegram',
+              'discord',
+              'tags_json',
+              'exception_reason',
+            ])
+            .execute()
+        : Promise.resolve([]),
     ]);
-    return players.map((player) => ({
-      id: player.id,
-      name: player.name,
-      active: !!player.active,
-      hasAccount: player.account_id !== null,
-      weeks: scores.filter((score) => score.player_id === player.id).map((score) => score.start_date),
-    }));
+    const weeksByPlayer = new Map<number, string[]>();
+    for (const score of scores) {
+      const weeks = weeksByPlayer.get(score.player_id) ?? [];
+      weeks.push(score.start_date);
+      weeksByPlayer.set(score.player_id, weeks);
+    }
+    const labelsByPlayer = new Map(labels.map((label) => [label.player_id, label]));
+    return players.map((player) => {
+      const flags = labelsByPlayer.get(player.id);
+      const tags = flags ? (JSON.parse(flags.tags_json) as string[]) : [];
+      return {
+        id: player.id,
+        name: player.name,
+        active: !!player.active,
+        hasAccount: player.account_id !== null && !!player.account_active,
+        // A revoked account is still linked, but must not appear as registered and available.
+        accountLinked: player.account_id !== null,
+        accountRole: player.account_id !== null ? player.account_role : null,
+        ...(isStaff ? { accountId: player.account_id } : {}),
+        weeks: weeksByPlayer.get(player.id) ?? [],
+        ...(isStaff
+          ? {
+              telegram: !!flags?.telegram,
+              discord: !!flags?.discord,
+              protected: !!flags?.exception_reason.trim() || tags.includes('exception'),
+              attention: tags.includes('attention'),
+            }
+          : {}),
+      };
+    });
   }
 
   async resolve(trx: Tx, input: string): Promise<number | undefined> {
@@ -321,15 +365,16 @@ export class PlayersService {
 }
 
 @Controller('api/players')
-@UseGuards(SessionGuard, AdminGuard)
+@UseGuards(SessionGuard)
 export class PlayersController {
   constructor(private readonly players: PlayersService) {}
 
   @Get()
-  list() {
-    return this.players.list();
+  list(@Req() request: AuthenticatedRequest) {
+    return this.players.list(request.account?.role !== 'member');
   }
 
+  @UseGuards(AdminGuard)
   @Post('merge')
   merge(@Body() body: unknown) {
     return this.players.merge(body);
