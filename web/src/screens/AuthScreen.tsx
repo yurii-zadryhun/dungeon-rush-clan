@@ -1,17 +1,23 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { api, json, type Account } from '../api';
-import { LanguagePicker, useI18n } from '../i18n';
+import { LanguagePicker, useI18n, type Locale } from '../i18n';
 
 type Credentials = { username: string; password: string };
 
-function AuthLayout({ children }: { children: React.ReactNode }) {
+function AuthLayout({
+  children,
+  onLocaleChange,
+}: {
+  children: React.ReactNode;
+  onLocaleChange: (locale: Locale) => void;
+}) {
   const { t } = useI18n();
   return (
     <main className="auth-shell">
       <div className="panel auth-card">
         <div className="auth-language">
-          <LanguagePicker />
+          <LanguagePicker onSelect={onLocaleChange} />
         </div>
         <h1>Dungeon Rush</h1>
         <h2>{t('appTitle')}</h2>
@@ -93,13 +99,24 @@ function CredentialsForm({
   );
 }
 
-function LoginScreen({ onDone }: { onDone: (account: Account) => void }) {
+function LoginScreen({
+  onDone,
+  loginLocale,
+}: {
+  onDone: (account: Account) => void;
+  loginLocale: Locale | null;
+}) {
   const { t } = useI18n();
   return (
     <CredentialsForm
       title={t('login')}
       onDone={onDone}
-      onSubmit={(credentials) => api<Account>('auth/login', json('POST', credentials))}
+      onSubmit={(credentials) =>
+        api<Account>(
+          'auth/login',
+          json('POST', { ...credentials, ...(loginLocale ? { locale: loginLocale } : {}) }),
+        )
+      }
     />
   );
 }
@@ -187,9 +204,10 @@ const authScreens: Record<
   React.ComponentType<{
     onDone: (account: Account) => void;
     token: string;
+    loginLocale: Locale | null;
   }>
 > = {
-  login: ({ onDone }) => <LoginScreen onDone={onDone} />,
+  login: ({ onDone, loginLocale }) => <LoginScreen onDone={onDone} loginLocale={loginLocale} />,
   setup: ({ onDone }) => <OwnerSetupScreen onDone={onDone} />,
   invite: ({ onDone, token }) => <InvitationScreen token={token} onDone={onDone} />,
 };
@@ -204,9 +222,11 @@ export function AuthScreen({
   onDone: (account: Account) => void;
 }) {
   const Screen = authScreens[mode];
+  // Inferred language is a UI default, not consent to overwrite an existing account.
+  const [explicitLocale, setExplicitLocale] = React.useState<Locale | null>(null);
   return (
-    <AuthLayout>
-      <Screen onDone={onDone} token={invite ?? ''} />
+    <AuthLayout onLocaleChange={setExplicitLocale}>
+      <Screen onDone={onDone} token={invite ?? ''} loginLocale={explicitLocale} />
     </AuthLayout>
   );
 }
