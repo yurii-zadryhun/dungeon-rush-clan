@@ -405,18 +405,24 @@ export class AccountsService {
       throw new BadRequestException('Player name already exists');
     if (!legacyPlayer) return;
     if (legacyPlayer.name === username.trim() && legacyPlayer.account_id === accountId) return;
-    const alias = await trx.selectFrom('player_aliases').select('player_id')
-      .where('normalized_name', '=', normalized).executeTakeFirst();
+    const alias = await trx
+      .selectFrom('player_aliases')
+      .select('player_id')
+      .where('normalized_name', '=', normalized)
+      .executeTakeFirst();
     if (alias && alias.player_id !== legacyPlayer.id) {
       throw new BadRequestException('Player name belongs to another player. Merge duplicates first.');
     }
     if (legacyPlayer.normalized_name !== normalized) {
-      await trx.insertInto('player_aliases')
+      await trx
+        .insertInto('player_aliases')
         .values({ normalized_name: legacyPlayer.normalized_name, player_id: legacyPlayer.id })
-        .onConflict(oc => oc.column('normalized_name').doUpdateSet({ player_id: legacyPlayer.id }))
+        .onConflict((oc) => oc.column('normalized_name').doUpdateSet({ player_id: legacyPlayer.id }))
         .execute();
-      await trx.deleteFrom('player_aliases')
-        .where('normalized_name', '=', normalized).where('player_id', '=', legacyPlayer.id)
+      await trx
+        .deleteFrom('player_aliases')
+        .where('normalized_name', '=', normalized)
+        .where('player_id', '=', legacyPlayer.id)
         .execute();
     }
     await trx
