@@ -42,7 +42,9 @@ export function PlayersPage({
 }) {
   const { t } = useI18n();
   const isStaff = account.role !== 'member';
-  const [tab, setTab] = React.useState<'roster' | 'access'>(initialAccess && isStaff ? 'access' : 'roster');
+  const [tab, setTab] = React.useState<'roster' | 'access'>(
+    initialAccess && isStaff ? 'access' : 'roster',
+  );
   const [members, setMembers] = React.useState<DirectoryPlayer[]>([]);
   const [standaloneAccounts, setStandaloneAccounts] = React.useState<StandaloneAccount[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -95,7 +97,9 @@ export function PlayersPage({
       return (bScore?.score ?? 0) - (aScore?.score ?? 0) || a.name.localeCompare(b.name);
     });
   const activeCount = members.filter((player) => player.active).length;
-  const registeredCount = members.filter((player) => player.active && player.hasAccount && player.accountActive).length;
+  const registeredCount = members.filter(
+    (player) => player.active && player.hasAccount && player.accountActive,
+  ).length;
 
   function merged(next: Dashboard) {
     onMerged(next);
@@ -106,23 +110,39 @@ export function PlayersPage({
     <main className="players-page">
       <header className="players-heading">
         <div>
-          <h1><Users size={25} /> {t('playersDirectory')}</h1>
+          <h1>
+            <Users size={25} /> {t('playersDirectory')}
+          </h1>
           <p className="muted">{t('playersDirectoryHelp')}</p>
         </div>
         <div className="players-overview">
-          <span><b>{activeCount}</b>{t('activePlayer')}</span>
-          <span><b>{registeredCount}</b>{t('registered')}</span>
+          <span>
+            <b>{activeCount}</b>
+            {t('activePlayer')}
+          </span>
+          <span>
+            <b>{registeredCount}</b>
+            {t('registered')}
+          </span>
         </div>
       </header>
 
       {isStaff && (
         <div className="players-tabs" role="tablist" aria-label={t('playersDirectory')}>
-          <button role="tab" aria-selected={tab === 'roster'}
-            className={tab === 'roster' ? 'selected' : ''} onClick={() => setTab('roster')}>
+          <button
+            role="tab"
+            aria-selected={tab === 'roster'}
+            className={tab === 'roster' ? 'selected' : ''}
+            onClick={() => setTab('roster')}
+          >
             <Users size={16} /> {t('clanRoster')}
           </button>
-          <button role="tab" aria-selected={tab === 'access'}
-            className={tab === 'access' ? 'selected' : ''} onClick={() => setTab('access')}>
+          <button
+            role="tab"
+            aria-selected={tab === 'access'}
+            className={tab === 'access' ? 'selected' : ''}
+            onClick={() => setTab('access')}
+          >
             <UserRound size={16} /> {t('accountsAndInvites')}
           </button>
         </div>
@@ -137,21 +157,39 @@ export function PlayersPage({
           <div className="players-filters">
             <label className="players-search">
               <Search size={18} />
-              <input type="search" value={search} onChange={(event) => setSearch(event.target.value)}
-                placeholder={t('searchPlayers')} aria-label={t('searchPlayers')} />
+              <input
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder={t('searchPlayers')}
+                aria-label={t('searchPlayers')}
+              />
             </label>
             <div className="players-filter-row">
               <div className="players-segments" role="group" aria-label={t('membershipFilter')}>
                 {(['active', 'all', 'left'] as const).map((value) => (
-                  <button key={value} className={membership === value ? 'selected' : ''}
-                    aria-pressed={membership === value} onClick={() => setMembership(value)}>
-                    {t(value === 'active' ? 'activePlayer' : value === 'left' ? 'formerPlayers' : 'allPlayers')}
+                  <button
+                    key={value}
+                    className={membership === value ? 'selected' : ''}
+                    aria-pressed={membership === value}
+                    onClick={() => setMembership(value)}
+                  >
+                    {t(
+                      value === 'active'
+                        ? 'activePlayer'
+                        : value === 'left'
+                          ? 'formerPlayers'
+                          : 'allPlayers',
+                    )}
                   </button>
                 ))}
               </div>
               <label className="players-filter-select">
                 <span>{t('siteAccount')}</span>
-                <select value={registration} onChange={(event) => setRegistration(event.target.value as Registration)}>
+                <select
+                  value={registration}
+                  onChange={(event) => setRegistration(event.target.value as Registration)}
+                >
                   <option value="all">{t('allAccounts')}</option>
                   <option value="registered">{t('registered')}</option>
                   <option value="unregistered">{t('notRegistered')}</option>
@@ -167,30 +205,50 @@ export function PlayersPage({
               </label>
             </div>
           </div>
-          {error && <p className="error-strip" role="alert">{error}</p>}
+          {error && (
+            <p className="error-strip" role="alert">
+              {error}
+            </p>
+          )}
           {loading && <p className="muted">{t('loading')}</p>}
           {!loading && (
             <>
-              <div className="players-result-count">{t('matchingPlayers', { count: visible.length })}</div>
+              <div className="players-result-count">
+                {t('matchingPlayers', { count: visible.length })}
+              </div>
               {visible.length === 0 && <p className="empty">{t('noMatchingPlayers')}</p>}
               <div className="players-directory-list">
                 {visible.map((player) => (
                   <DirectoryRow key={player.id} player={player} stat={stats.get(player.id)} />
                 ))}
               </div>
-              {isStaff && standaloneAccounts.length > 0 && membership !== 'left' && registration !== 'unregistered' && !search && (
-                <div className="players-unlinked">
-                  <h2><ShieldCheck size={17} /> {t('siteOnlyAccounts')} ({standaloneAccounts.length})</h2>
-                  <p className="muted">{t('siteOnlyHelp')}</p>
-                  {standaloneAccounts.map((item) => (
-                    <div className="players-unlinked-entry" key={item.id}>
-                      <span>{item.display_name}</span>
-                      <small>{t(item.role === 'owner' ? 'ownerRole' : item.role === 'admin' ? 'adminRole' : 'memberRole')}
-                        {!item.active && ' · ' + t('revoked')}</small>
-                    </div>
-                  ))}
-                </div>
-              )}
+              {isStaff &&
+                standaloneAccounts.length > 0 &&
+                membership !== 'left' &&
+                registration !== 'unregistered' &&
+                !search && (
+                  <div className="players-unlinked">
+                    <h2>
+                      <ShieldCheck size={17} /> {t('siteOnlyAccounts')} ({standaloneAccounts.length})
+                    </h2>
+                    <p className="muted">{t('siteOnlyHelp')}</p>
+                    {standaloneAccounts.map((item) => (
+                      <div className="players-unlinked-entry" key={item.id}>
+                        <span>{item.display_name}</span>
+                        <small>
+                          {t(
+                            item.role === 'owner'
+                              ? 'ownerRole'
+                              : item.role === 'admin'
+                                ? 'adminRole'
+                                : 'memberRole',
+                          )}
+                          {!item.active && ' · ' + t('revoked')}
+                        </small>
+                      </div>
+                    ))}
+                  </div>
+                )}
             </>
           )}
         </section>
@@ -208,26 +266,56 @@ function DirectoryRow({ player, stat }: { player: DirectoryPlayer; stat?: Player
           {player.name} <ArrowUpRight size={15} />
         </a>
         <div className="directory-player-flags">
-          <span className={'directory-flag ' + (player.hasAccount && player.accountActive ? 'linked' : 'unlinked')}>
-            {t(player.hasAccount ? player.accountActive ? 'registered' : 'revokedAccount' : 'notRegistered')}
+          <span
+            className={
+              'directory-flag ' + (player.hasAccount && player.accountActive ? 'linked' : 'unlinked')
+            }
+          >
+            {t(
+              player.hasAccount
+                ? player.accountActive
+                  ? 'registered'
+                  : 'revokedAccount'
+                : 'notRegistered',
+            )}
           </span>
-          {player.hasAccount && player.accountActive && player.accountRole && player.accountRole !== 'member' && (
-            <span className="directory-flag">{t(player.accountRole === 'owner' ? 'ownerRole' : 'adminRole')}</span>
-          )}
+          {player.hasAccount &&
+            player.accountActive &&
+            player.accountRole &&
+            player.accountRole !== 'member' && (
+              <span className="directory-flag">
+                {t(player.accountRole === 'owner' ? 'ownerRole' : 'adminRole')}
+              </span>
+            )}
           {!player.active && <span className="directory-flag">{t('left')}</span>}
           {player.telegram && <span className="directory-flag">TG</span>}
           {player.discord && <span className="directory-flag">Discord</span>}
-          {player.protected && <span className="directory-flag protected"><ShieldCheck size={12} /> {t('protectedPlayer')}</span>}
+          {player.protected && (
+            <span className="directory-flag protected">
+              <ShieldCheck size={12} /> {t('protectedPlayer')}
+            </span>
+          )}
           {player.attention && <span className="directory-flag caution">{t('health_attention')}</span>}
         </div>
       </div>
       <div className="directory-player-metrics">
-        <span><strong>{shortNumber(stat?.score ?? 0)}</strong><small>{t('calculatedScore')}</small></span>
-        <span><strong>{stat?.lastPoints == null ? '—' : shortNumber(stat.lastPoints)}</strong><small>{t('latestPoints')}</small></span>
-        <span><strong>{player.weeks.length}</strong><small>{t('weeksParticipated')}</small></span>
+        <span>
+          <strong>{shortNumber(stat?.score ?? 0)}</strong>
+          <small>{t('calculatedScore')}</small>
+        </span>
+        <span>
+          <strong>{stat?.lastPoints == null ? '—' : shortNumber(stat.lastPoints)}</strong>
+          <small>{t('latestPoints')}</small>
+        </span>
+        <span>
+          <strong>{player.weeks.length}</strong>
+          <small>{t('weeksParticipated')}</small>
+        </span>
       </div>
       {stat?.belowRequirement && player.active && (
-        <span className="directory-player-low" title={t('underMinimum')}><Activity size={15} /></span>
+        <span className="directory-player-low" title={t('underMinimum')}>
+          <Activity size={15} />
+        </span>
       )}
     </div>
   );

@@ -14,24 +14,29 @@ import {
 import { formatWarRange } from '../date-format';
 import { useI18n, type Locale } from '../i18n';
 
-
-
 import { SiteHeader } from './SiteHeader';
 
-
-
-
-
-
 // Route-only screens and heavy editors should not be bundled into the archive's first paint.
-const WikiScreen = React.lazy(() => import('../wiki/WikiScreen').then((m) => ({ default: m.WikiScreen })));
+const WikiScreen = React.lazy(() =>
+  import('../wiki/WikiScreen').then((m) => ({ default: m.WikiScreen })),
+);
 const PlayersPage = React.lazy(() => import('./PlayersPage').then((m) => ({ default: m.PlayersPage })));
-const AnalyticsPage = React.lazy(() => import('./AnalyticsPage').then((m) => ({ default: m.AnalyticsPage })));
-const PlayerInsightsPage = React.lazy(() => import('./PlayerInsightsPage').then((m) => ({ default: m.PlayerInsightsPage })));
+const AnalyticsPage = React.lazy(() =>
+  import('./AnalyticsPage').then((m) => ({ default: m.AnalyticsPage })),
+);
+const PlayerInsightsPage = React.lazy(() =>
+  import('./PlayerInsightsPage').then((m) => ({ default: m.PlayerInsightsPage })),
+);
 const ImportModal = React.lazy(() => import('./ImportModal').then((m) => ({ default: m.ImportModal })));
-const EditWarModal = React.lazy(() => import('./EditWarModal').then((m) => ({ default: m.EditWarModal })));
-const SettingsModal = React.lazy(() => import('./SettingsModal').then((m) => ({ default: m.SettingsModal })));
-const ProfileModal = React.lazy(() => import('./ProfileModal').then((m) => ({ default: m.ProfileModal })));
+const EditWarModal = React.lazy(() =>
+  import('./EditWarModal').then((m) => ({ default: m.EditWarModal })),
+);
+const SettingsModal = React.lazy(() =>
+  import('./SettingsModal').then((m) => ({ default: m.SettingsModal })),
+);
+const ProfileModal = React.lazy(() =>
+  import('./ProfileModal').then((m) => ({ default: m.ProfileModal })),
+);
 
 type PlayerMetric = 'average' | 'lastPoints';
 
@@ -470,129 +475,135 @@ export function ClanDashboard({
         onLocaleChange={onLocaleChange}
       />
 
-      <React.Suspense fallback={<main className="loading-page"><span className="spinner" /> {t('loading')}</main>}>
-      {isWiki ? (
-        <WikiScreen articleId={wikiArticleId} />
-      ) : playerId !== null ? (
-        <PlayerInsightsPage
-          key={playerId}
-          playerId={playerId}
-          account={user}
-          candidates={data.rankings.calculated}
-        />
-      ) : isAnalytics ? (
-        <AnalyticsPage account={user} />
-      ) : isPlayers ? (
-        <PlayersPage
-          key={legacyAccessRoute ? 'access' : 'roster'}
-          initialAccess={legacyAccessRoute}
-          account={user}
-          dashboard={data}
-          onMerged={(next) => {
-            setWeeks([]);
-            onChange(next);
-          }}
-        />
-      ) : (
-        <main className="dashboard">
-          {error && <div className="error-strip">{error}</div>}
-          <div className="dashboard-top">
-            <ClanOverview data={data} />
-            <Leaders
-              title={t('allTimeLeaders')}
-              players={data.rankings.allTime}
-              metric="average"
-              account={user}
-            />
-            <Leaders
-              title={t('latestLeaders')}
-              players={data.rankings.latest}
-              metric="lastPoints"
-              account={user}
-            />
-          </div>
-          <section className="panel history-widget">
-            <header className="widget-head timeline-heading">
-              <h2>
-                <History size={20} /> {t('warHistory')}
-              </h2>
-            </header>
-            <div
-              className="timeline-scroll"
-              ref={track}
-              onTouchStart={touchStart}
-              onTouchEnd={touchEnd}
-              onWheel={wheelScroll}
-            >
-              <div className="timeline-track">
-                <button
-                  className="war-load-control"
-                  disabled={loadingOlder}
-                  title={t('pullOlder')}
-                  aria-label={t('pullOlder')}
-                  onClick={loadOlder}
-                >
-                  <ChevronsLeft size={32} />
-                </button>
-                {visibleWeeks.map((week) => (
-                  <WarColumn
-                    key={week.start}
-                    week={week}
-                    onImport={setImportWeek}
-                    onEdit={setEditWeek}
-                    calculated={calculated}
-                    canEdit={canEdit}
-                    account={user}
-                    clanName={data.rankings.settings.clanName}
-                  />
-                ))}
-              </div>
+      <React.Suspense
+        fallback={
+          <main className="loading-page">
+            <span className="spinner" /> {t('loading')}
+          </main>
+        }
+      >
+        {isWiki ? (
+          <WikiScreen articleId={wikiArticleId} />
+        ) : playerId !== null ? (
+          <PlayerInsightsPage
+            key={playerId}
+            playerId={playerId}
+            account={user}
+            candidates={data.rankings.calculated}
+          />
+        ) : isAnalytics ? (
+          <AnalyticsPage account={user} />
+        ) : isPlayers ? (
+          <PlayersPage
+            key={legacyAccessRoute ? 'access' : 'roster'}
+            initialAccess={legacyAccessRoute}
+            account={user}
+            dashboard={data}
+            onMerged={(next) => {
+              setWeeks([]);
+              onChange(next);
+            }}
+          />
+        ) : (
+          <main className="dashboard">
+            {error && <div className="error-strip">{error}</div>}
+            <div className="dashboard-top">
+              <ClanOverview data={data} />
+              <Leaders
+                title={t('allTimeLeaders')}
+                players={data.rankings.allTime}
+                metric="average"
+                account={user}
+              />
+              <Leaders
+                title={t('latestLeaders')}
+                players={data.rankings.latest}
+                metric="lastPoints"
+                account={user}
+              />
             </div>
-          </section>
-        </main>
-      )}
+            <section className="panel history-widget">
+              <header className="widget-head timeline-heading">
+                <h2>
+                  <History size={20} /> {t('warHistory')}
+                </h2>
+              </header>
+              <div
+                className="timeline-scroll"
+                ref={track}
+                onTouchStart={touchStart}
+                onTouchEnd={touchEnd}
+                onWheel={wheelScroll}
+              >
+                <div className="timeline-track">
+                  <button
+                    className="war-load-control"
+                    disabled={loadingOlder}
+                    title={t('pullOlder')}
+                    aria-label={t('pullOlder')}
+                    onClick={loadOlder}
+                  >
+                    <ChevronsLeft size={32} />
+                  </button>
+                  {visibleWeeks.map((week) => (
+                    <WarColumn
+                      key={week.start}
+                      week={week}
+                      onImport={setImportWeek}
+                      onEdit={setEditWeek}
+                      calculated={calculated}
+                      canEdit={canEdit}
+                      account={user}
+                      clanName={data.rankings.settings.clanName}
+                    />
+                  ))}
+                </div>
+              </div>
+            </section>
+          </main>
+        )}
       </React.Suspense>
       <React.Suspense fallback={null}>
-      {editWeek && canEdit && (
-        <EditWarModal
-          key={editWeek.start}
-          week={editWeek}
-          clanName={data.rankings.settings.clanName}
-          onClose={() => setEditWeek(null)}
-          onDone={(next, updatedWeek) => {
-            onChange(next);
-            setWeeks((previous) =>
-              previous.map((week) => (week.start === updatedWeek.start ? updatedWeek : week)),
-            );
-            setEditWeek(null);
-          }}
-        />
-      )}
-      {importWeek && canEdit && (
-        <ImportModal
-          key={importWeek.start}
-          week={importWeek}
-          clanName={data.rankings.settings.clanName}
-          onClose={() => setImportWeek(null)}
-          onDone={(next) => {
-            onChange(next);
-            setImportWeek(null);
-          }}
-        />
-      )}
-      {dialog === 'settings' && canEdit && (
-        <SettingsModal
-          current={data.rankings.settings}
-          onClose={() => setDialog(null)}
-          onDone={(next) => {
-            onChange(next);
-            setDialog(null);
-          }}
-        />
-      )}
-      {dialog === 'profile' && (
-        <ProfileModal account={user} onClose={() => setDialog(null)} onSaved={onProfileChange} />
-      )}
+        {editWeek && canEdit && (
+          <EditWarModal
+            key={editWeek.start}
+            week={editWeek}
+            clanName={data.rankings.settings.clanName}
+            onClose={() => setEditWeek(null)}
+            onDone={(next, updatedWeek) => {
+              onChange(next);
+              setWeeks((previous) =>
+                previous.map((week) => (week.start === updatedWeek.start ? updatedWeek : week)),
+              );
+              setEditWeek(null);
+            }}
+          />
+        )}
+        {importWeek && canEdit && (
+          <ImportModal
+            key={importWeek.start}
+            week={importWeek}
+            clanName={data.rankings.settings.clanName}
+            onClose={() => setImportWeek(null)}
+            onDone={(next) => {
+              onChange(next);
+              setImportWeek(null);
+            }}
+          />
+        )}
+        {dialog === 'settings' && canEdit && (
+          <SettingsModal
+            current={data.rankings.settings}
+            onClose={() => setDialog(null)}
+            onDone={(next) => {
+              onChange(next);
+              setDialog(null);
+            }}
+          />
+        )}
+        {dialog === 'profile' && (
+          <ProfileModal account={user} onClose={() => setDialog(null)} onSaved={onProfileChange} />
+        )}
       </React.Suspense>
     </div>
   );

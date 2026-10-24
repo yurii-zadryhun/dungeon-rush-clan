@@ -272,10 +272,16 @@
 }
 
 /* Keep the current user's identity visible on phones without opening the menu. */
-.shell-mobile-profile { display: none; }
+.shell-mobile-profile {
+  display: none;
+}
 @media (max-width: 950px) {
-  .shell-header .brand-caption { display: none; }
-  .site-header.shell-header .shell-tools { gap: 7px; }
+  .shell-header .brand-caption {
+    display: none;
+  }
+  .site-header.shell-header .shell-tools {
+    gap: 7px;
+  }
   .shell-mobile-profile {
     display: grid;
     justify-items: end;
@@ -298,6 +304,12 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .shell-mobile-profile small { font-size: 10px; color: #c9b8d0; font-weight: 800; }
-  .shell-menu-user { display: none; }
+  .shell-mobile-profile small {
+    font-size: 10px;
+    color: #c9b8d0;
+    font-weight: 800;
+  }
+  .shell-menu-user {
+    display: none;
+  }
 }

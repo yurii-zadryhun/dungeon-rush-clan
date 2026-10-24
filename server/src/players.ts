@@ -47,13 +47,7 @@ export class PlayersService {
       isStaff
         ? this.db.query
             .selectFrom('player_labels')
-            .select([
-              'player_id',
-              'telegram',
-              'discord',
-              'tags_json',
-              'exception_reason',
-            ])
+            .select(['player_id', 'telegram', 'discord', 'tags_json', 'exception_reason'])
             .execute()
         : Promise.resolve([]),
     ]);

@@ -40,7 +40,8 @@ export function SiteHeader({
   const [menuOpen, setMenuOpen] = React.useState(false);
   const dropdown = React.useRef<HTMLDivElement>(null);
   const canManage = user.role !== 'member';
-  const roleKey = user.role === 'owner' ? 'ownerRole' : user.role === 'admin' ? 'adminRole' : 'memberRole';
+  const roleKey =
+    user.role === 'owner' ? 'ownerRole' : user.role === 'admin' ? 'adminRole' : 'memberRole';
 
   React.useEffect(() => {
     if (!menuOpen) return;
@@ -107,8 +108,12 @@ export function SiteHeader({
           </a>
         </nav>
         <div className="shell-tools">
-          <button type="button" className="shell-mobile-profile" onClick={onProfile}
-            aria-label={t('profile') + ': ' + user.displayName}>
+          <button
+            type="button"
+            className="shell-mobile-profile"
+            onClick={onProfile}
+            aria-label={t('profile') + ': ' + user.displayName}
+          >
             <span className="shell-mobile-name">{user.displayName}</span>
             <small>{t(roleKey)}</small>
           </button>
@@ -128,9 +133,7 @@ export function SiteHeader({
               <div className="shell-menu" role="menu">
                 <div className="shell-menu-user">
                   {user.displayName}
-                  <small>
-                    {t(roleKey)}
-                  </small>
+                  <small>{t(roleKey)}</small>
                 </div>
                 <button
                   role="menuitem"
@@ -171,21 +174,33 @@ export function SiteHeader({
         </div>
       </header>
       <nav className="mobile-bottom-navigation" aria-label={t('navigation')}>
-        <a href="#/archive" className={!isWiki && !isPlayers && !isAnalytics ? 'active' : ''}
-          aria-current={!isWiki && !isPlayers && !isAnalytics ? 'page' : undefined}>
-          <History size={22} /><span>{t('historyTab')}</span>
+        <a
+          href="#/archive"
+          className={!isWiki && !isPlayers && !isAnalytics ? 'active' : ''}
+          aria-current={!isWiki && !isPlayers && !isAnalytics ? 'page' : undefined}
+        >
+          <History size={22} />
+          <span>{t('historyTab')}</span>
         </a>
-        <a href="#/analytics" className={isAnalytics ? 'active' : ''}
-          aria-current={isAnalytics ? 'page' : undefined}>
-          <Activity size={22} /><span>{t('analyticsTab')}</span>
+        <a
+          href="#/analytics"
+          className={isAnalytics ? 'active' : ''}
+          aria-current={isAnalytics ? 'page' : undefined}
+        >
+          <Activity size={22} />
+          <span>{t('analyticsTab')}</span>
         </a>
-        <a href="#/players" className={isPlayers ? 'active' : ''}
-          aria-current={isPlayers ? 'page' : undefined}>
-          <UsersRound size={22} /><span>{t('playersDirectory')}</span>
+        <a
+          href="#/players"
+          className={isPlayers ? 'active' : ''}
+          aria-current={isPlayers ? 'page' : undefined}
+        >
+          <UsersRound size={22} />
+          <span>{t('playersDirectory')}</span>
         </a>
-        <a href="#/wiki" className={isWiki ? 'active' : ''}
-          aria-current={isWiki ? 'page' : undefined}>
-          <BookOpen size={22} /><span>{t('wikiTab')}</span>
+        <a href="#/wiki" className={isWiki ? 'active' : ''} aria-current={isWiki ? 'page' : undefined}>
+          <BookOpen size={22} />
+          <span>{t('wikiTab')}</span>
         </a>
       </nav>
     </>

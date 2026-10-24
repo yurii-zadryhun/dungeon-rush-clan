@@ -10,7 +10,9 @@ export function AnalyticsPage({ account }: { account: Account }) {
   return (
     <main className="analytics-page">
       <header className="analytics-heading">
-        <h1><Activity size={25} /> {t('analyticsTab')}</h1>
+        <h1>
+          <Activity size={25} /> {t('analyticsTab')}
+        </h1>
         <p className="muted">{t('analyticsIntro')}</p>
       </header>
       <div className="insights-grid">
