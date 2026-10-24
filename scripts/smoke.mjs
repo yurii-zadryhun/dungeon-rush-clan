@@ -114,10 +114,16 @@ async function run() {
   ensure(publicBeforeEnrollment.body.leader, '—', 'Uninitialized clan has no leader');
   const guestHtml = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan');
   ensure(guestHtml.status, 200, 'Public clan HTML is server-rendered');
-  assert.match(guestHtml.headers.get('content-security-policy') || '', /frame-ancestors 'none'/,
-    'Guests cannot embed the site in third-party frames');
-  assert.match(guestHtml.headers.get('strict-transport-security') || '', /max-age=/,
-    'Production enforces HTTPS for repeat visitors');
+  assert.match(
+    guestHtml.headers.get('content-security-policy') || '',
+    /frame-ancestors 'none'/,
+    'Guests cannot embed the site in third-party frames',
+  );
+  assert.match(
+    guestHtml.headers.get('strict-transport-security') || '',
+    /max-age=/,
+    'Production enforces HTTPS for repeat visitors',
+  );
   const guestMarkup = await guestHtml.text();
   assert.match(guestMarkup, /property="og:image"/, 'Social preview metadata');
   assert.match(guestMarkup, /rel="canonical"/, 'Canonical public URL');

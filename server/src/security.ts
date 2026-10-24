@@ -16,10 +16,8 @@ export function limitFor(method: string, pathname: string): Limit | null {
   if (/^\/api\/auth\/invite\/[^/]+\/register$/.test(pathname))
     return { group: 'registration', max: 10, windowMs: 10 * 60_000 };
   if (pathname === '/api/ocr') return { group: 'ocr', max: 8, windowMs: 10 * 60_000 };
-  if (pathname === '/api/wiki-ai/ask')
-    return { group: 'ai', max: 25, windowMs: 60_000 };
-  if (pathname === '/api/public/clan')
-    return { group: 'public-data', max: 150, windowMs: 60_000 };
+  if (pathname === '/api/wiki-ai/ask') return { group: 'ai', max: 25, windowMs: 60_000 };
+  if (pathname === '/api/public/clan') return { group: 'public-data', max: 150, windowMs: 60_000 };
   if (method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS')
     return { group: 'mutations', max: 150, windowMs: 60_000 };
   return { group: 'api-reads', max: 400, windowMs: 60_000 };

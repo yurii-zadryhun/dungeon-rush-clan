@@ -1,5 +1,14 @@
 import React from 'react';
-import { Activity, ArrowUpRight, Gamepad2, Search, Send, ShieldCheck, UserRound, Users } from 'lucide-react';
+import {
+  Activity,
+  ArrowUpRight,
+  Gamepad2,
+  Search,
+  Send,
+  ShieldCheck,
+  UserRound,
+  Users,
+} from 'lucide-react';
 import { api, shortNumber, type Account, type Dashboard, type Player } from '../api';
 import { useI18n } from '../i18n';
 const UsersScreen = React.lazy(() => import('./UsersScreen').then((m) => ({ default: m.UsersScreen })));

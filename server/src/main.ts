@@ -55,15 +55,16 @@ async function bootstrap() {
     if (rule) {
       const retry = limiter.check(request.ip, rule);
       if (retry > 0) {
-        return reply.code(429)
+        return reply
+          .code(429)
           .header('Retry-After', String(retry))
           .header('Cache-Control', 'no-store')
           .send({ message: 'Too many requests. Try again later.' });
       }
     }
 
-    if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method) ||
-        !pathname.startsWith('/api/')) return;
+    if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method) || !pathname.startsWith('/api/'))
+      return;
 
     // Browser CSRF defenses: SameSite=Strict session cookie (auth.ts), required
     // non-simple request header, exact Origin, and Fetch Metadata validation.

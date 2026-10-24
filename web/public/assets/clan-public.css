@@ -593,9 +593,15 @@ p {
 }
 
 /* Visually align the opaque artwork (which has transparent top padding) with the title. */
-.guest-intro { align-items: flex-start; }
-.guest-emblem-wrap { align-self: flex-start; }
-.guest-emblem-wrap img { transform: translateY(-16px); }
+.guest-intro {
+  align-items: flex-start;
+}
+.guest-emblem-wrap {
+  align-self: flex-start;
+}
+.guest-emblem-wrap img {
+  transform: translateY(-16px);
+}
 
 /* A secondary contact action: inviting but quieter than the clan identity. */
 .guest-identity-actions .guest-contact-link {
@@ -624,7 +630,9 @@ p {
   font-size: 16px;
 }
 @media (max-width: 650px) {
-  .guest-emblem-wrap img { transform: translateY(-11px); }
+  .guest-emblem-wrap img {
+    transform: translateY(-11px);
+  }
   .guest-identity-actions .guest-contact-link {
     min-height: 35px;
     font-size: 12px;
