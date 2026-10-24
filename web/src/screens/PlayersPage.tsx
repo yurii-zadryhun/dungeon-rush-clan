@@ -1,7 +1,7 @@
 import React from 'react';
 import { Activity, ArrowUpRight, Search, ShieldCheck, UserRound, Users } from 'lucide-react';
 import { api, shortNumber, type Account, type Dashboard, type Player } from '../api';
-import { nChoice, useI18n } from '../i18n';
+import { useI18n } from '../i18n';
 const UsersScreen = React.lazy(() => import('./UsersScreen').then((m) => ({ default: m.UsersScreen })));
 import './PlayersPage.css';
 
@@ -40,7 +40,7 @@ export function PlayersPage({
   onMerged: (data: Dashboard) => void;
   initialAccess?: boolean;
 }) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const isStaff = account.role !== 'member';
   const [tab, setTab] = React.useState<'roster' | 'access'>(
     initialAccess && isStaff ? 'access' : 'roster',
@@ -100,9 +100,6 @@ export function PlayersPage({
       return (bScore?.score ?? 0) - (aScore?.score ?? 0) || a.name.localeCompare(b.name);
     });
   const activeCount = members.filter((player) => player.active).length;
-  const linkedCount = members.filter(
-    (player) => player.active && player.hasAccount && player.accountActive,
-  ).length;
   const matchingUnlinked =
     isStaff && membership !== 'left' && registration !== 'unregistered'
       ? standaloneAccounts.filter(
@@ -126,30 +123,9 @@ export function PlayersPage({
           </h1>
           <p className="muted">{t('playersDirectoryHelp')}</p>
         </div>
-        <div className="players-overview">
-          <span>
-            <b>{activeCount}</b>
-            {nChoice(
-              locale,
-              activeCount,
-              t('activeCountOne'),
-              t('activeCountFew'),
-              t('activeCountMany'),
-            )}
-          </span>
-          <span>
-            <b>{accountsTotal ?? linkedCount}</b>
-            {accountsTotal === null
-              ? t('registeredPlayers')
-              : nChoice(
-                  locale,
-                  accountsTotal,
-                  t('accountCountOne'),
-                  t('accountCountFew'),
-                  t('accountCountMany'),
-                )}
-          </span>
-          {isStaff && (
+      </header>
+
+      {isStaff && (
             <span>
               <b>{linkedCount}</b>
               {nChoice(
@@ -172,7 +148,9 @@ export function PlayersPage({
             className={tab === 'roster' ? 'selected' : ''}
             onClick={() => setTab('roster')}
           >
-            <Users size={16} /> {t('clanRoster')}
+            <Users size={16} />
+            <span>{t('clanRoster')}</span>
+            <small className="players-tab-count">{activeCount}</small>
           </button>
           <button
             role="tab"
@@ -180,7 +158,9 @@ export function PlayersPage({
             className={tab === 'access' ? 'selected' : ''}
             onClick={() => setTab('access')}
           >
-            <UserRound size={16} /> {t('accountsAndInvites')}
+            <UserRound size={16} />
+            <span>{t('accounts')}</span>
+            <small className="players-tab-count">{accountsTotal ?? '—'}</small>
           </button>
         </div>
       )}
@@ -253,12 +233,24 @@ export function PlayersPage({
               <div className="players-result-count">
                 {t('matchingPlayers', { count: visible.length })}
               </div>
-              {visible.length === 0 && <p className="empty">{t('noMatchingPlayers')}</p>}
-              <div className="players-directory-list">
-                {visible.map((player) => (
-                  <DirectoryRow key={player.id} player={player} stat={stats.get(player.id)} />
-                ))}
-              </div>
+              {visible.length === 0 && matchingUnlinked.length === 0 && (
+                <p className="empty">{t('noMatchingPlayers')}</p>
+              )}
+              {visible.length > 0 && (
+                <div className="players-table" role="table" aria-label={t('clanRoster')}>
+                  <div className="players-column-head" role="row">
+                    <span role="columnheader">{t('playerColumn')}</span>
+                    <span role="columnheader" title={t('calculatedScore')}>{t('scoreColumn')}</span>
+                    <span role="columnheader" title={t('latestPoints')}>{t('lastWarColumn')}</span>
+                    <span role="columnheader" title={t('weeksParticipated')}>{t('warsColumn')}</span>
+                  </div>
+                  <div className="players-directory-list" role="rowgroup">
+                    {visible.map((player) => (
+                      <DirectoryRow key={player.id} player={player} stat={stats.get(player.id)} />
+                    ))}
+                  </div>
+                </div>
+              )}
               {matchingUnlinked.length > 0 && (
                 <div className="players-unlinked">
                   <h2>
@@ -293,8 +285,8 @@ export function PlayersPage({
 function DirectoryRow({ player, stat }: { player: DirectoryPlayer; stat?: Player }) {
   const { t } = useI18n();
   return (
-    <div className={'directory-player' + (!player.active ? ' inactive' : '')}>
-      <div className="directory-player-main">
+    <div className={'directory-player' + (!player.active ? ' inactive' : '')} role="row">
+      <div className="directory-player-main" role="cell">
         <a href={'#/players/' + player.id} className="directory-player-name">
           {player.name} <ArrowUpRight size={15} />
         </a>
@@ -329,27 +321,22 @@ function DirectoryRow({ player, stat }: { player: DirectoryPlayer; stat?: Player
             </span>
           )}
           {player.attention && <span className="directory-flag caution">{t('health_attention')}</span>}
+          {stat?.belowRequirement && player.active && (
+            <span className="directory-player-low" title={t('underMinimum')} aria-label={t('underMinimum')}>
+              <Activity size={14} />
+            </span>
+          )}
         </div>
       </div>
-      <div className="directory-player-metrics">
-        <span>
-          <strong>{shortNumber(stat?.score ?? 0)}</strong>
-          <small>{t('calculatedScore')}</small>
-        </span>
-        <span>
-          <strong>{stat?.lastPoints == null ? '—' : shortNumber(stat.lastPoints)}</strong>
-          <small>{t('latestPoints')}</small>
-        </span>
-        <span>
-          <strong>{player.weeks.length}</strong>
-          <small>{t('weeksParticipated')}</small>
-        </span>
-      </div>
-      {stat?.belowRequirement && player.active && (
-        <span className="directory-player-low" title={t('underMinimum')}>
-          <Activity size={15} />
-        </span>
-      )}
+      <strong className="directory-player-value" role="cell" title={t('calculatedScore')}>
+        {stat ? shortNumber(stat.score) : '—'}
+      </strong>
+      <strong className="directory-player-value" role="cell" title={t('latestPoints')}>
+        {stat?.lastPoints == null ? '—' : shortNumber(stat.lastPoints)}
+      </strong>
+      <span className="directory-player-wars" role="cell" title={t('weeksParticipated')}>
+        {player.weeks.length}
+      </span>
     </div>
   );
 }
