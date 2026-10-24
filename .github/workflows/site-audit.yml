@@ -15,6 +15,23 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Verify public SEO responses and zero-JavaScript route
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --max-time 20 https://clan.dungeon-rush.webestit.com/clan -o /tmp/clan-seo.html
+          grep -q 'rel="canonical"' /tmp/clan-seo.html
+          grep -q 'application/ld+json' /tmp/clan-seo.html
+          grep -q 'hreflang="uk"' /tmp/clan-seo.html
+          grep -q 'hreflang="en"' /tmp/clan-seo.html
+          grep -q '/assets/clan-public.css' /tmp/clan-seo.html
+          if grep -Eq '<script[^>]+type="module"' /tmp/clan-seo.html; then
+            echo "Unexpected JavaScript module on the public page"
+            exit 1
+          fi
+          curl -fsS --max-time 20 -o /dev/null https://clan.dungeon-rush.webestit.com/assets/clan-public.css
+          curl -fsS --max-time 20 -o /dev/null https://clan.dungeon-rush.webestit.com/assets/og-clan.jpg
+          curl -fsSL --max-time 20 https://clan.dungeon-rush.webestit.com/ | grep -q 'noindex,nofollow'
       - name: Run real Lighthouse audits against production
         shell: bash
         run: |
