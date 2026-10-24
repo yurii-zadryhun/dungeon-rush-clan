@@ -2113,3 +2113,11 @@ b {
 .auth-public-link:hover {
   color: #fff;
 }
+
+.clan-widget-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 38px;
+}

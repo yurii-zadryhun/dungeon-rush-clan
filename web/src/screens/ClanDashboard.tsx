@@ -308,10 +308,10 @@ function ClanOverview({ data }: { data: Dashboard }) {
   const { t } = useI18n();
   return (
     <section className="panel clan-widget">
-      <div className="eyebrow">
-        <Swords size={15} /> {t('clanOverview')}
-      </div>
-      <div className="clan-heading-line">
+      <div className="clan-widget-header">
+        <div className="eyebrow">
+          <Swords size={15} /> {t('clanOverview')}
+        </div>
         <ClanSocialLinks
           telegramUrl={data.rankings.settings.telegramUrl}
           discordUrl={data.rankings.settings.discordUrl}
