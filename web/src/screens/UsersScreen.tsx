@@ -1,9 +1,8 @@
 import React from 'react';
 import { Copy, Link2, Pencil, Trash2, UserPlus, Users, X } from 'lucide-react';
-import { api, json, type Account, type Role } from '../api';
+import { api, json, type Account, type Dashboard, type Role } from '../api';
 import { useI18n } from '../i18n';
 import { MergePlayers } from './MergePlayers';
-import type { Dashboard } from '../api';
 
 interface ManagedAccount {
   id: number;
@@ -181,6 +180,80 @@ export function UsersScreen({
         </div>
       )}
       <div className="users-layout">
+        <div className="users-lists">
+          <section className="panel access-panel">
+            <h2>
+              {t('accounts')} <span className="chip">{data?.accounts.length ?? '—'}</span>
+            </h2>
+            {!data && <p className="muted">{t('loading')}</p>}
+            <div className="accounts-list">
+              {data?.accounts.map((person) => (
+                <div className={'account-row' + (!person.active ? ' inactive' : '')} key={person.id}>
+                  <div>
+                    <strong>{person.display_name}</strong>
+                    <small>
+                      {roleLabel(person.role)} {!person.active && '· ' + t('revoked')}
+                    </small>
+                  </div>
+                  {person.id !== account.id && (owner || person.role === 'member') && (
+                    <div className="user-actions">
+                      <button
+                        className="icon-button"
+                        aria-label={t('editUser')}
+                        title={t('editUser')}
+                        disabled={busy}
+                        onClick={() => openEditor(person)}
+                      >
+                        <Pencil size={17} />
+                      </button>
+                      <button
+                        className="icon-button danger"
+                        aria-label={t('deleteUser')}
+                        title={t('deleteUser')}
+                        disabled={busy}
+                        onClick={() => deleteAccount(person)}
+                      >
+                        <Trash2 size={17} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+          <section className="panel access-panel">
+            <h2>
+              {t('pendingInvites')} <span className="chip">{data ? pending.length : '—'}</span>
+            </h2>
+            <div className="accounts-list">
+              {data && pending.length === 0 && <p className="empty">{t('noPendingInvites')}</p>}
+              {pending.map((invite) => (
+                <div className="account-row" key={invite.id}>
+                  <div>
+                    <strong>{invite.label}</strong>
+                    <small>
+                      {roleLabel(invite.role)} ·{' '}
+                      {t('expires', {
+                        date: new Date(invite.expires_at).toLocaleDateString(locale),
+                      })}
+                    </small>
+                  </div>
+                  {(owner || (invite.role === 'member' && invite.created_by === account.id)) && (
+                    <button
+                      className="icon-button danger"
+                      disabled={busy}
+                      aria-label={t('revokeInvite')}
+                      onClick={() => revokeInvite(invite)}
+                    >
+                      <X size={18} />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
         <section className="panel access-panel">
           <h2>
             <UserPlus size={19} /> {t('newUserInvite')}
@@ -265,79 +338,6 @@ export function UsersScreen({
           )}
         </section>
 
-        <div className="users-lists">
-          <section className="panel access-panel">
-            <h2>
-              {t('accounts')} <span className="chip">{data?.accounts.length ?? '—'}</span>
-            </h2>
-            {!data && <p className="muted">{t('loading')}</p>}
-            <div className="accounts-list">
-              {data?.accounts.map((person) => (
-                <div className={'account-row' + (!person.active ? ' inactive' : '')} key={person.id}>
-                  <div>
-                    <strong>{person.display_name}</strong>
-                    <small>
-                      {roleLabel(person.role)} {!person.active && '· ' + t('revoked')}
-                    </small>
-                  </div>
-                  {person.id !== account.id && (owner || person.role === 'member') && (
-                    <div className="user-actions">
-                      <button
-                        className="icon-button"
-                        aria-label={t('editUser')}
-                        title={t('editUser')}
-                        disabled={busy}
-                        onClick={() => openEditor(person)}
-                      >
-                        <Pencil size={17} />
-                      </button>
-                      <button
-                        className="icon-button danger"
-                        aria-label={t('deleteUser')}
-                        title={t('deleteUser')}
-                        disabled={busy}
-                        onClick={() => deleteAccount(person)}
-                      >
-                        <Trash2 size={17} />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </section>
-          <section className="panel access-panel">
-            <h2>
-              {t('pendingInvites')} <span className="chip">{data ? pending.length : '—'}</span>
-            </h2>
-            <div className="accounts-list">
-              {data && pending.length === 0 && <p className="empty">{t('noPendingInvites')}</p>}
-              {pending.map((invite) => (
-                <div className="account-row" key={invite.id}>
-                  <div>
-                    <strong>{invite.label}</strong>
-                    <small>
-                      {roleLabel(invite.role)} ·{' '}
-                      {t('expires', {
-                        date: new Date(invite.expires_at).toLocaleDateString(locale),
-                      })}
-                    </small>
-                  </div>
-                  {(owner || (invite.role === 'member' && invite.created_by === account.id)) && (
-                    <button
-                      className="icon-button danger"
-                      disabled={busy}
-                      aria-label={t('revokeInvite')}
-                      onClick={() => revokeInvite(invite)}
-                    >
-                      <X size={18} />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </section>
-        </div>
         <MergePlayers onMerged={onMerged} />
       </div>
       {editing && (

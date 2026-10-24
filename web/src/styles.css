@@ -1812,7 +1812,7 @@ b {
 }
 .users-layout {
   display: grid;
-  grid-template-columns: minmax(290px, 0.9fr) minmax(320px, 1.1fr);
+  grid-template-columns: minmax(320px, 1.1fr) minmax(290px, 0.9fr);
   gap: 18px;
   align-items: start;
 }
@@ -2069,3 +2069,14 @@ b {
   .leaderboard-tabs { width: 100%; }
   .leaderboard-tabs button { flex: 1; }
 }
+
+/* Authentication styles must live in the entry stylesheet, not in lazy Players CSS. */
+.auth-public-link {
+  display: inline-flex;
+  margin: 0 0 15px;
+  text-decoration: none;
+  color: #9bd4fc;
+  font-size: 12px;
+  font-weight: 800;
+}
+.auth-public-link:hover { color: #fff; }

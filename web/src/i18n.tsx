@@ -4,6 +4,10 @@ import { initialLocale, rememberLocale, type Locale } from './locale';
 export type { Locale } from './locale';
 
 const en = {
+  playerColumn: 'Player',
+  scoreColumn: 'Calculated',
+  lastWarColumn: 'Last war',
+  warsColumn: 'Wars',
   rankingsTitle: 'Player rankings',
   allTimeTab: 'All-time',
   latestTab: 'Last war',
@@ -315,6 +319,10 @@ const en = {
 
 type MessageKey = keyof typeof en;
 const uk: Record<MessageKey, string> = {
+  playerColumn: 'Гравець',
+  scoreColumn: 'Рейтинг',
+  lastWarColumn: 'Остання',
+  warsColumn: 'Війн',
   rankingsTitle: 'Рейтинг гравців',
   allTimeTab: 'За весь час',
   latestTab: 'Остання війна',
