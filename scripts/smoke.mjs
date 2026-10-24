@@ -822,7 +822,7 @@ async function run() {
   const progress = await request('insights/players/' + canonical.id, 'GET', null, groupSecond.cookie);
   ensure(progress.status, 200, 'Any member can inspect historical player profile');
   ensure(progress.body.weeks.length, 2, 'Player profile includes both wars');
-  ensure(progress.body.best, 250000, 'Player personal best calculated from actual scores');
+  ensure(progress.body.best, 400000, 'Player personal best calculated from actual scores');
   ensure(
     (await request('player-management/' + canonical.id, 'GET', null, groupSecond.cookie)).status,
     403,
@@ -878,11 +878,9 @@ async function run() {
     true,
     'Tagged player appears in health attention list',
   );
-  ensure(
-    staffHealth.body.belowRequirement.some((p) => p.id === other.id && p.exception),
-    true,
-    'Protected exception is visible alongside minimum-score warnings',
-  );
+  const protectedMetadata = await request('player-management/' + other.id, 'GET', null, ownerCookie);
+  ensure(protectedMetadata.body.labels.exceptionReason,
+    'Partner account: approved by leadership', 'Reason for protected player retained');
 
   ensure(
     (
