@@ -112,8 +112,29 @@ async function run() {
   );
   ensure(publicBeforeEnrollment.body.name, 'Ukrainians', 'Public clan name');
   ensure(publicBeforeEnrollment.body.leader, '—', 'Uninitialized clan has no leader');
-  const guestHtml = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan');
+  const guestHtml = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/public');
   ensure(guestHtml.status, 200, 'Public clan HTML is server-rendered');
+  const oldPublicLink = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan', {
+    redirect: 'manual',
+  });
+  ensure(oldPublicLink.status, 308, 'Old clan URL redirects');
+  ensure(oldPublicLink.headers.get('location'), '/public', 'Old clan links point to new URL');
+  const loginHtml = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/login');
+  ensure(loginHtml.status, 200, 'Login has a clean server-served URL');
+  assert.match(await loginHtml.text(), /noindex,nofollow/, 'Login remains noindex');
+  for (const path of ['about', 'privacy', 'terms']) {
+    for (const locale of ['en', 'uk']) {
+      const legal = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/' + path + '/' + locale);
+      ensure(legal.status, 200, 'Bilingual legal page ' + path + '/' + locale);
+      const body = await legal.text();
+      assert.match(body, new RegExp('rel="canonical" href="https://clan\\.example\\.com/' + path + '/' + locale + '"'),
+        'Legal page uses self-canonical URL');
+      assert.match(body, new RegExp('<html lang="' + locale + '"'), 'Correct legal language');
+      assert.doesNotMatch(body, /<script type="module"/, 'Legal page never loads the private React app');
+    }
+  }
+  assert.match(await (await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/terms/en')).text(),
+    /Never enter your Dungeon Rush game password/, 'Website-specific password notice');
   assert.match(
     guestHtml.headers.get('content-security-policy') || '',
     /frame-ancestors 'none'/,
@@ -129,7 +150,7 @@ async function run() {
   assert.match(guestMarkup, /rel="canonical"/, 'Canonical public URL');
   assert.match(
     guestMarkup,
-    /rel="canonical" href="https:\/\/clan\.example\.com\/clan"/,
+    /rel="canonical" href="https:\/\/clan\.example\.com\/public"/,
     'Default public URL must be self-canonical, not a hreflang alternate',
   );
   assert.match(guestMarkup, /class="guest-game">Dungeon Rush<\/p>/, 'Game is a subtitle');
@@ -154,32 +175,32 @@ async function run() {
   );
   assert.match(guestMarkup, /\/assets\/clan-public\.css/, 'Small standalone guest stylesheet');
   assert.match(guestMarkup, /hreflang="uk"/, 'Ukrainian alternate language declared');
-  const englishGuest = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan/en');
+  const englishGuest = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/public/en');
   assert.match(await englishGuest.text(), /<html lang="en">/, 'English page served without JavaScript');
   const englishHtml = await (
-    await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan/en')
+    await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/public/en')
   ).text();
   assert.match(
     englishHtml,
-    /rel="canonical" href="https:\/\/clan\.example\.com\/clan\/en"/,
+    /rel="canonical" href="https:\/\/clan\.example\.com\/public\/en"/,
     'English page canonical matches its own language',
   );
 
-  const ukrainianGuest = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan/uk');
+  const ukrainianGuest = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/public/uk');
   assert.match(
     await ukrainianGuest.text(),
     /<html lang="uk">/,
     'Ukrainian page served without JavaScript',
   );
   const ukrainianHtml = await (
-    await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan/uk')
+    await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/public/uk')
   ).text();
   assert.match(
     ukrainianHtml,
-    /rel="canonical" href="https:\/\/clan\.example\.com\/clan\/uk"/,
+    /rel="canonical" href="https:\/\/clan\.example\.com\/public\/uk"/,
     'Ukrainian page canonical matches its own language',
   );
-  const browserGuest = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan', {
+  const browserGuest = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/public', {
     headers: { 'Accept-Language': 'en-GB,en;q=0.8,uk;q=0.2' },
   });
   assert.match(
@@ -195,7 +216,7 @@ async function run() {
   const robots = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/robots.txt');
   assert.match(await robots.text(), /Disallow: \/api\//, 'API excluded from crawl');
   const sitemap = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/sitemap.xml');
-  assert.match(await sitemap.text(), /clan<\/loc>/, 'Only public clan in sitemap');
+  assert.match(await sitemap.text(), /clan<\/loc>/, 'Public clan appears in sitemap');
   const privateHtml = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/');
   assert.match(await privateHtml.text(), /noindex,nofollow/, 'Private sign-in is noindex');
   ensure(
@@ -226,6 +247,12 @@ async function run() {
   const ownerSession = await request('auth/session-state', 'GET', null, ownerCookie);
   ensure(ownerSession.status, 200, 'Valid cookie restores via single request');
   ensure(ownerSession.body.account.role, 'owner', 'Session status returns only signed-in account');
+  ensure(
+    (await request('auth/me', 'DELETE', { password: 'testing-password-1234', confirmation: 'DELETE' },
+      ownerCookie)).status,
+    403,
+    'The only owner cannot self-delete',
+  );
   ensure(ownerSession.body.initialized, true, 'Existing session confirms setup');
   const aiStatus = await request('wiki-ai/status', 'GET', null, ownerCookie);
   ensure(aiStatus.status, 200, 'AI status available to members');
@@ -313,7 +340,7 @@ async function run() {
     'Insecure Discord URL rejected',
   );
   const configuredPublicPage = await fetch(
-    'http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan/en',
+    'http://127.0.0.1:' + (process.env.PORT || 3128) + '/public/en',
   );
   assert.match(
     await configuredPublicPage.text(),
@@ -321,7 +348,7 @@ async function run() {
     'Public contact link is rendered in the searchable HTML',
   );
   const contactMarkup = await (
-    await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/clan/en')
+    await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/public/en')
   ).text();
   assert.match(contactMarkup, /Get in touch/, 'Public contact uses inviting English copy');
   assert.doesNotMatch(contactMarkup, />Leader:\s*</, 'No redundant Leader label');
@@ -467,7 +494,7 @@ async function run() {
     ownerCookie,
   );
   ensure(ownerInvitation.status, 201, 'Owner can invite another owner');
-  const ownerToken = new URL(ownerInvitation.body.url).searchParams.get('invite');
+  const ownerToken = new URL(ownerInvitation.body.url).pathname.split('/').pop();
   const secondOwner = await request('auth/invite/' + ownerToken + '/register', 'POST', {
     username: 'SecondOwner',
     password: 'second-owner-password-1234',
@@ -485,7 +512,7 @@ async function run() {
     ownerCookie,
   );
   ensure(adminInvitation.status, 201, 'Owner can invite admin');
-  const adminToken = new URL(adminInvitation.body.url).searchParams.get('invite');
+  const adminToken = new URL(adminInvitation.body.url).pathname.split('/').pop();
   const administrator = await request('auth/invite/' + adminToken + '/register', 'POST', {
     username: 'TrustedAdmin',
     password: 'trusted-admin-password-1234',
@@ -526,9 +553,12 @@ async function run() {
     ownerCookie,
   );
   ensure(invitation.status, 201, 'Owner can invite');
-  const inviteToken = new URL(invitation.body.url).searchParams.get('invite');
+  const inviteToken = new URL(invitation.body.url).pathname.split('/').pop();
   const info = await request('auth/invite/' + inviteToken);
   ensure(info.body.label, 'Guest', 'Invitation display name');
+  const invitePage = await fetch('http://127.0.0.1:' + (process.env.PORT || 3128) + '/invite/' + inviteToken);
+  ensure(invitePage.status, 200, 'New invitation URLs return the registration application');
+  assert.match(await invitePage.text(), /noindex,nofollow/, 'Invitation tokens are never indexed');
   const member = await request('auth/invite/' + inviteToken + '/register', 'POST', {
     username: 'guest',
     password: 'guest-password-1234',
@@ -671,7 +701,7 @@ async function run() {
   // One reusable group link serves multiple independent Member registrations.
   const shared = await request('auth/shared-invite', 'POST', {}, ownerCookie);
   ensure(shared.status, 201, 'Owner can issue group invite');
-  const groupToken = new URL(shared.body.url).searchParams.get('invite');
+  const groupToken = new URL(shared.body.url).pathname.split('/').pop();
   ensure(
     (await request('auth/invite/' + groupToken)).body.shared,
     true,
@@ -1327,6 +1357,34 @@ async function run() {
     200,
     'Leadership can remove obsolete note',
   );
+
+
+  // A member can delete their own site account without destroying historical scores.
+  const archiveBeforeDeletion = (await request('dashboard', 'GET', null, ownerCookie)).body;
+  ensure((await request('auth/me', 'DELETE', {
+    password: 'incorrect', confirmation: 'DELETE',
+  }, groupFirst.cookie)).status, 401, 'Account deletion requires the actual password');
+  ensure((await request('auth/me', 'DELETE', {
+    password: 'newperson-password-1234', confirmation: 'WRONG',
+  }, groupFirst.cookie)).status, 400, 'Account deletion requires explicit confirmation');
+  const removedAccount = await request('auth/me', 'DELETE', {
+    password: 'newperson-password-1234', confirmation: 'DELETE',
+  }, groupFirst.cookie);
+  ensure(removedAccount.status, 200, 'Player can delete their own website account');
+  ensure((await request('auth/session-state', 'GET', null, groupFirst.cookie)).body.account,
+    null, 'Deleted account sessions no longer authenticate');
+  ensure((await request('auth/login', 'POST', {
+    username: 'NewPerson', password: 'newperson-password-1234',
+  })).status, 401, 'Deleted password can no longer sign in');
+  const archiveAfterDeletion = (await request('dashboard', 'GET', null, ownerCookie)).body;
+  assert.deepEqual(archiveAfterDeletion.rankings.calculated, archiveBeforeDeletion.rankings.calculated,
+    'Historic calculated scores remain unchanged after account deletion');
+  assert.deepEqual(archiveAfterDeletion.record, archiveBeforeDeletion.record,
+    'Win/loss history survives account deletion');
+  const deletedPlayer = (await request('players', 'GET', null, ownerCookie)).body.find(
+    (p) => p.id === groupFirst.body.playerId,
+  );
+  assert.equal(deletedPlayer.hasAccount, false, 'Historic player is no longer linked to deleted account');
 
   console.log('Production integration smoke tests passed');
 }

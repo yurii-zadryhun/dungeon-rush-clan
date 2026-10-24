@@ -20,7 +20,7 @@ jobs:
         run: |
           set -uo pipefail
           curl -sS -L --max-time 20 -w 'Public HTML HTTP: %{http_code}\n' \
-            https://clan.dungeon-rush.webestit.com/clan -o /tmp/clan-seo.html
+            https://clan.dungeon-rush.webestit.com/public -o /tmp/clan-seo.html
           echo "HTML first 1500 bytes:"
           head -c 1500 /tmp/clan-seo.html || true
           echo ""
@@ -48,7 +48,7 @@ jobs:
           set -euo pipefail
           mkdir -p audit
           for page in sign-in clan; do
-            if [ "$page" = clan ]; then url="https://clan.dungeon-rush.webestit.com/clan"; else url="https://clan.dungeon-rush.webestit.com/"; fi
+            if [ "$page" = clan ]; then url="https://clan.dungeon-rush.webestit.com/public"; else url="https://clan.dungeon-rush.webestit.com/"; fi
             for device in mobile desktop; do
               echo "::group::Lighthouse $page / $device"
               options=()
@@ -66,7 +66,7 @@ jobs:
         shell: bash
         run: |
           for page in sign-in clan; do
-            if [ "$page" = clan ]; then url="https://clan.dungeon-rush.webestit.com/clan"; else url="https://clan.dungeon-rush.webestit.com/"; fi
+            if [ "$page" = clan ]; then url="https://clan.dungeon-rush.webestit.com/public"; else url="https://clan.dungeon-rush.webestit.com/"; fi
             for device in mobile desktop; do
               echo "::group::PageSpeed Insights $page / $device"
               curl -sSL -G --max-time 100 --retry 1                 --data-urlencode "url=$url" --data "strategy=$device"                 "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"                 -o "audit/psi-$page-$device.json" -w "HTTP %{http_code}\n" || true
