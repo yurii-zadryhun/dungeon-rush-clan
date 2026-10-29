@@ -1477,6 +1477,82 @@ async function run() {
   ensure(cleansed.body.labels.discord, false, 'Discord flag erased with linked account');
   ensure(cleansed.body.notes.length, 0, 'Private management notes about account erased');
 
+  // A complete member roster has its own power history, independent of war rankings.
+  const noRosterYet = await request('clan-roster/timeline', 'GET', null, ownerCookie);
+  ensure(noRosterYet.status, 200, 'Roster chart accessible to signed-in members');
+  assert.deepEqual(noRosterYet.body, [], 'No fabricated pre-import power values');
+  const captured1 = new Date(Date.now() - 90 * 60_000).toISOString();
+  const captured2 = new Date(Date.now() - 30 * 60_000).toISOString();
+  const makeRoster = (capturedAt, players, reportedMembers = players.length) => ({
+    capturedAt,
+    reportedMembers,
+    reportedPowerText: '2.06q',
+    screenshotCount: 2,
+    players,
+  });
+  const firstMembers = [
+    { name: 'FreshNick', playerId: newcomer.id, powerText: '1.50q' },
+    { name: 'RosterOnly', powerText: '558.37T' },
+  ];
+  ensure((await request('clan-roster/confirm', 'POST',
+    makeRoster(captured1, firstMembers, 3), ownerCookie)).status,
+    400, 'Incomplete roster cannot mark anyone as having left');
+  ensure((await request('clan-roster/confirm', 'POST',
+    makeRoster(captured1, firstMembers), groupSecond.cookie)).status,
+    403, 'Member cannot import/overwrite the roster');
+  const savedRoster = await request('clan-roster/confirm', 'POST',
+    makeRoster(captured1, firstMembers), ownerCookie);
+  ensure(savedRoster.status, 201, 'Complete roster import is accepted');
+  const latestRoster = await request('clan-roster/latest', 'GET', null, ownerCookie);
+  ensure(latestRoster.body.entries.length, 2, 'All observed players saved with power');
+  const rosterOnly = latestRoster.body.entries.find((player) => player.name === 'RosterOnly');
+  assert.ok(rosterOnly && rosterOnly.powerText === '558.37T', 'Player with no war appears in roster');
+  const rosterNoWar = await request('insights/players/' + rosterOnly.id,
+    'GET', null, ownerCookie);
+  ensure(rosterNoWar.status, 200, 'Player without war scores has a working profile');
+  ensure(rosterNoWar.body.weeks.length, 0, 'No fabricated war scores');
+  ensure(rosterNoWar.body.belowRequirement, false,
+    'Player with no war scores is not automatically a requirement violator');
+  ensure(rosterNoWar.body.powerHistory.length, 1, 'First player power observation is retained');
+  const activeRosterOnly = (await request('players', 'GET', null, ownerCookie)).body.find(
+    (player) => player.id === rosterOnly.id,
+  );
+  ensure(activeRosterOnly.active, true, 'Roster-only newcomer is active');
+
+  const secondMembers = [
+    { name: 'RosterOnly', playerId: rosterOnly.id, powerText: '600.00T' },
+    { name: 'Replacement', powerText: '1.46q' },
+  ];
+  const secondRoster = await request('clan-roster/confirm', 'POST',
+    makeRoster(captured2, secondMembers), ownerCookie);
+  ensure(secondRoster.status, 201, 'Second full roster snapshot is saved');
+  const movement = await request('clan-roster/timeline', 'GET', null, ownerCookie);
+  ensure(movement.body.length, 2, 'Both immutable snapshots available');
+  ensure(movement.body[0].joined, null, 'First import is a baseline, not a mass join');
+  ensure(movement.body[1].joined, 1, 'New player detected by roster comparison');
+  ensure(movement.body[1].left, 1, 'Departed player detected by roster comparison');
+  const powerChanges = await request('clan-roster/players/' + rosterOnly.id,
+    'GET', null, groupSecond.cookie);
+  ensure(powerChanges.body.length, 2, 'Member can inspect strength progression');
+  ensure(powerChanges.body[1].powerText, '600.00T', 'New strength value saved correctly');
+  const departures = (await request('players', 'GET', null, ownerCookie)).body;
+  ensure(departures.find((player) => player.id === newcomer.id).active,
+    false, 'Latest complete roster marks departed member inactive');
+  ensure(departures.find((player) => player.id === rosterOnly.id).active,
+    true, 'Present member remains active despite no war participation');
+  const healthAfterRoster = await request('insights/health', 'GET', null, ownerCookie);
+  ensure(healthAfterRoster.body.left.some((player) => player.id === newcomer.id),
+    true, 'Clan Health uses latest roster for departures');
+  const weeklyPoints = await request('insights/war-points', 'GET', null, ownerCookie);
+  ensure(weeklyPoints.status, 200, 'War points chart available');
+  assert.ok(weeklyPoints.body.length >= 2, 'Historical war points are graphed');
+  assert.ok(weeklyPoints.body.every((week) => week.playerCount > 0 && week.total >= 0),
+    'War totals count only actual score entries');
+  const privateNotLeaked = await request('public/clan');
+  assert.equal(privateNotLeaked.body.powerHistory, undefined, 'Guest API hides player power history');
+  assert.equal(privateNotLeaked.body.totalPower, undefined, 'Guest API hides clan power');
+  assert.equal(privateNotLeaked.body.recentWars[0]?.power, undefined, 'Guest war data has no power');
+
   console.log('Production integration smoke tests passed');
 }
 
