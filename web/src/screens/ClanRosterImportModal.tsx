@@ -1,5 +1,5 @@
 import React from 'react';
-import { Camera, CheckCircle, Plus, Trash2, UploadCloud, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, Camera, CheckCircle, Plus, Trash2, UploadCloud, X } from 'lucide-react';
 import {
   api,
   json,
@@ -10,7 +10,7 @@ import {
   type Dashboard,
 } from '../api';
 import { useI18n } from '../i18n';
-import { prepareScreenshots } from './image-prep';
+import { prepareScreenshots, type PreparedScreenshots } from './image-prep';
 import { SearchSelect } from './SearchSelect';
 import { matchRosterName } from './roster-match';
 import './ClanRosterImportModal.css';
@@ -62,6 +62,14 @@ export function ClanRosterImportModal({
 }) {
   const { t, locale } = useI18n();
   const [files, setFiles] = React.useState<File[]>([]);
+  const [sourceUrls, setSourceUrls] = React.useState<string[]>([]);
+  const [preparedPreview, setPreparedPreview] = React.useState<{
+    files: File[];
+    result: PreparedScreenshots;
+    urls: string[];
+  } | null>(null);
+  const [previewError, setPreviewError] = React.useState('');
+
   const [stage, setStage] = React.useState<'upload' | 'review'>('upload');
   const [capturedLocal, setCapturedLocal] = React.useState(captureLocalTime);
   const [rows, setRows] = React.useState<DraftEntry[]>([]);
@@ -74,6 +82,49 @@ export function ClanRosterImportModal({
   const [acknowledge, setAcknowledge] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState('');
+
+  // Preview the actual encoded JPEG mosaics subsequently sent to the OCR API.
+  // A single preparation serves both the preview and the scan; no second crop path.
+  React.useEffect(() => {
+    if (!files.length) {
+      setSourceUrls([]);
+      setPreparedPreview(null);
+      setPreviewError('');
+      return;
+    }
+    let canceled = false;
+    let mosaicUrls: string[] = [];
+    const originals = files.map((file) => URL.createObjectURL(file));
+    setSourceUrls(originals);
+    setPreparedPreview(null);
+    setPreviewError('');
+    void prepareScreenshots(files, 'clan')
+      .then((result) => {
+        if (canceled) return;
+        mosaicUrls = result.parts.map((blob) => URL.createObjectURL(blob));
+        setPreparedPreview({ files, result, urls: mosaicUrls });
+      })
+      .catch((cause: unknown) => {
+        if (!canceled) setPreviewError((cause as Error).message);
+      });
+    return () => {
+      canceled = true;
+      originals.forEach((url) => URL.revokeObjectURL(url));
+      mosaicUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [files]);
+
+  const visiblePreview = preparedPreview?.files === files ? preparedPreview : null;
+
+  function moveScreenshot(index: number, offset: -1 | 1) {
+    setFiles((current) => {
+      const target = index + offset;
+      if (target < 0 || target >= current.length) return current;
+      const reordered = [...current];
+      [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
+      return reordered;
+    });
+  }
 
   const sum = rows.reduce((total, entry) => total + (magnitude(entry.powerText) ?? 0), 0);
   const expectedPower = reportedPower ? magnitude(reportedPower) : null;
@@ -158,14 +209,18 @@ export function ClanRosterImportModal({
       setError(t('clanChooseScreens'));
       return;
     }
+    if (!visiblePreview) {
+      setError(previewError || t('clanPreparingImages'));
+      return;
+    }
     setBusy(true);
     setError('');
     try {
-      const [prepared, known, latest] = await Promise.all([
-        prepareScreenshots(files, 'clan'),
+      const [known, latest] = await Promise.all([
         api<ClanRosterCandidates>('clan-roster/candidates'),
         api<ClanRosterSnapshot | null>('clan-roster/latest'),
       ]);
+      const prepared = visiblePreview.result;
       const form = new FormData();
       form.append('headerHeight', String(prepared.headerHeight));
       prepared.parts.forEach((blob, i) => form.append('mosaic', blob, 'members-' + (i + 1) + '.jpg'));
@@ -265,7 +320,6 @@ export function ClanRosterImportModal({
         <div className="clan-roster-scroll">
           {stage === 'upload' ? (
             <div className="clan-roster-upload">
-              <p className="muted">{t('clanImportHelp')}</p>
               <label className="clan-roster-file">
                 <Camera size={21} />
                 <span>
@@ -278,6 +332,7 @@ export function ClanRosterImportModal({
                   multiple
                   onChange={(event) => {
                     const chosen = Array.from(event.target.files || []);
+                    event.currentTarget.value = '';
                     if (chosen.length > 10) setError(t('clanChooseScreens'));
                     else {
                       setError('');
@@ -287,26 +342,84 @@ export function ClanRosterImportModal({
                 />
               </label>
               {files.length > 0 && (
-                <div className="clan-file-list">
-                  {files.map((file, index) => (
-                    <div className="clan-file-row" key={file.name + index}>
-                      <span>{file.name}</span>
-                      <button
-                        type="button"
-                        aria-label={t('remove') + ': ' + file.name}
-                        onClick={() => setFiles((items) => items.filter((_, i) => i !== index))}
-                      >
-                        <Trash2 size={15} />
-                      </button>
+                <div className="clan-image-selection">
+                  <div className="clan-thumbnail-strip" aria-label={t('clanScreensChosen', { count: files.length })}>
+                    {files.map((file, index) => (
+                      <div className="clan-thumbnail" key={file.name + ':' + file.lastModified + ':' + index}>
+                        <div className="clan-thumbnail-image">
+                          {sourceUrls[index] && (
+                            <img
+                              src={sourceUrls[index]}
+                              alt={t('clanScreenshotNumber', { number: index + 1 })}
+                              loading="lazy"
+                            />
+                          )}
+                          <span>{index + 1}</span>
+                        </div>
+                        <div className="clan-thumbnail-actions">
+                          <button
+                            type="button"
+                            disabled={index === 0}
+                            onClick={() => moveScreenshot(index, -1)}
+                            aria-label={t('moveUp')}
+                            title={t('moveUp')}
+                          >
+                            <ArrowUp size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={index === files.length - 1}
+                            onClick={() => moveScreenshot(index, 1)}
+                            aria-label={t('moveDown')}
+                            title={t('moveDown')}
+                          >
+                            <ArrowDown size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setFiles((current) => current.filter((_, i) => i !== index))}
+                            aria-label={t('remove') + ': ' + (index + 1)}
+                            title={t('remove')}
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {previewError && <p className="error-strip" role="alert">{previewError}</p>}
+                  {!visiblePreview && !previewError && (
+                    <p className="muted" role="status">{t('clanPreparingImages')}</p>
+                  )}
+                  {visiblePreview && (
+                    <div className="clan-mosaic-preview">
+                      <h3>{t('clanImagePreview')}</h3>
+                      <div className="clan-mosaic-grid">
+                        {visiblePreview.urls.map((url, index) => (
+                          <div className="clan-mosaic-part" key={url}>
+                            <div className="clan-mosaic-part-head">
+                              <span>{t('clanPreviewPart', { number: index + 1 })}</span>
+                              <a href={url} target="_blank" rel="noopener noreferrer">
+                                {t('clanEnlargeImage')}
+                              </a>
+                            </div>
+                            <div className="clan-mosaic-viewport">
+                              <img
+                                src={url}
+                                alt={t('clanPreviewPart', { number: index + 1 })}
+                                width={600}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  ))}
+                  )}
                 </div>
               )}
-              <p className="muted tiny">{t('clanFirstScreenHelp')}</p>
             </div>
           ) : (
             <div className="clan-roster-review">
-              <p className="muted">{t('clanReviewHelp')}</p>
               <div className="clan-roster-summary">
                 <label>
                   {t('clanCapturedAt')}
@@ -356,7 +469,7 @@ export function ClanRosterImportModal({
                 </p>
               )}
               {warnings.length > 0 && (
-                <details className="clan-roster-warnings" open>
+                <details className="clan-roster-warnings">
                   <summary>
                     {t('clanWarnings')} ({warnings.length})
                   </summary>
@@ -481,7 +594,7 @@ export function ClanRosterImportModal({
           </button>
           <button
             className="game-button blue"
-            disabled={busy || (stage === 'upload' && !files.length)}
+            disabled={busy || (stage === 'upload' && (!files.length || !visiblePreview))}
             onClick={() => void (stage === 'upload' ? scan() : confirm())}
           >
             <CheckCircle size={16} />{' '}
