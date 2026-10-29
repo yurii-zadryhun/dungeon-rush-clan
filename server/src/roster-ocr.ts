@@ -92,6 +92,7 @@ export function parseRosterScreenshot(
     value.length <= 80 &&
     /[\p{L}_]/u.test(value) &&
     !interfaceLabel.test(value) &&
+    !/^[o0]\s+m(?:e(?:m(?:b(?:e(?:r)?)?)?)?)?$/i.test(value) &&
     !/^\d+\s*[hms]\b/i.test(value);
 
   for (const row of all) {

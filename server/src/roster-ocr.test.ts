@@ -70,6 +70,8 @@ describe('clan power units', () => {
       { text: '9.64q', x: 25, y: 323 },
       { text: 'O Memb', x: 25, y: 380 },
       { text: '1.40q', x: 25, y: 423 },
+      { text: 'O M', x: 25, y: 446 },
+      { text: '1.12q', x: 25, y: 465 },
       { text: 'КРОСТ', x: 25, y: 485 },
       { text: '5.59q', x: 25, y: 530 },
     ];
