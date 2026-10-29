@@ -82,11 +82,18 @@ export function ClanRosterImportModal({
       !entry.name.trim() || magnitude(entry.powerText) === null || entry.name.trim().length > 80,
   );
   const duplicated = new Set(rows.map((entry) => normalizeName(entry.name))).size !== rows.length;
-  const knownNames = new Set(previous?.entries.map((entry) => normalizeName(entry.name)) ?? []);
+  const previousIds = new Set(previous?.entries.map((entry) => entry.id) ?? []);
+  const currentIds = new Set(rows.map((entry) => entry.playerId).filter((id) => id !== null));
+  const previousNames = new Set(previous?.entries.map((entry) => normalizeName(entry.name)) ?? []);
   const currentNames = new Set(rows.map((entry) => normalizeName(entry.name)));
-  const joined = previous ? rows.filter((entry) => !knownNames.has(normalizeName(entry.name))) : [];
+  const joined = previous
+    ? rows.filter((entry) => entry.playerId === null
+      ? !previousNames.has(normalizeName(entry.name))
+      : !previousIds.has(entry.playerId))
+    : [];
   const left = previous
-    ? previous.entries.filter((entry) => !currentNames.has(normalizeName(entry.name)))
+    ? previous.entries.filter((entry) => !currentIds.has(entry.id) &&
+      !currentNames.has(normalizeName(entry.name)))
     : [];
   const differenceHigh = percentDifference !== null && percentDifference > 4;
 
@@ -212,7 +219,11 @@ export function ClanRosterImportModal({
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   multiple
-                  onChange={(event) => setFiles(Array.from(event.target.files || []).slice(0, 10))}
+                  onChange={(event) => {
+                    const chosen = Array.from(event.target.files || []);
+                    if (chosen.length > 10) setError(t('clanChooseScreens'));
+                    else { setError(''); setFiles(chosen); }
+                  }}
                 />
               </label>
               {files.length > 0 && (
