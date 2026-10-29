@@ -85,7 +85,8 @@ export function parseRosterScreenshot(
   // Cropped or partially recognized game roles must never become player identities.
   // In particular, the old client crop cut "Captain" -> "Captai" and "Member"
   // -> "Memb", which previously created dozens of false duplicate players.
-  const interfaceLabel = /^(?:(?:capt(?:a(?:i(?:n)?)?)?)|(?:memb(?:e(?:r(?:s)?)?)?)|(?:lead(?:e(?:r)?)?)|(?:onlin(?:e)?)|(?:offlin(?:e)?)|power|tier|type|open|members|battle|(?:[o0]\s+)?memb?)$/i;
+  const interfaceLabel =
+    /^(?:(?:capt(?:a(?:i(?:n)?)?)?)|(?:memb(?:e(?:r(?:s)?)?)?)|(?:lead(?:e(?:r)?)?)|(?:onlin(?:e)?)|(?:offlin(?:e)?)|power|tier|type|open|members|battle|(?:[o0]\s+)?memb?)$/i;
   const plausibleName = (value: string) =>
     value.length >= 2 &&
     value.length <= 80 &&

@@ -343,9 +343,15 @@ export function ClanRosterImportModal({
               </label>
               {files.length > 0 && (
                 <div className="clan-image-selection">
-                  <div className="clan-thumbnail-strip" aria-label={t('clanScreensChosen', { count: files.length })}>
+                  <div
+                    className="clan-thumbnail-strip"
+                    aria-label={t('clanScreensChosen', { count: files.length })}
+                  >
                     {files.map((file, index) => (
-                      <div className="clan-thumbnail" key={file.name + ':' + file.lastModified + ':' + index}>
+                      <div
+                        className="clan-thumbnail"
+                        key={file.name + ':' + file.lastModified + ':' + index}
+                      >
                         <div className="clan-thumbnail-image">
                           {sourceUrls[index] && (
                             <img
@@ -387,9 +393,15 @@ export function ClanRosterImportModal({
                       </div>
                     ))}
                   </div>
-                  {previewError && <p className="error-strip" role="alert">{previewError}</p>}
+                  {previewError && (
+                    <p className="error-strip" role="alert">
+                      {previewError}
+                    </p>
+                  )}
                   {!visiblePreview && !previewError && (
-                    <p className="muted" role="status">{t('clanPreparingImages')}</p>
+                    <p className="muted" role="status">
+                      {t('clanPreparingImages')}
+                    </p>
                   )}
                   {visiblePreview && (
                     <div className="clan-mosaic-preview">

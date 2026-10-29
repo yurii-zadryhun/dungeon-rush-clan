@@ -74,9 +74,7 @@ describe('clan power units', () => {
       { text: '5.59q', x: 25, y: 530 },
     ];
     const result = parseRosterScreenshot({ raw: '', width: 600, height: 620, words }, 1);
-    expect(result.players).toEqual([
-      { name: 'КРОСТ', power: 5.59e15, powerText: '5.59q', source: 1 },
-    ]);
+    expect(result.players).toEqual([{ name: 'КРОСТ', power: 5.59e15, powerText: '5.59q', source: 1 }]);
   });
 
   it('does not warn about repeated cards from overlapping screenshots', () => {
