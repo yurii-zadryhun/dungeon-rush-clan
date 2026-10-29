@@ -79,15 +79,15 @@ export function parseRosterScreenshot(
   let candidate: { name: string; y: number } | null = null;
   const cleanCandidate = (value: string) =>
     value
-      .replace(/^[^\\p{L}\\p{N}_]+/u, '')
-      .replace(/[^\\p{L}\\p{N}_ .'-]+$/u, '')
+      .replace(/^[^\p{L}\p{N}_]+/u, '')
+      .replace(/[^\p{L}\p{N}_ .'-]+$/u, '')
       .trim();
   const plausibleName = (value: string) =>
     value.length >= 2 &&
     value.length <= 80 &&
-    /[\\p{L}_]/u.test(value) &&
+    /[\p{L}_]/u.test(value) &&
     !/^(?:leader|captain|member|online|offline|power|tier|members?)$/i.test(value) &&
-    !/^\\d+\\s*[hms]\\b/i.test(value);
+    !/^\d+\s*[hms]\b/i.test(value);
 
   for (const row of all) {
     if (row.y <= headerHeight + 5) continue;
