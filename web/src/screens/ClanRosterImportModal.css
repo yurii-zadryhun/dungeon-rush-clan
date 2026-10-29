@@ -238,3 +238,23 @@
     padding: 6px;
   }
 }
+
+/* Self-contained file picker: never depend on the lazy-loaded war editor CSS. */
+.clan-roster-file {
+  display: flex;
+  align-items: center;
+  position: relative;
+  min-height: 72px;
+  gap: 12px;
+  padding: 13px;
+  background: #252427;
+  border: 2px dashed #72645c;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.clan-roster-file:focus-within { border-color: #e8ba55; outline: 2px solid #a78d5b; outline-offset: 2px; }
+.clan-roster-file svg { flex: none; color: #e8ba55; }
+.clan-roster-file span { display: grid; min-width: 0; gap: 4px; }
+.clan-roster-file strong { font-size: 13px; }
+.clan-roster-file small { color: #b8aeb2; font-size: 11px; overflow-wrap: anywhere; }
+.clan-roster-file input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }

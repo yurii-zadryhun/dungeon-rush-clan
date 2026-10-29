@@ -212,7 +212,7 @@ export function ClanRosterImportModal({
           {stage === 'upload' ? (
             <div className="clan-roster-upload">
               <p className="muted">{t('clanImportHelp')}</p>
-              <label className="war-editor-file">
+              <label className="clan-roster-file">
                 <Camera size={21} />
                 <span>
                   <strong>{t('clanSelectScreens')}</strong>
