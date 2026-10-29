@@ -76,35 +76,44 @@ export function parseRosterScreenshot(
   );
   const reportedPowerText = headerPower ? headerPower[1] + headerPower[2] : null;
   const output: RecognizedPower[] = [];
-  let previous = '';
-  let previousY = -Infinity;
+  let candidate: { name: string; y: number } | null = null;
+  const cleanCandidate = (value: string) =>
+    value
+      .replace(/^[^\\p{L}\\p{N}_]+/u, '')
+      .replace(/[^\\p{L}\\p{N}_ .'-]+$/u, '')
+      .trim();
+  const plausibleName = (value: string) =>
+    value.length >= 2 &&
+    value.length <= 80 &&
+    /[\\p{L}_]/u.test(value) &&
+    !/^(?:leader|captain|member|online|offline|power|tier|members?)$/i.test(value) &&
+    !/^\\d+\\s*[hms]\\b/i.test(value);
+
   for (const row of all) {
     if (row.y <= headerHeight + 5) continue;
-    const match = row.text.match(powerMatch);
-    if (match) {
-      const powerText = match[1] + match[2];
-      const power = parsePower(powerText);
-      const candidate = previous.replace(/^[^\p{L}\p{N}_]+/u, '').trim();
-      if (
-        power !== null &&
-        candidate.length >= 2 &&
-        candidate.length <= 80 &&
-        /[\p{L}_]/u.test(candidate) &&
-        row.y - previousY < 125 &&
-        row.y - previousY > 0
-      ) {
-        output.push({ name: candidate, power, powerText, source });
+    const power = row.text.match(powerMatch);
+    if (power) {
+      const powerText = power[1] + power[2];
+      const powerValue = parsePower(powerText);
+      // Vision may put the name on the same line as the power. Otherwise use
+      // the nearest plausible name above it, within one player card.
+      const inline = cleanCandidate(row.text.slice(0, power.index ?? 0));
+      const name =
+        plausibleName(inline) ? inline :
+        candidate && row.y > candidate.y && row.y - candidate.y < 145
+          ? candidate.name
+          : null;
+      if (powerValue !== null && name) {
+        output.push({ name, power: powerValue, powerText, source });
       } else {
         warnings.push('Power without recognized player name near ' + powerText);
       }
-      previous = '';
-      previousY = -Infinity;
+      candidate = null;
       continue;
     }
-    // The screenshots contain only names and power after cropping out roles and UI.
-    if (!row.text || /^[-–—]+$/.test(row.text)) continue;
-    previous = row.text;
-    previousY = row.y;
+    const cleaned = cleanCandidate(row.text);
+    if (!cleaned || /^[-–—]+$/.test(cleaned)) continue;
+    if (plausibleName(cleaned)) candidate = { name: cleaned, y: row.y };
   }
   if (!output.length) warnings.push('No player power rows were recognized. Review the screenshot crop.');
   const duplicate = new Set<string>();
