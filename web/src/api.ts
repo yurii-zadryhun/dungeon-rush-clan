@@ -94,6 +94,7 @@ export interface PlayerProgress {
   requirement: number;
   belowRequirement: boolean;
   weeks: PlayerProgressWeek[];
+  powerHistory: PlayerPowerEntry[];
 }
 export interface WarPointsPoint {
   start: string;

@@ -4,6 +4,10 @@ import { initialLocale, rememberLocale, type Locale } from './locale';
 export type { Locale } from './locale';
 
 const en = {
+  powerHistoryTitle: "Power history",
+  latestPower: "Latest power",
+  powerObservations: "Observations",
+  noPowerHistory: "Import clan rosters to track this player's power.",
   clanGrowthTitle: "Clan strength & membership",
   clanGrowthEmpty: "Import a clan roster to start tracking strength and membership.",
   clanPowerChange: "Change",
@@ -384,6 +388,10 @@ const en = {
 
 type MessageKey = keyof typeof en;
 const uk: Record<MessageKey, string> = {
+  powerHistoryTitle: "Історія сили",
+  latestPower: "Остання сила",
+  powerObservations: "Вимірювань",
+  noPowerHistory: "Імпортуйте склад клану, щоб відстежувати силу цього гравця.",
   clanGrowthTitle: "Сила та склад клану",
   clanGrowthEmpty: "Імпортуйте склад клану, щоб відстежувати силу та учасників.",
   clanPowerChange: "Зміна",
