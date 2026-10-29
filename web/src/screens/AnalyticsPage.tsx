@@ -2,7 +2,7 @@ import React from 'react';
 import { Activity } from 'lucide-react';
 import { type Account } from '../api';
 import { useI18n } from '../i18n';
-import { ClanHealthWidget, DayOutcomesWidget } from './InsightsWidgets';
+import { ClanGrowthWidget, ClanHealthWidget, DayOutcomesWidget, WarPointsWidget } from './InsightsWidgets';
 import './AnalyticsPage.css';
 
 export function AnalyticsPage({ account }: { account: Account }) {
@@ -18,6 +18,8 @@ export function AnalyticsPage({ account }: { account: Account }) {
       <div className="insights-grid">
         {account.role !== 'member' && <ClanHealthWidget />}
         <DayOutcomesWidget />
+        <ClanGrowthWidget />
+        <WarPointsWidget />
       </div>
     </main>
   );

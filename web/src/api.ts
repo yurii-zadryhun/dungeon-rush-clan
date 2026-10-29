@@ -95,6 +95,13 @@ export interface PlayerProgress {
   belowRequirement: boolean;
   weeks: PlayerProgressWeek[];
 }
+export interface WarPointsPoint {
+  start: string;
+  total: number;
+  playerCount: number;
+  average: number;
+}
+
 export interface DayAnalytics {
   completedWars: number;
   days: Array<{

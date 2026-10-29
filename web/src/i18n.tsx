@@ -4,6 +4,18 @@ import { initialLocale, rememberLocale, type Locale } from './locale';
 export type { Locale } from './locale';
 
 const en = {
+  clanGrowthTitle: "Clan strength & membership",
+  clanGrowthEmpty: "Import a clan roster to start tracking strength and membership.",
+  clanPowerChange: "Change",
+  clanPowerTrend: "Clan power",
+  clanSnapshotNote: "Based on {count} roster snapshots. Entry and exit counts are changes between complete snapshots.",
+  warPointsTitle: "War points trend",
+  warPointsEmpty: "Import a completed weekly ranking to see the points trend.",
+  warPointsLast: "Last war total",
+  warPointsAverage: "Average per war",
+  warPointsPerPlayer: "Avg. per player",
+  warPointsDelta: "Change",
+  warPointsPlayers: "Participants",
   clanImportTitle: "Import clan roster",
   clanImportHelp: "Add up to 10 clan member screenshots. We'll crop and combine the member cards before OCR. Check every name and power value before importing.",
   clanSelectScreens: "Clan member screenshots",
@@ -372,6 +384,18 @@ const en = {
 
 type MessageKey = keyof typeof en;
 const uk: Record<MessageKey, string> = {
+  clanGrowthTitle: "Сила та склад клану",
+  clanGrowthEmpty: "Імпортуйте склад клану, щоб відстежувати силу та учасників.",
+  clanPowerChange: "Зміна",
+  clanPowerTrend: "Сила клану",
+  clanSnapshotNote: "На основі {count} знімків складу. Вступи й виходи — різниця між повними списками.",
+  warPointsTitle: "Динаміка очок війн",
+  warPointsEmpty: "Імпортуйте тижневий рейтинг, щоб побачити динаміку очок.",
+  warPointsLast: "Остання війна",
+  warPointsAverage: "У середньому за війну",
+  warPointsPerPlayer: "У середньому на гравця",
+  warPointsDelta: "Зміна",
+  warPointsPlayers: "Учасників",
   clanImportTitle: "Імпорт складу клану",
   clanImportHelp: "Додайте до 10 скриншотів учасників клану. Перед OCR застосунок виріже та об’єднає картки гравців. Перевірте імена й силу перед збереженням.",
   clanSelectScreens: "Скриншоти учасників",

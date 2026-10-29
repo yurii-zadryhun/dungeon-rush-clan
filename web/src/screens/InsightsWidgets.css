@@ -189,3 +189,17 @@
 .insights-grid {
   margin-top: 18px;
 }
+
+.growth-headline { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.growth-headline > div { min-width:0; display:grid; justify-items:center; gap:3px; padding:11px 4px; background:#24232a; border:1px solid #544e5a; border-radius:9px; }
+.growth-headline strong { color:#8be998; font-size:clamp(15px,2.5vw,21px); font-variant-numeric:tabular-nums; }
+.growth-headline strong.negative { color:#f48f91; }
+.growth-headline small { color:#c1b9c4; font-size:10px; text-align:center; }
+.growth-plot { width:100%; min-width:0; }
+.growth-plot svg { display:block; width:100%; height:auto; max-height:270px; }
+.growth-legend { display:flex; flex-wrap:wrap; gap:13px; font-size:11px; color:#c9bfce; }
+.growth-legend span { display:inline-flex; align-items:center; gap:5px; }
+.growth-dot { display:inline-block; width:10px; height:10px; border-radius:50%; }
+.growth-dot.power,.growth-dot.joined { background:#7ee899; }
+.growth-dot.left { background:#ed9094; }
+.growth-dot.power { border:2px solid #d6ffc9; }
