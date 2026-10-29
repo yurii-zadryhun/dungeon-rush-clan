@@ -74,11 +74,12 @@ function toInt(value: string): number | null {
 export function parsePlayers(
   text: VisionText,
   source = 0,
+  prepared = false,
 ): { players: OcrPlayer[]; warnings: string[] } {
   const warnings: string[] = [];
   const players: OcrPlayer[] = [];
   const lines = groupLines(
-    text.words.filter((w) => w.y >= text.height * 0.39 && w.y <= text.height * 0.8),
+    text.words.filter((w) => prepared || (w.y >= text.height * 0.39 && w.y <= text.height * 0.8)),
     Math.max(10, text.height * 0.012),
   );
   for (const row of lines) {
@@ -369,10 +370,10 @@ export class OcrController {
 
   @Post()
   async process(@Req() req: FastifyRequest) {
-    const files: { type: 'ranking' | 'result'; buffer: Buffer }[] = [];
+    const files: { type: 'ranking' | 'rankingMosaic' | 'result'; buffer: Buffer }[] = [];
     for await (const part of (req as any).parts()) {
       if (part.type !== 'file') continue;
-      if (part.fieldname !== 'ranking' && part.fieldname !== 'result')
+      if (!['ranking', 'rankingMosaic', 'result'].includes(part.fieldname))
         throw new BadRequestException('Unexpected image field');
       if (!['image/png', 'image/jpeg', 'image/webp'].includes(part.mimetype))
         throw new BadRequestException('PNG, JPEG or WebP required');
@@ -382,9 +383,11 @@ export class OcrController {
       if (files.length > 11)
         throw new BadRequestException('Maximum 10 ranking screenshots and one result');
     }
-    const rankingImages = files.filter((f) => f.type === 'ranking');
+    const rankingImages = files.filter((f) => f.type === 'ranking' || f.type === 'rankingMosaic');
     const resultImages = files.filter((f) => f.type === 'result');
-    if (rankingImages.length > 10 || resultImages.length > 1 || !files.length)
+    if (rankingImages.length > 10 || resultImages.length > 1 || !files.length ||
+        (rankingImages.some((f) => f.type === 'rankingMosaic') &&
+         rankingImages.some((f) => f.type === 'ranking')))
       throw new BadRequestException('Invalid image count');
     const settings = await this.db.query
       .selectFrom('settings')
@@ -394,7 +397,7 @@ export class OcrController {
     const warnings: string[] = [];
     const players: OcrPlayer[] = [];
     for (const [index, file] of rankingImages.entries()) {
-      const result = parsePlayers(await this.vision.read(file.buffer), index + 1);
+      const result = parsePlayers(await this.vision.read(file.buffer), index + 1, file.type === 'rankingMosaic');
       warnings.push(...result.warnings.map((w) => 'Image ' + (index + 1) + ': ' + w));
       players.push(...result.players);
     }
