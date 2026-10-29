@@ -417,3 +417,7 @@
   color: #c4c6ff;
   background: #3b3b62;
 }
+
+.players-heading { display:flex; align-items:center; justify-content:space-between; gap:11px; flex-wrap:wrap; }
+.clan-import-trigger { display:inline-flex; align-items:center; gap:7px; font-size:12px; white-space:nowrap; }
+@media(max-width:650px) { .clan-import-trigger { width:100%; justify-content:center; } }

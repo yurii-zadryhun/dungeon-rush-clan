@@ -7,10 +7,14 @@ import {
   Send,
   ShieldCheck,
   UserRound,
+  UploadCloud,
   Users,
 } from 'lucide-react';
 import { api, shortNumber, type Account, type Dashboard, type Player } from '../api';
 import { useI18n } from '../i18n';
+const ClanRosterImportModal = React.lazy(() =>
+  import('./ClanRosterImportModal').then((m) => ({ default: m.ClanRosterImportModal })),
+);
 const UsersScreen = React.lazy(() => import('./UsersScreen').then((m) => ({ default: m.UsersScreen })));
 import './PlayersPage.css';
 
@@ -53,6 +57,7 @@ export function PlayersPage({
 }) {
   const { t } = useI18n();
   const isStaff = account.role !== 'member';
+  const [rosterImportOpen, setRosterImportOpen] = React.useState(false);
   const [tab, setTab] = React.useState<'roster' | 'access'>(
     initialAccess && isStaff ? 'access' : 'roster',
   );
@@ -134,6 +139,10 @@ export function PlayersPage({
           </h1>
           <p className="muted">{t('playersDirectoryHelp')}</p>
         </div>
+        {isStaff && <button className="game-button blue clan-import-trigger"
+          onClick={() => setRosterImportOpen(true)}>
+          <UploadCloud size={16} /> {t('clanImportTitle')}
+        </button>}
       </header>
 
       {isStaff && (
@@ -279,6 +288,15 @@ export function PlayersPage({
             </>
           )}
         </section>
+      )}
+      {rosterImportOpen && (
+        <React.Suspense fallback={null}>
+          <ClanRosterImportModal onClose={() => setRosterImportOpen(false)}
+            onDone={(dashboard) => {
+              merged(dashboard);
+              setRosterImportOpen(false);
+            }} />
+        </React.Suspense>
       )}
     </main>
   );

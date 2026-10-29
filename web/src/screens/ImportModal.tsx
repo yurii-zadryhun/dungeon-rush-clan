@@ -120,7 +120,17 @@ export function ImportModal({
     setError('');
     try {
       const form = new FormData();
-      rankingImages.forEach((file) => form.append('ranking', file));
+      // Crop only the ranking bands and stitch compatible screenshots into
+      // two compact OCR requests. Unsupported layouts retain the proven full-image path.
+      if (rankingImages.length) {
+        try {
+          const prepared = await prepareScreenshots(rankingImages, 'ranking');
+          prepared.parts.forEach((blob, index) =>
+            form.append('rankingMosaic', blob, 'rankings-' + index + '.jpg'));
+        } catch {
+          rankingImages.forEach((file) => form.append('ranking', file));
+        }
+      }
       if (resultImage) form.append('result', resultImage);
       const [recognized, available] = await Promise.all([
         api<OcrResponse>('ocr', { method: 'POST', body: form }),
