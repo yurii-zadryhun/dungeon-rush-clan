@@ -3,11 +3,13 @@ import { readFileSync } from 'node:fs';
 import ts from 'typescript';
 
 // Test the production pure matching algorithm without importing React or UI components.
-const source = readFileSync(new URL('../web/src/screens/roster-match.ts', import.meta.url), 'utf8')
-  .replace(
-    /^import \{ normalizeName, type ClanRosterCandidates \} from '\.\.\/api';/m,
-    "const normalizeName = (value: string) => value.normalize('NFKC').trim().replace(/\\s+/g, ' ').toLocaleLowerCase();\ntype ClanRosterCandidates = { players: Array<{ id: number; name: string }>; aliases: Array<{ normalizedName: string; playerId: number }> };",
-  );
+const source = readFileSync(
+  new URL('../web/src/screens/roster-match.ts', import.meta.url),
+  'utf8',
+).replace(
+  /^import \{ normalizeName, type ClanRosterCandidates \} from '\.\.\/api';/m,
+  "const normalizeName = (value: string) => value.normalize('NFKC').trim().replace(/\\s+/g, ' ').toLocaleLowerCase();\ntype ClanRosterCandidates = { players: Array<{ id: number; name: string }>; aliases: Array<{ normalizedName: string; playerId: number }> };",
+);
 const compiled = ts.transpileModule(source, {
   compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
 }).outputText;

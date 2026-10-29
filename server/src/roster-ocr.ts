@@ -98,9 +98,9 @@ export function parseRosterScreenshot(
       // Vision may put the name on the same line as the power. Otherwise use
       // the nearest plausible name above it, within one player card.
       const inline = cleanCandidate(row.text.slice(0, power.index ?? 0));
-      const name =
-        plausibleName(inline) ? inline :
-        candidate && row.y > candidate.y && row.y - candidate.y < 145
+      const name = plausibleName(inline)
+        ? inline
+        : candidate && row.y > candidate.y && row.y - candidate.y < 145
           ? candidate.name
           : null;
       if (powerValue !== null && name) {

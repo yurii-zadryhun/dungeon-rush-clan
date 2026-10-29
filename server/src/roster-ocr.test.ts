@@ -21,11 +21,7 @@ describe('clan power units', () => {
       { text: name, x: 20, y: 190 + index * 115 },
       { text: '2.34q', x: 20, y: 241 + index * 115 },
     ]);
-    const result = parseRosterScreenshot(
-      { raw: '', width: 600, height: 1000, words },
-      1,
-      120,
-    );
+    const result = parseRosterScreenshot({ raw: '', width: 600, height: 1000, words }, 1, 120);
     expect(result.players.map((row) => row.name)).toEqual(names);
     expect(result.warnings).toEqual([]);
   });
@@ -38,11 +34,7 @@ describe('clan power units', () => {
       { text: 'Jaishin', x: 10, y: 310 },
       { text: '3.11q', x: 10, y: 365 },
     ];
-    const result = parseRosterScreenshot(
-      { raw: '', width: 600, height: 500, words },
-      1,
-      0,
-    );
+    const result = parseRosterScreenshot({ raw: '', width: 600, height: 500, words }, 1, 0);
     expect(result.players.map((row) => row.name)).toEqual(['Dexterium', 'Jaishin']);
   });
 

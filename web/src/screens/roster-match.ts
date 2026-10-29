@@ -10,8 +10,19 @@ export interface RosterMatch {
 // OCR mixes lookalike Latin and Cyrillic letters, particularly in "КРОСТ"/"KPOCT".
 // Use this only for matching. Never rewrite a player's stored name.
 const confusables: Record<string, string> = {
-  а: 'a', в: 'b', е: 'e', к: 'k', м: 'm', н: 'h',
-  о: 'o', р: 'p', с: 'c', т: 't', у: 'y', х: 'x', і: 'i',
+  а: 'a',
+  в: 'b',
+  е: 'e',
+  к: 'k',
+  м: 'm',
+  н: 'h',
+  о: 'o',
+  р: 'p',
+  с: 'c',
+  т: 't',
+  у: 'y',
+  х: 'x',
+  і: 'i',
 };
 function visualName(value: string): string {
   return Array.from(normalizeName(value), (char) => confusables[char] ?? char).join('');

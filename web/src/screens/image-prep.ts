@@ -24,7 +24,7 @@ const regions: Record<ScreenshotMode, { rows: CropRegion; header?: CropRegion }>
   // A narrow crop lost lower members and truncated long nicknames near x≈440.
   // Avoid the right-side role labels and the bottom game navigation.
   clan: {
-    rows: { x: 0.23, y: 0.468, width: 0.50, height: 0.417 },
+    rows: { x: 0.23, y: 0.468, width: 0.5, height: 0.417 },
     header: { x: 0.15, y: 0.244, width: 0.7, height: 0.224 },
   },
   // Existing ranking OCR looked for ranks between 39% and 80% screen height.
