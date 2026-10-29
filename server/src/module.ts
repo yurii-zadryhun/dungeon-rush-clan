@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { Db } from './database';
+import { MembershipService } from './membership';
 import { AccountsService, AdminGuard, AuthController, OwnerGuard, SessionGuard } from './auth';
 import { RankingService } from './ranking';
 import { WarsController, WarsService } from './wars';
@@ -27,6 +28,7 @@ import { SitePagesController, SitePagesService } from './site-pages';
   ],
   providers: [
     Db,
+    MembershipService,
     AccountsService,
     SessionGuard,
     AdminGuard,
