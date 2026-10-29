@@ -3,6 +3,7 @@ import { AdminGuard, SessionGuard } from './auth';
 import { Db, normalizeName } from './database';
 import { PlayerManagementService } from './player-management';
 import { RankingService } from './ranking';
+import { ClanRosterService } from './clan-roster';
 
 @Injectable()
 export class InsightsService {
@@ -10,6 +11,7 @@ export class InsightsService {
     private readonly db: Db,
     private readonly ranking: RankingService,
     private readonly management: PlayerManagementService,
+    private readonly roster: ClanRosterService,
   ) {}
 
   async days() {
@@ -53,7 +55,7 @@ export class InsightsService {
       .executeTakeFirst();
     if (!player) throw new BadRequestException('Player not found');
 
-    const [weeks, mvpDays, aliases, ranking] = await Promise.all([
+    const [weeks, mvpDays, aliases, ranking, powerHistory] = await Promise.all([
       this.db.query
         .selectFrom('player_scores')
         .innerJoin('wars', 'wars.id', 'player_scores.war_id')
@@ -72,6 +74,7 @@ export class InsightsService {
         .where('player_id', '=', id)
         .execute(),
       this.ranking.compute(),
+      this.roster.playerHistory(id),
     ]);
     const names = new Set([player.normalized_name, ...aliases.map((alias) => alias.normalized_name)]);
     const points = weeks.map((week) => week.points);
@@ -91,7 +94,34 @@ export class InsightsService {
       requirement: ranking.settings.minimumPoints,
       belowRequirement: stats?.belowRequirement ?? false,
       weeks,
+      powerHistory,
     };
+  }
+
+  async warPoints() {
+    const scores = await this.db.query
+      .selectFrom('player_scores')
+      .innerJoin('wars', 'wars.id', 'player_scores.war_id')
+      .select([
+        'wars.start_date',
+        'player_scores.points',
+      ])
+      .where('wars.ranking_imported_at', 'is not', null)
+      .orderBy('wars.start_date')
+      .execute();
+    const totals = new Map<string, { points: number; players: number }>();
+    for (const score of scores) {
+      const value = totals.get(score.start_date) ?? { points: 0, players: 0 };
+      value.points += score.points;
+      value.players++;
+      totals.set(score.start_date, value);
+    }
+    return [...totals].map(([start, data]) => ({
+      start,
+      total: data.points,
+      playerCount: data.players,
+      average: data.players ? Math.round(data.points / data.players) : 0,
+    }));
   }
 
   async health() {
@@ -174,6 +204,10 @@ export class InsightsService {
 @UseGuards(SessionGuard)
 export class InsightsController {
   constructor(private readonly insights: InsightsService) {}
+
+  @Get('war-points') warPoints() {
+    return this.insights.warPoints();
+  }
 
   @Get('days') days() {
     return this.insights.days();

@@ -62,7 +62,7 @@ export class RankingService {
         average,
         appearances: entries.length,
         lastPoints: latestId ? (lookup.get(latestId) ?? null) : null,
-        belowRequirement: score < settings.minimum_points,
+        belowRequirement: entries.length > 0 && !!p.active && score < settings.minimum_points,
       };
     });
     return {
@@ -76,7 +76,8 @@ export class RankingService {
         contactUrl: settings.contact_url,
       },
       calculated: ranking.slice().sort((a, b) => b.score - a.score),
-      allTime: ranking.slice().sort((a, b) => b.average - a.average || b.appearances - a.appearances),
+      allTime: ranking.filter((player) => player.appearances > 0)
+        .sort((a, b) => b.average - a.average || b.appearances - a.appearances),
       latest: ranking
         .filter((p) => p.lastPoints !== null)
         .sort((a, b) => (b.lastPoints || 0) - (a.lastPoints || 0)),

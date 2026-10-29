@@ -10,7 +10,7 @@ import {
   UploadCloud,
   Users,
 } from 'lucide-react';
-import { api, shortNumber, type Account, type Dashboard, type Player } from '../api';
+import { api, shortNumber, type Account, type ClanRosterSnapshot, type Dashboard, type Player } from '../api';
 import { useI18n } from '../i18n';
 const ClanRosterImportModal = React.lazy(() =>
   import('./ClanRosterImportModal').then((m) => ({ default: m.ClanRosterImportModal })),
@@ -62,6 +62,7 @@ export function PlayersPage({
     initialAccess && isStaff ? 'access' : 'roster',
   );
   const [members, setMembers] = React.useState<DirectoryPlayer[]>([]);
+  const [powerByPlayer, setPowerByPlayer] = React.useState<Map<number, string>>(new Map());
   const [standaloneAccounts, setStandaloneAccounts] = React.useState<StandaloneAccount[]>([]);
   const [accountsTotal, setAccountsTotal] = React.useState<number | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -78,11 +79,13 @@ export function PlayersPage({
     setError('');
     Promise.all([
       api<DirectoryPlayer[]>('players'),
+      api<ClanRosterSnapshot | null>('clan-roster/latest'),
       isStaff ? api<StandaloneAccount[]>('auth/accounts') : Promise.resolve([]),
     ])
-      .then(([players, accounts]) => {
+      .then(([players, rosterSnapshot, accounts]) => {
         if (!alive) return;
         setMembers(players);
+        setPowerByPlayer(new Map(rosterSnapshot?.entries.map((entry) => [entry.id, entry.powerText]) ?? []));
         setAccountsTotal(isStaff ? accounts.filter((item) => item.active).length : null);
         const linked = new Set(players.map((player) => player.accountId).filter((id) => id != null));
         setStandaloneAccounts(accounts.filter((item) => !linked.has(item.id)));
@@ -257,7 +260,7 @@ export function PlayersPage({
                   </div>
                   <div className="players-directory-list" role="rowgroup">
                     {visible.map((player) => (
-                      <DirectoryRow key={player.id} player={player} stat={stats.get(player.id)} />
+                      <DirectoryRow key={player.id} player={player} stat={stats.get(player.id)} power={powerByPlayer.get(player.id)} />
                     ))}
                   </div>
                 </div>
@@ -302,7 +305,7 @@ export function PlayersPage({
   );
 }
 
-function DirectoryRow({ player, stat }: { player: DirectoryPlayer; stat?: Player }) {
+function DirectoryRow({ player, stat, power }: { player: DirectoryPlayer; stat?: Player; power?: string }) {
   const { t } = useI18n();
   return (
     <div className={'directory-player' + (!player.active ? ' inactive' : '')} role="row">
@@ -310,6 +313,7 @@ function DirectoryRow({ player, stat }: { player: DirectoryPlayer; stat?: Player
         <a href={'#/players/' + player.id} className="directory-player-name">
           {player.name} <ArrowUpRight size={15} />
         </a>
+        {power && <small className="directory-player-power">⚔ {power}</small>}
         <div className="directory-player-flags">
           <span
             className={
@@ -371,7 +375,7 @@ function DirectoryRow({ player, stat }: { player: DirectoryPlayer; stat?: Player
         </div>
       </div>
       <strong className="directory-player-value" role="cell" title={t('calculatedScore')}>
-        {stat ? shortNumber(stat.score) : '—'}
+        {stat?.appearances ? shortNumber(stat.score) : '—'}
       </strong>
       <strong className="directory-player-value" role="cell" title={t('latestPoints')}>
         {stat?.lastPoints == null ? '—' : shortNumber(stat.lastPoints)}
