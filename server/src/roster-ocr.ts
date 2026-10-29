@@ -82,11 +82,15 @@ export function parseRosterScreenshot(
       .replace(/^[^\p{L}\p{N}_]+/u, '')
       .replace(/[^\p{L}\p{N}_ .'-]+$/u, '')
       .trim();
+  // Cropped or partially recognized game roles must never become player identities.
+  // In particular, the old client crop cut "Captain" -> "Captai" and "Member"
+  // -> "Memb", which previously created dozens of false duplicate players.
+  const interfaceLabel = /^(?:(?:capt(?:a(?:i(?:n)?)?)?)|(?:memb(?:e(?:r(?:s)?)?)?)|(?:lead(?:e(?:r)?)?)|(?:onlin(?:e)?)|(?:offlin(?:e)?)|power|tier|type|open|members|battle|(?:[o0]\s+)?memb?)$/i;
   const plausibleName = (value: string) =>
     value.length >= 2 &&
     value.length <= 80 &&
     /[\p{L}_]/u.test(value) &&
-    !/^(?:leader|captain|member|online|offline|power|tier|members?)$/i.test(value) &&
+    !interfaceLabel.test(value) &&
     !/^\d+\s*[hms]\b/i.test(value);
 
   for (const row of all) {
@@ -116,12 +120,18 @@ export function parseRosterScreenshot(
     if (plausibleName(cleaned)) candidate = { name: cleaned, y: row.y };
   }
   if (!output.length) warnings.push('No player power rows were recognized. Review the screenshot crop.');
-  const duplicate = new Set<string>();
+  // The same player can appear in overlapping screenshots. Repeats with an
+  // identical value are expected; different powers need manual review.
+  const seen = new Map<string, string>();
+  const conflicts = new Set<string>();
   for (const entry of output) {
     const key = normalizeName(entry.name);
-    if (duplicate.has(key)) warnings.push('Duplicate detected: ' + entry.name);
-    duplicate.add(key);
+    const earlier = seen.get(key);
+    if (earlier && earlier !== entry.powerText) conflicts.add(entry.name);
+    else if (!earlier) seen.set(key, entry.powerText);
   }
+  if (conflicts.size > 0)
+    warnings.push('Conflicting power values for: ' + [...conflicts].slice(0, 8).join(', '));
   return {
     players: output,
     reportedMembers: members ? Number(members[1]) : null,
