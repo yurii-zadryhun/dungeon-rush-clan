@@ -165,6 +165,27 @@ export class InsightsService {
     const previous = new Map(
       scores.filter((s) => s.war_id === wars[1]?.id).map((s) => [s.player_id, s.points]),
     );
+    // A complete roster is more authoritative for join/leave events than missing
+    // historical war scores. In particular, a member can join before playing a war.
+    const rosterSnapshots = await this.db.query.selectFrom('clan_roster_snapshots')
+      .select(['id', 'captured_at']).orderBy('captured_at', 'desc')
+      .orderBy('id', 'desc').limit(2).execute();
+    const rosterIsCurrent = rosterSnapshots.length > 0 &&
+      rosterSnapshots[0].captured_at >= (wars[0]
+        ? Date.parse(wars[0].start_date + 'T00:00:00Z') + 6 * 86_400_000 - 1
+        : -1);
+    const rosterEntries = rosterIsCurrent && rosterSnapshots.length >= 2
+      ? await this.db.query.selectFrom('clan_roster_entries')
+          .select(['snapshot_id', 'player_id'])
+          .where('snapshot_id', 'in', rosterSnapshots.map((item) => item.id))
+          .execute()
+      : [];
+    const currentRoster = new Set(rosterEntries
+      .filter((entry) => entry.snapshot_id === rosterSnapshots[0]?.id)
+      .map((entry) => entry.player_id));
+    const olderRoster = new Set(rosterEntries
+      .filter((entry) => entry.snapshot_id === rosterSnapshots[1]?.id)
+      .map((entry) => entry.player_id));
     const rows = ranking.calculated.map((player) => {
       const current = latest.get(player.id) ?? null;
       const before = previous.get(player.id) ?? null;
@@ -181,8 +202,12 @@ export class InsightsService {
         previousPoints: before,
         change,
         belowRequirement: player.active && player.belowRequirement,
-        joined: !!wars[1] && current !== null && before === null,
-        left: !!wars[1] && current === null && before !== null,
+        joined: rosterIsCurrent
+          ? rosterSnapshots.length >= 2 && currentRoster.has(player.id) && !olderRoster.has(player.id)
+          : !!wars[1] && current !== null && before === null && player.active,
+        left: rosterIsCurrent
+          ? rosterSnapshots.length >= 2 && !currentRoster.has(player.id) && olderRoster.has(player.id)
+          : !!wars[1] && current === null && before !== null && !player.active,
         dropping: player.active && change !== null && change <= -25,
         ...tags.get(player.id),
       };
