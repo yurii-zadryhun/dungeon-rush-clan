@@ -407,7 +407,7 @@ export function WarPointsWidget() {
                 (value) => 190 - (value / max) * 150,
                 '#88c7f5',
               )}
-              {data
+              {series
                 .filter((_, index) => series.length <= 6 || index === 0 || index === series.length - 1)
                 .map((entry) => {
                   const x = 48 + (series.indexOf(entry) * 542) / Math.max(1, series.length - 1);
