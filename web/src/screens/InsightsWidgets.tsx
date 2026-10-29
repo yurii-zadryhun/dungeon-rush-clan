@@ -216,9 +216,10 @@ export function ClanGrowthWidget() {
     };
   }, []);
 
-  const last = data?.at(-1);
-  const prior = data && data.length > 1 ? data[data.length - 2] : null;
-  const maximum = Math.max(1, ...(data ?? []).map((entry) => entry.totalPower));
+  const series = data ?? [];
+  const last = series.at(-1);
+  const prior = data && series.length > 1 ? series[series.length - 2] : null;
+  const maximum = Math.max(1, ...series.map((entry) => entry.totalPower));
   const toY = (value: number) => 182 - (value / maximum) * 145;
 
   return (
@@ -228,7 +229,7 @@ export function ClanGrowthWidget() {
       </h2>
       {error && <p className="error-strip">{error}</p>}
       {data === null && !error && <p className="muted tiny">{t('loading')}</p>}
-      {data && data.length === 0 && <p className="muted">{t('clanGrowthEmpty')}</p>}
+      {data && series.length === 0 && <p className="muted">{t('clanGrowthEmpty')}</p>}
       {last && (
         <>
           <div className="growth-headline">
@@ -275,13 +276,13 @@ export function ClanGrowthWidget() {
                 </g>
               ))}
               {trendLine(
-                data.map((entry) => entry.totalPower),
+                series.map((entry) => entry.totalPower),
                 toY,
                 '#7ee899',
               )}
               <line x1="48" x2="590" y1="232" y2="232" stroke="#6f6574" />
-              {data.map((entry, index) => {
-                const x = 48 + (index * 542) / Math.max(1, data.length - 1);
+              {series.map((entry, index) => {
+                const x = 48 + (index * 542) / Math.max(1, series.length - 1);
                 const change = Math.max(1, entry.joined ?? 0, entry.left ?? 0);
                 const height = Math.min(36, change * 10);
                 return (
@@ -306,7 +307,7 @@ export function ClanGrowthWidget() {
                         </title>
                       </rect>
                     )}
-                    {(data.length <= 6 || index === 0 || index === data.length - 1) && (
+                    {(series.length <= 6 || index === 0 || index === series.length - 1) && (
                       <text x={x} y="279" fill="#bdb7c2" fontSize="12" textAnchor="middle">
                         {shortDate(entry.capturedAt, locale)}
                       </text>
@@ -327,7 +328,7 @@ export function ClanGrowthWidget() {
               <i className="growth-dot left" /> {t('clanLeft')}
             </span>
           </div>
-          <p className="muted tiny">{t('clanSnapshotNote', { count: data.length })}</p>
+          <p className="muted tiny">{t('clanSnapshotNote', { count: series.length })}</p>
         </>
       )}
     </section>
@@ -352,12 +353,13 @@ export function WarPointsWidget() {
     };
   }, []);
 
-  const max = Math.max(1, ...(data ?? []).map((entry) => entry.total));
+  const series = data ?? [];
+  const max = Math.max(1, ...series.map((entry) => entry.total));
   const overall = data?.length
-    ? Math.round(data.reduce((sum, entry) => sum + entry.total, 0) / data.length)
+    ? Math.round(series.reduce((sum, entry) => sum + entry.total, 0) / series.length)
     : 0;
   const latest = data?.at(-1);
-  const previous = data && data.length > 1 ? data[data.length - 2] : null;
+  const previous = data && series.length > 1 ? series[series.length - 2] : null;
 
   return (
     <section className="panel insight-widget war-points-widget">
@@ -401,14 +403,14 @@ export function WarPointsWidget() {
                 </g>
               ))}
               {trendLine(
-                data.map((entry) => entry.total),
+                series.map((entry) => entry.total),
                 (value) => 190 - (value / max) * 150,
                 '#88c7f5',
               )}
               {data
-                .filter((_, index) => data.length <= 6 || index === 0 || index === data.length - 1)
+                .filter((_, index) => series.length <= 6 || index === 0 || index === series.length - 1)
                 .map((entry) => {
-                  const x = 48 + (data.indexOf(entry) * 542) / Math.max(1, data.length - 1);
+                  const x = 48 + (series.indexOf(entry) * 542) / Math.max(1, series.length - 1);
                   return (
                     <text
                       key={entry.start}

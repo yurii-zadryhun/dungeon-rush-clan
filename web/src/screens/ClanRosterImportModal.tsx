@@ -380,7 +380,7 @@ export function ClanRosterImportModal({
                     />
                     <button
                       type="button"
-                      aria-label={t('delete') + ': ' + row.name}
+                      aria-label={t('remove') + ': ' + row.name}
                       onClick={() => setRows((all) => all.filter((entry) => entry.key !== row.key))}
                     >
                       <Trash2 size={15} />

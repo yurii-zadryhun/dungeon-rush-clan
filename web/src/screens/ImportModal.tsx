@@ -10,6 +10,7 @@ import {
   type Week,
 } from '../api';
 import { formatWarRange } from '../date-format';
+import { prepareScreenshots } from './image-prep';
 import { useI18n } from '../i18n';
 import {
   WarReviewEditor,
