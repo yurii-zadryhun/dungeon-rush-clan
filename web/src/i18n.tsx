@@ -24,13 +24,14 @@ const en = {
   warPointsDelta: 'Change',
   warPointsPlayers: 'Participants',
   clanImportTitle: 'Import clan roster',
+  clanOcrCorrected: 'OCR name: {name}',
   clanImportHelp:
     "Add up to 10 clan member screenshots. We'll crop and combine the member cards before OCR. Check every name and power value before importing.",
   clanSelectScreens: 'Clan member screenshots',
   clanScreensChosen: 'Selected: {count} / 10',
   clanChooseScreens: 'Select 1–10 screenshots of clan members.',
   clanFirstScreenHelp:
-    'The first screenshot must show total clan power and member count. Keep screenshots in roster order.',
+    'The first screenshot must show total clan power and member count. Screenshot order does not matter; players are sorted alphabetically.',
   moveUp: 'Move image up',
   moveDown: 'Move image down',
   clanReviewHelp:
@@ -414,13 +415,14 @@ const uk: Record<MessageKey, string> = {
   warPointsDelta: 'Зміна',
   warPointsPlayers: 'Учасників',
   clanImportTitle: 'Імпорт складу клану',
+  clanOcrCorrected: 'OCR розпізнав: {name}',
   clanImportHelp:
     'Додайте до 10 скриншотів учасників клану. Перед OCR застосунок виріже та об’єднає картки гравців. Перевірте імена й силу перед збереженням.',
   clanSelectScreens: 'Скриншоти учасників',
   clanScreensChosen: 'Вибрано: {count} із 10',
   clanChooseScreens: 'Виберіть від 1 до 10 скриншотів учасників клану.',
   clanFirstScreenHelp:
-    'Перший скриншот має містити загальну силу й кількість учасників. Збережіть порядок скриншотів.',
+    'Перший скриншот має містити загальну силу й кількість учасників. Порядок скриншотів не важливий; гравці будуть за алфавітом.',
   moveUp: 'Перемістити вище',
   moveDown: 'Перемістити нижче',
   clanReviewHelp:
