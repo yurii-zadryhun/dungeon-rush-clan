@@ -89,6 +89,20 @@ export interface Tables {
     category: 'note' | 'attention' | 'contact' | 'positive';
     created_at: number;
   };
+  clan_roster_snapshots: {
+    id: Generated<number>;
+    captured_at: number;
+    imported_at: number;
+    reported_members: number;
+    reported_power: number | null;
+    screenshot_count: number;
+  };
+  clan_roster_entries: {
+    snapshot_id: number;
+    player_id: number;
+    power: number;
+    power_text: string;
+  };
   player_scores: { war_id: number; player_id: number; position: number; points: number };
   war_days: {
     war_id: number;
@@ -144,6 +158,20 @@ export class Db implements OnModuleDestroy {
         created_at INTEGER NOT NULL
       );
       CREATE INDEX IF NOT EXISTS player_notes_by_player ON player_notes(player_id, created_at DESC);
+      CREATE TABLE IF NOT EXISTS clan_roster_snapshots (
+        id INTEGER PRIMARY KEY, captured_at INTEGER NOT NULL, imported_at INTEGER NOT NULL,
+        reported_members INTEGER NOT NULL CHECK(reported_members BETWEEN 1 AND 100),
+        reported_power REAL, screenshot_count INTEGER NOT NULL CHECK(screenshot_count BETWEEN 1 AND 10)
+      );
+      CREATE INDEX IF NOT EXISTS roster_snapshots_recent ON clan_roster_snapshots(captured_at DESC, id DESC);
+      CREATE TABLE IF NOT EXISTS clan_roster_entries (
+        snapshot_id INTEGER NOT NULL REFERENCES clan_roster_snapshots(id) ON DELETE CASCADE,
+        player_id INTEGER NOT NULL REFERENCES players(id),
+        power REAL NOT NULL CHECK(power >= 0),
+        power_text TEXT NOT NULL,
+        PRIMARY KEY(snapshot_id, player_id)
+      );
+      CREATE INDEX IF NOT EXISTS roster_entries_player ON clan_roster_entries(player_id, snapshot_id);
       CREATE TABLE IF NOT EXISTS war_days (war_id INTEGER NOT NULL REFERENCES wars(id) ON DELETE CASCADE, day_number INTEGER NOT NULL CHECK(day_number BETWEEN 1 AND 6), points INTEGER NOT NULL, winner TEXT NOT NULL, mvp TEXT NOT NULL, PRIMARY KEY(war_id, day_number));
       INSERT OR IGNORE INTO settings(id,clan_name,minimum_points,weights_json) VALUES(1,'Ukrainians',100000,'[0.75,0.25]');
     `);
