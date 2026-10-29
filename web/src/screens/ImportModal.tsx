@@ -142,8 +142,11 @@ export function ImportModal({
       ]);
       // A previously supported layout must not regress because of optimization.
       // If the composite detects suspiciously few rows, retry with original images.
-      if (optimized && rankingImages.length &&
-          recognized.players.length < Math.max(1, rankingImages.length * 2)) {
+      if (
+        optimized &&
+        rankingImages.length &&
+        recognized.players.length < Math.max(1, rankingImages.length * 2)
+      ) {
         const original = new FormData();
         rankingImages.forEach((file) => original.append('ranking', file));
         if (resultImage) original.append('result', resultImage);
