@@ -9,7 +9,14 @@ import {
   Trophy,
   Users,
 } from 'lucide-react';
-import { api, shortNumber, type Account, type Player, type PlayerProgress, type PlayerPowerEntry } from '../api';
+import {
+  api,
+  shortNumber,
+  type Account,
+  type Player,
+  type PlayerProgress,
+  type PlayerPowerEntry,
+} from '../api';
 import { formatWarRange } from '../date-format';
 import { useI18n } from '../i18n';
 import { SearchSelect } from './SearchSelect';

@@ -4,7 +4,8 @@ import { initialLocale, rememberLocale, type Locale } from './locale';
 export type { Locale } from './locale';
 
 const en = {
-  clanPowerMismatch: 'The clan power total differs by more than 4%. Check the screenshots or acknowledge the difference.',
+  clanPowerMismatch:
+    'The clan power total differs by more than 4%. Check the screenshots or acknowledge the difference.',
   powerHistoryTitle: 'Power history',
   latestPower: 'Latest power',
   powerObservations: 'Observations',
@@ -394,7 +395,8 @@ const en = {
 
 type MessageKey = keyof typeof en;
 const uk: Record<MessageKey, string> = {
-  clanPowerMismatch: 'Загальна сила відрізняється більш ніж на 4%. Перевірте скриншоти або підтвердьте різницю.',
+  clanPowerMismatch:
+    'Загальна сила відрізняється більш ніж на 4%. Перевірте скриншоти або підтвердьте різницю.',
   powerHistoryTitle: 'Історія сили',
   latestPower: 'Остання сила',
   powerObservations: 'Вимірювань',
