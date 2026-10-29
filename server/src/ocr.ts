@@ -6,6 +6,7 @@ import { createHash } from 'node:crypto';
 import { AdminGuard, SessionGuard } from './auth';
 import { DAY_POINTS } from './calendar';
 import { Db, normalizeName } from './database';
+import { parseRosterScreenshot } from './roster-ocr';
 
 export interface Word {
   text: string;
@@ -291,6 +292,80 @@ export class OcrController {
     private readonly vision: VisionService,
     private readonly db: Db,
   ) {}
+
+  @Post('clan')
+  async clan(@Req() req: FastifyRequest) {
+    const mosaics: Buffer[] = [];
+    let headerHeight = 0;
+    for await (const part of (req as any).parts()) {
+      if (part.type === 'field' && part.fieldname === 'headerHeight') {
+        headerHeight = Number(part.value);
+        continue;
+      }
+      if (part.type !== 'file') continue;
+      if (part.fieldname !== 'mosaic' ||
+          !['image/png', 'image/jpeg', 'image/webp'].includes(part.mimetype)) {
+        throw new BadRequestException('Unexpected image');
+      }
+      const buffer: Buffer = await part.toBuffer();
+      if (buffer.length > 6 * 1024 * 1024)
+        throw new BadRequestException('Composite image exceeds 6 MB');
+      mosaics.push(buffer);
+      if (mosaics.length > 3) throw new BadRequestException('Too many screenshot mosaics');
+    }
+    if (!mosaics.length || !Number.isSafeInteger(headerHeight) || headerHeight < 0 || headerHeight > 1500) {
+      throw new BadRequestException('Invalid roster screenshot mosaics');
+    }
+    const warnings: string[] = [];
+    const all = [];
+    let reportedMembers: number | null = null;
+    let reportedPower: number | null = null;
+    let reportedPowerText: string | null = null;
+    let capacity: number | null = null;
+    for (const [index, buffer] of mosaics.entries()) {
+      const extracted = await this.vision.read(buffer);
+      const parsed = parseRosterScreenshot(extracted, index + 1, index === 0 ? headerHeight : 0);
+      all.push(...parsed.players);
+      warnings.push(...parsed.warnings.map((warning) => 'Part ' + (index + 1) + ': ' + warning));
+      if (index === 0) {
+        reportedMembers = parsed.reportedMembers;
+        reportedPower = parsed.reportedPower;
+        reportedPowerText = parsed.reportedPowerText;
+        capacity = parsed.capacity;
+      }
+    }
+    const unique = new Map<string, (typeof all)[number]>();
+    for (const entry of all) {
+      const key = normalizeName(entry.name);
+      const previous = unique.get(key);
+      if (previous) {
+        if (previous.powerText !== entry.powerText) {
+          warnings.push('Conflicting power for ' + entry.name + ': ' +
+            previous.powerText + ' / ' + entry.powerText);
+        }
+        continue;
+      }
+      unique.set(key, entry);
+    }
+    if (reportedMembers !== null && reportedMembers !== unique.size) {
+      warnings.push('Expected ' + reportedMembers + ' members, recognized ' + unique.size +
+        '. Review and correct the list before importing.');
+    }
+    if (reportedMembers === null) {
+      warnings.push('Clan member count not recognized. Enter the count from the first screenshot.');
+    }
+    if (reportedPower === null) {
+      warnings.push('Total clan power not recognized. Enter it from the first screenshot.');
+    }
+    return {
+      players: [...unique.values()],
+      reportedMembers,
+      reportedPower,
+      reportedPowerText,
+      capacity,
+      warnings,
+    };
+  }
 
   @Post()
   async process(@Req() req: FastifyRequest) {
