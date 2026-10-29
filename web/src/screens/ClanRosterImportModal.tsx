@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowDown, ArrowUp, Camera, CheckCircle, Plus, Trash2, UploadCloud, X } from 'lucide-react';
+import { Camera, CheckCircle, Plus, Trash2, UploadCloud, X } from 'lucide-react';
 import {
   api,
   json,
@@ -12,6 +12,7 @@ import {
 import { useI18n } from '../i18n';
 import { prepareScreenshots } from './image-prep';
 import { SearchSelect } from './SearchSelect';
+import { matchRosterName } from './roster-match';
 import './ClanRosterImportModal.css';
 
 interface DraftEntry {
@@ -20,6 +21,7 @@ interface DraftEntry {
   powerText: string;
   playerId: number | null;
   source: number;
+  ocrName?: string;
 }
 let nextKey = 1;
 
@@ -58,7 +60,7 @@ export function ClanRosterImportModal({
   onClose: () => void;
   onDone: (dashboard: Dashboard) => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [files, setFiles] = React.useState<File[]>([]);
   const [stage, setStage] = React.useState<'upload' | 'review'>('upload');
   const [capturedLocal, setCapturedLocal] = React.useState(captureLocalTime);
@@ -99,10 +101,56 @@ export function ClanRosterImportModal({
       )
     : [];
   const differenceHigh = percentDifference !== null && percentDifference > 4;
+  const compareNames = React.useMemo(
+    () => new Intl.Collator(locale === 'uk' ? 'uk-UA' : 'en-US', { sensitivity: 'base', numeric: true }),
+    [locale],
+  );
+  const sortedRows = React.useMemo(
+    () => [...rows].sort((a, b) => compareNames.compare(a.name, b.name) || a.key - b.key),
+    [rows, compareNames],
+  );
+  const candidateChoices = React.useMemo(
+    () => [
+      { value: null, label: t('clanNewPlayer') },
+      ...(candidates?.players ?? [])
+        .slice()
+        .sort((a, b) => compareNames.compare(a.name, b.name))
+        .map((person) => ({ value: person.id, label: person.name })),
+    ],
+    [candidates, compareNames, t],
+  );
 
   function update(key: number, patch: Partial<DraftEntry>) {
     setRows((all) => all.map((row) => (row.key === key ? { ...row, ...patch } : row)));
     setAcknowledge(false);
+  }
+
+  function updateName(key: number, name: string) {
+    // While typing, match only exact names/aliases. Partial text must not
+    // accidentally select an unrelated player through fuzzy matching.
+    const match = candidates ? matchRosterName(name, candidates, false) : null;
+    update(key, { name, playerId: match?.playerId ?? null, ocrName: undefined });
+  }
+
+  function reconcileName(key: number, name: string) {
+    if (!candidates) return;
+    const match = matchRosterName(name, candidates);
+    if (match) {
+      update(key, {
+        name: match.name,
+        playerId: match.playerId,
+        ocrName: normalizeName(name) === normalizeName(match.name) ? undefined : name,
+      });
+    }
+  }
+
+  function choosePlayer(key: number, id: number | null) {
+    if (id === null) {
+      update(key, { playerId: null, ocrName: undefined });
+      return;
+    }
+    const selected = candidates?.players.find((person) => person.id === id);
+    if (selected) update(key, { playerId: id, name: selected.name, ocrName: undefined });
   }
 
   async function scan() {
@@ -122,16 +170,22 @@ export function ClanRosterImportModal({
       form.append('headerHeight', String(prepared.headerHeight));
       prepared.parts.forEach((blob, i) => form.append('mosaic', blob, 'members-' + (i + 1) + '.jpg'));
       const result = await api<ClanOcrResponse>('ocr/clan', { method: 'POST', body: form });
-      const byName = new Map(known.players.map((person) => [normalizeName(person.name), person.id]));
-      for (const alias of known.aliases) byName.set(alias.normalizedName, alias.playerId);
       setCandidates(known);
       setPrevious(latest);
       setRows(
-        result.players.map((player) => ({
-          ...player,
-          key: nextKey++,
-          playerId: byName.get(normalizeName(player.name)) ?? null,
-        })),
+        result.players.map((player) => {
+          const match = matchRosterName(player.name, known);
+          return {
+            ...player,
+            key: nextKey++,
+            name: match?.name ?? player.name,
+            playerId: match?.playerId ?? null,
+            ocrName:
+              match && normalizeName(player.name) !== normalizeName(match.name)
+                ? player.name
+                : undefined,
+          };
+        }),
       );
       setExpected(result.reportedMembers == null ? '' : String(result.reportedMembers));
       setReportedPower(result.reportedPowerText ?? '');
@@ -236,36 +290,13 @@ export function ClanRosterImportModal({
                 <div className="clan-file-list">
                   {files.map((file, index) => (
                     <div className="clan-file-row" key={file.name + index}>
-                      <span>
-                        <b>{index + 1}.</b> {file.name}
-                      </span>
+                      <span>{file.name}</span>
                       <button
                         type="button"
-                        aria-label={t('moveUp')}
-                        disabled={index === 0}
-                        onClick={() =>
-                          setFiles((items) => {
-                            const changed = items.slice();
-                            [changed[index - 1], changed[index]] = [changed[index], changed[index - 1]];
-                            return changed;
-                          })
-                        }
+                        aria-label={t('remove') + ': ' + file.name}
+                        onClick={() => setFiles((items) => items.filter((_, i) => i !== index))}
                       >
-                        <ArrowUp size={15} />
-                      </button>
-                      <button
-                        type="button"
-                        aria-label={t('moveDown')}
-                        disabled={index === files.length - 1}
-                        onClick={() =>
-                          setFiles((items) => {
-                            const changed = items.slice();
-                            [changed[index], changed[index + 1]] = [changed[index + 1], changed[index]];
-                            return changed;
-                          })
-                        }
-                      >
-                        <ArrowDown size={15} />
+                        <Trash2 size={15} />
                       </button>
                     </div>
                   ))}
@@ -361,7 +392,7 @@ export function ClanRosterImportModal({
                   <span>{t('clanMatch')}</span>
                   <span />
                 </div>
-                {rows.map((row, index) => (
+                {sortedRows.map((row, index) => (
                   <div
                     className={
                       'clan-roster-entry' +
@@ -374,7 +405,9 @@ export function ClanRosterImportModal({
                       <input
                         aria-label={t('playerColumn') + ' ' + (index + 1)}
                         value={row.name}
-                        onChange={(event) => update(row.key, { name: event.target.value })}
+                        onChange={(event) => updateName(row.key, event.target.value)}
+                        onBlur={() => reconcileName(row.key, row.name)}
+                        title={row.ocrName ? t('clanOcrCorrected', { name: row.ocrName }) : undefined}
                       />
                     </label>
                     <input
@@ -386,14 +419,8 @@ export function ClanRosterImportModal({
                       value={row.playerId}
                       ariaLabel={t('clanMatch') + ': ' + row.name}
                       placeholder={t('clanNewPlayer')}
-                      choices={[
-                        { value: null, label: t('clanNewPlayer') },
-                        ...(candidates?.players ?? []).map((person) => ({
-                          value: person.id,
-                          label: person.name,
-                        })),
-                      ]}
-                      onChange={(value) => update(row.key, { playerId: value })}
+                      choices={candidateChoices}
+                      onChange={(value) => choosePlayer(row.key, value)}
                     />
                     <button
                       type="button"
