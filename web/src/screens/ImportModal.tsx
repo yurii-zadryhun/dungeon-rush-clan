@@ -121,6 +121,7 @@ export function ImportModal({
     setError('');
     try {
       const form = new FormData();
+      let optimized = false;
       // Crop only the ranking bands and stitch compatible screenshots into
       // two compact OCR requests. Unsupported layouts retain the proven full-image path.
       if (rankingImages.length) {
@@ -129,15 +130,25 @@ export function ImportModal({
           prepared.parts.forEach((blob, index) =>
             form.append('rankingMosaic', blob, 'rankings-' + index + '.jpg'),
           );
+          optimized = true;
         } catch {
           rankingImages.forEach((file) => form.append('ranking', file));
         }
       }
       if (resultImage) form.append('result', resultImage);
-      const [recognized, available] = await Promise.all([
+      let [recognized, available] = await Promise.all([
         api<OcrResponse>('ocr', { method: 'POST', body: form }),
         api<Roster>('import/roster?start=' + encodeURIComponent(week.start)),
       ]);
+      // A previously supported layout must not regress because of optimization.
+      // If the composite detects suspiciously few rows, retry with original images.
+      if (optimized && rankingImages.length &&
+          recognized.players.length < Math.max(1, rankingImages.length * 2)) {
+        const original = new FormData();
+        rankingImages.forEach((file) => original.append('ranking', file));
+        if (resultImage) original.append('result', resultImage);
+        recognized = await api<OcrResponse>('ocr', { method: 'POST', body: original });
+      }
       setRoster(available);
       setWarnings(recognized.warnings);
       setDraft({
