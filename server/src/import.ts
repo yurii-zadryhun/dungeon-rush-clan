@@ -15,6 +15,7 @@ import { AdminGuard, SessionGuard } from './auth';
 import { Db, normalizeName } from './database';
 import { WarsService } from './wars';
 import { PlayersService } from './players';
+import { MembershipService } from './membership';
 
 const name = z.string().trim().min(1).max(80);
 const rankingItem = z.object({
@@ -52,6 +53,7 @@ export class ImportService {
     private readonly db: Db,
     private readonly wars: WarsService,
     private readonly identities: PlayersService,
+    private readonly membership: MembershipService,
   ) {}
 
   async matchingPlayers(start: string) {
@@ -237,29 +239,7 @@ export class ImportService {
             .set({ ranking_imported_at: war.ranking_imported_at ?? Date.now() })
             .where('id', '=', war.id)
             .execute();
-          // Roster status is always based on the most recent imported ranking by war date.
-          const latest = await trx
-            .selectFrom('wars')
-            .select(['id'])
-            .where('ranking_imported_at', 'is not', null)
-            .orderBy('start_date', 'desc')
-            .executeTakeFirstOrThrow();
-          await trx.updateTable('players').set({ active: 0 }).execute();
-          const active = await trx
-            .selectFrom('player_scores')
-            .select('player_id')
-            .where('war_id', '=', latest.id)
-            .execute();
-          if (active.length)
-            await trx
-              .updateTable('players')
-              .set({ active: 1 })
-              .where(
-                'id',
-                'in',
-                active.map((x) => x.player_id),
-              )
-              .execute();
+          await this.membership.refresh(trx);
         }
         if (data.result) {
           if (mode === 'create' && war.result_imported_at !== null)
