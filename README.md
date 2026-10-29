@@ -137,3 +137,17 @@ npm run build     # optimized React assets + compiled NestJS server
 ```
 
 GitHub Actions runs Prettier, TypeScript checks, tests and a production HTTP smoke test on `master`.
+
+## Formatting and contribution policy
+
+**Prettier runs before commits, never as a GitHub Actions auto-commit.**
+Run `npm run format` followed by `npm run format:check` before committing changes.
+For automatic local commit protection, run `npm run hooks:install` once per Git clone;
+the included pre-commit hook checks formatting and blocks unformatted commits.
+
+The `Check` workflow is **read-only** (`permissions: contents: read`):
+it validates Prettier, tests and builds but never writes to `master`.
+Do not temporarily grant `contents: write` or add `git push` to fix formatting.
+The workflow runs `scripts/ci-contract-check.mjs` to enforce this policy.
+The same rules apply to automated and AI-authored changes.
+

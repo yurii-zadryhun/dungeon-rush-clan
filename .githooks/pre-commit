@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+
+if ! npm run format:check; then
+  printf '\nPrettier failed. Run "npm run format", review the changes, and stage them before retrying.\n' >&2
+  exit 1
+fi

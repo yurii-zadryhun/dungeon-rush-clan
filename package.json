@@ -19,7 +19,8 @@
     "predev": "npm run wiki:index",
     "prebuild": "npm run wiki:index",
     "precheck": "npm run wiki:index",
-    "pretest": "npm run wiki:index"
+    "pretest": "npm run wiki:index",
+    "hooks:install": "git config --local core.hooksPath .githooks"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
