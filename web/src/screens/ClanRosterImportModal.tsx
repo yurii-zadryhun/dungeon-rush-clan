@@ -87,13 +87,16 @@ export function ClanRosterImportModal({
   const previousNames = new Set(previous?.entries.map((entry) => normalizeName(entry.name)) ?? []);
   const currentNames = new Set(rows.map((entry) => normalizeName(entry.name)));
   const joined = previous
-    ? rows.filter((entry) => entry.playerId === null
-      ? !previousNames.has(normalizeName(entry.name))
-      : !previousIds.has(entry.playerId))
+    ? rows.filter((entry) =>
+        entry.playerId === null
+          ? !previousNames.has(normalizeName(entry.name))
+          : !previousIds.has(entry.playerId),
+      )
     : [];
   const left = previous
-    ? previous.entries.filter((entry) => !currentIds.has(entry.id) &&
-      !currentNames.has(normalizeName(entry.name)))
+    ? previous.entries.filter(
+        (entry) => !currentIds.has(entry.id) && !currentNames.has(normalizeName(entry.name)),
+      )
     : [];
   const differenceHigh = percentDifference !== null && percentDifference > 4;
 
@@ -222,7 +225,10 @@ export function ClanRosterImportModal({
                   onChange={(event) => {
                     const chosen = Array.from(event.target.files || []);
                     if (chosen.length > 10) setError(t('clanChooseScreens'));
-                    else { setError(''); setFiles(chosen); }
+                    else {
+                      setError('');
+                      setFiles(chosen);
+                    }
                   }}
                 />
               </label>
