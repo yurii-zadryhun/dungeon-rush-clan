@@ -61,4 +61,33 @@ describe('clan power units', () => {
     expect(result.players.map((row) => row.name)).toEqual(['КРОСТ', 'aywy', 'GIBURGERJOEY']);
     expect(result.players.map((row) => row.powerText)).toEqual(['6.98q', '9.64q', '2.46q']);
   });
+
+  it('ignores cropped game roles and never creates partial Member/Captain players', () => {
+    const words = [
+      { text: 'Memb', x: 25, y: 180 },
+      { text: '558.37T', x: 25, y: 220 },
+      { text: 'Captai', x: 25, y: 280 },
+      { text: '9.64q', x: 25, y: 323 },
+      { text: 'O Memb', x: 25, y: 380 },
+      { text: '1.40q', x: 25, y: 423 },
+      { text: 'КРОСТ', x: 25, y: 485 },
+      { text: '5.59q', x: 25, y: 530 },
+    ];
+    const result = parseRosterScreenshot({ raw: '', width: 600, height: 620, words }, 1);
+    expect(result.players).toEqual([
+      { name: 'КРОСТ', power: 5.59e15, powerText: '5.59q', source: 1 },
+    ]);
+  });
+
+  it('does not warn about repeated cards from overlapping screenshots', () => {
+    const words = [
+      { text: 'Mishko', x: 22, y: 200 },
+      { text: '4.74q', x: 22, y: 250 },
+      { text: 'Mishko', x: 22, y: 360 },
+      { text: '4.74q', x: 22, y: 410 },
+    ];
+    const result = parseRosterScreenshot({ raw: '', width: 600, height: 500, words }, 1);
+    expect(result.players).toHaveLength(2);
+    expect(result.warnings).toEqual([]);
+  });
 });

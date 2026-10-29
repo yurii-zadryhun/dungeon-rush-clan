@@ -333,7 +333,7 @@ export class OcrController {
       const extracted = await this.vision.read(buffer);
       const parsed = parseRosterScreenshot(extracted, index + 1, index === 0 ? headerHeight : 0);
       all.push(...parsed.players);
-      warnings.push(...parsed.warnings.map((warning) => 'Part ' + (index + 1) + ': ' + warning));
+      warnings.push(...parsed.warnings.map((warning) => 'Image ' + (index + 1) + ': ' + warning));
       if (index === 0) {
         reportedMembers = parsed.reportedMembers;
         reportedPower = parsed.reportedPower;
@@ -342,18 +342,23 @@ export class OcrController {
       }
     }
     const unique = new Map<string, (typeof all)[number]>();
+    const conflicts = new Map<string, Set<string>>();
     for (const entry of all) {
       const key = normalizeName(entry.name);
       const previous = unique.get(key);
       if (previous) {
         if (previous.powerText !== entry.powerText) {
-          warnings.push(
-            'Conflicting power for ' + entry.name + ': ' + previous.powerText + ' / ' + entry.powerText,
-          );
+          const values = conflicts.get(key) ?? new Set([previous.powerText]);
+          values.add(entry.powerText);
+          conflicts.set(key, values);
         }
         continue;
       }
       unique.set(key, entry);
+    }
+    for (const [key, values] of conflicts) {
+      const name = unique.get(key)!.name;
+      warnings.push('Different power values for ' + name + ': ' + [...values].slice(0, 4).join(' / '));
     }
     if (reportedMembers !== null && reportedMembers !== unique.size) {
       warnings.push(

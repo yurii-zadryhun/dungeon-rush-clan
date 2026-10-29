@@ -72,7 +72,7 @@ export function parseRosterScreenshot(
   // Cloud Vision may split '48/50' or '77.80q' over multiple words.
   const members = header.match(/Members?\s*[:\s]*?(\d{1,3})\s*\/\s*(\d{1,3})/i);
   const headerPower = header.match(
-    /\bPower\s*[:\s\S]*?(\d{1,5}(?:[.,]\d{1,4})?)\s*([KMBTqQ])(?=$|[^\p{L}])/u,
+    /(?:^|\n)\s*Power\s*:?\s*(\d{1,5}(?:[.,]\d{1,4})?)\s*([KMBTqQ])(?=$|[^\p{L}])/iu,
   );
   const reportedPowerText = headerPower ? headerPower[1] + headerPower[2] : null;
   const output: RecognizedPower[] = [];
@@ -119,7 +119,7 @@ export function parseRosterScreenshot(
     if (!cleaned || /^[-–—]+$/.test(cleaned)) continue;
     if (plausibleName(cleaned)) candidate = { name: cleaned, y: row.y };
   }
-  if (!output.length) warnings.push('No player power rows were recognized. Review the screenshot crop.');
+  if (!output.length) warnings.push('No player names and power were found. Check the images.');
   // The same player can appear in overlapping screenshots. Repeats with an
   // identical value are expected; different powers need manual review.
   const seen = new Map<string, string>();
