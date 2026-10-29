@@ -80,7 +80,7 @@ export function parsePlayers(
   const players: OcrPlayer[] = [];
   const lines = groupLines(
     text.words.filter((w) => prepared || (w.y >= text.height * 0.39 && w.y <= text.height * 0.8)),
-    Math.max(10, text.height * 0.012),
+    prepared ? 12 : Math.max(10, text.height * 0.012),
   );
   for (const row of lines) {
     const line = tokens(row);
