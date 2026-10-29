@@ -168,6 +168,55 @@ export interface PublicClan {
   }>;
 }
 
+export interface ClanRosterCandidate {
+  id: number;
+  name: string;
+  active: number;
+}
+export interface ClanRosterCandidates {
+  players: ClanRosterCandidate[];
+  aliases: { normalizedName: string; playerId: number }[];
+  latest: { id: number; capturedAt: number; reportedMembers: number } | null;
+}
+export interface ClanOcrPlayer {
+  name: string;
+  power: number;
+  powerText: string;
+  source: number;
+}
+export interface ClanOcrResponse {
+  players: ClanOcrPlayer[];
+  reportedMembers: number | null;
+  capacity: number | null;
+  reportedPower: number | null;
+  reportedPowerText: string | null;
+  warnings: string[];
+}
+export interface ClanRosterSnapshot {
+  id: number;
+  capturedAt: string;
+  reportedMembers: number;
+  reportedPower: number | null;
+  entries: { id: number; name: string; power: number; powerText: string }[];
+}
+export interface ClanRosterTimelineEntry {
+  id: number;
+  capturedAt: string;
+  memberCount: number;
+  reportedMembers: number;
+  totalPower: number;
+  totalPowerText: string;
+  reportedPower: number | null;
+  joined: number | null;
+  left: number | null;
+}
+export interface PlayerPowerEntry {
+  snapshotId: number;
+  capturedAt: string;
+  power: number;
+  powerText: string;
+}
+
 export interface OcrPlayer {
   position: number;
   name: string;
