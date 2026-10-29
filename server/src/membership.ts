@@ -47,8 +47,25 @@ export class MembershipService {
           .execute();
     const observedAt = rosterIsLatest ? roster!.captured_at : warObservedAt;
 
-    // Players enrolled after the last observed snapshot are not proof of departure.
-    await trx.updateTable('players').set({ active: 0 }).where('created_at', '<=', observedAt).execute();
+    // Import timestamps are not observation timestamps: a historical war imported today
+    // can contain players who left weeks ago. Preserve only *completely unobserved*
+    // newcomers created after the observation (e.g. newly registered accounts).
+    const unobserved = await trx.selectFrom('players')
+      .select(['id', 'created_at']).where('created_at', '>', observedAt).execute();
+    const [scored, rostered] = await Promise.all([
+      trx.selectFrom('player_scores').select('player_id').execute(),
+      trx.selectFrom('clan_roster_entries').select('player_id').execute(),
+    ]);
+    const observedIds = new Set([
+      ...scored.map((entry) => entry.player_id),
+      ...rostered.map((entry) => entry.player_id),
+    ]);
+    const newcomers = unobserved.filter((player) => !observedIds.has(player.id)).map((player) => player.id);
+    await trx.updateTable('players').set({ active: 0 }).execute();
+    if (newcomers.length) {
+      await trx.updateTable('players').set({ active: 1 })
+        .where('id', 'in', newcomers).execute();
+    }
     if (ids.length) {
       await trx
         .updateTable('players')
