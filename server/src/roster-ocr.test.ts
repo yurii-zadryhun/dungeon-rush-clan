@@ -15,6 +15,37 @@ describe('clan power units', () => {
     expect(formatPower(9.64e15)).toBe('9.64q');
     expect(formatPower(91.78e12)).toBe('91.78T');
   });
+  it('does not lose long or lower card names on a six-card mosaic', () => {
+    const names = ['КРОСТ', 'Dexterium', 'Jaishin', 'Mad1ar', 'PointJam', 'Lareauz'];
+    const words = names.flatMap((name, index) => [
+      { text: name, x: 20, y: 190 + index * 115 },
+      { text: '2.34q', x: 20, y: 241 + index * 115 },
+    ]);
+    const result = parseRosterScreenshot(
+      { raw: '', width: 600, height: 1000, words },
+      1,
+      120,
+    );
+    expect(result.players.map((row) => row.name)).toEqual(names);
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('handles name and power on the same line without losing the player', () => {
+    const words = [
+      { text: 'Dexterium', x: 10, y: 200 },
+      { text: '1.54q', x: 160, y: 200 },
+      { text: 'Captain', x: 10, y: 260 },
+      { text: 'Jaishin', x: 10, y: 310 },
+      { text: '3.11q', x: 10, y: 365 },
+    ];
+    const result = parseRosterScreenshot(
+      { raw: '', width: 600, height: 500, words },
+      1,
+      0,
+    );
+    expect(result.players.map((row) => row.name)).toEqual(['Dexterium', 'Jaishin']);
+  });
+
   it('recognizes two-row cards and the first screenshot header', () => {
     const words = (
       [
