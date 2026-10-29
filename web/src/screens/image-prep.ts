@@ -19,13 +19,13 @@ export interface PreparedScreenshots {
   headerHeight: number;
 }
 
-const regions: Record<ScreenshotMode, { rows: CropRegion; header?: CropRegion }> = {
-  // Include the first and last visible card (up to y≈1360 on a 1536px screen).
-  // A narrow crop lost lower members and truncated long nicknames near x≈440.
-  // Avoid the right-side role labels and the bottom game navigation.
+export const regions: Record<ScreenshotMode, { rows: CropRegion; header?: CropRegion }> = {
+  // Player names and power are near x≈0.15 of the full screenshot. The previous
+  // x=0.23 crop removed their beginning and captured partial "Member"/"Captain"
+  // labels; including the bottom tabs also fed non-player text to Vision.
   clan: {
-    rows: { x: 0.23, y: 0.468, width: 0.5, height: 0.417 },
-    header: { x: 0.15, y: 0.244, width: 0.7, height: 0.224 },
+    rows: { x: 0.1, y: 0.47, width: 0.63, height: 0.342 },
+    header: { x: 0.13, y: 0.125, width: 0.75, height: 0.335 },
   },
   // Existing ranking OCR looked for ranks between 39% and 80% screen height.
   ranking: {
