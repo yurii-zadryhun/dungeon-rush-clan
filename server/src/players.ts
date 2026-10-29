@@ -323,20 +323,30 @@ export class PlayersService {
         .where('player_id', '=', sourceId)
         .execute();
       // Keep all historical power observations when consolidating OCR nicknames.
-      const sourcePower = await trx.selectFrom('clan_roster_entries').selectAll()
-        .where('player_id', '=', sourceId).execute();
-      const targetPower = await trx.selectFrom('clan_roster_entries').select('snapshot_id')
-        .where('player_id', '=', targetId).execute();
+      const sourcePower = await trx
+        .selectFrom('clan_roster_entries')
+        .selectAll()
+        .where('player_id', '=', sourceId)
+        .execute();
+      const targetPower = await trx
+        .selectFrom('clan_roster_entries')
+        .select('snapshot_id')
+        .where('player_id', '=', targetId)
+        .execute();
       const occupiedSnapshots = new Set(targetPower.map((entry) => entry.snapshot_id));
       for (const entry of sourcePower) {
         if (!occupiedSnapshots.has(entry.snapshot_id)) continue;
-        await trx.deleteFrom('clan_roster_entries')
+        await trx
+          .deleteFrom('clan_roster_entries')
           .where('snapshot_id', '=', entry.snapshot_id)
           .where('player_id', '=', overlap === 'keepTarget' ? sourceId : targetId)
           .execute();
       }
-      await trx.updateTable('clan_roster_entries').set({ player_id: targetId })
-        .where('player_id', '=', sourceId).execute();
+      await trx
+        .updateTable('clan_roster_entries')
+        .set({ player_id: targetId })
+        .where('player_id', '=', sourceId)
+        .execute();
       await trx.deleteFrom('players').where('id', '=', sourceId).execute();
       await trx
         .insertInto('player_aliases')

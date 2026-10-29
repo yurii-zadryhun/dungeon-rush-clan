@@ -1,6 +1,14 @@
 import React from 'react';
 import { Activity, AlertTriangle, ArrowDownRight, ShieldCheck, Trophy, Users } from 'lucide-react';
-import { api, shortNumber, type ClanHealth, type ClanRosterTimelineEntry, type DayAnalytics, type HealthPlayer, type WarPointsPoint } from '../api';
+import {
+  api,
+  shortNumber,
+  type ClanHealth,
+  type ClanRosterTimelineEntry,
+  type DayAnalytics,
+  type HealthPlayer,
+  type WarPointsPoint,
+} from '../api';
 import { useI18n } from '../i18n';
 import './InsightsWidgets.css';
 
@@ -151,12 +159,7 @@ export function DayOutcomesWidget() {
   );
 }
 
-
-function trendLine(
-  values: number[],
-  scale: (value: number) => number,
-  color: string,
-) {
+function trendLine(values: number[], scale: (value: number) => number, color: string) {
   const toX = (index: number) => 48 + (index * 542) / Math.max(1, values.length - 1);
   return (
     <>
@@ -171,7 +174,15 @@ function trendLine(
         />
       )}
       {values.map((value, index) => (
-        <circle key={index} cx={toX(index)} cy={scale(value)} r="5" fill={color} stroke="#181a20" strokeWidth="2">
+        <circle
+          key={index}
+          cx={toX(index)}
+          cy={scale(value)}
+          r="5"
+          fill={color}
+          stroke="#181a20"
+          strokeWidth="2"
+        >
           <title>{value.toLocaleString()}</title>
         </circle>
       ))}
@@ -181,7 +192,9 @@ function trendLine(
 
 function shortDate(date: string, locale: string) {
   return new Intl.DateTimeFormat(locale === 'uk' ? 'uk-UA' : 'en-US', {
-    month: 'short', day: 'numeric', timeZone: 'UTC',
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
   }).format(new Date(date));
 }
 
@@ -192,27 +205,41 @@ export function ClanGrowthWidget() {
   React.useEffect(() => {
     let active = true;
     api<ClanRosterTimelineEntry[]>('clan-roster/timeline')
-      .then((result) => { if (active) setData(result); })
-      .catch((failure) => { if (active) setError((failure as Error).message); });
-    return () => { active = false; };
+      .then((result) => {
+        if (active) setData(result);
+      })
+      .catch((failure) => {
+        if (active) setError((failure as Error).message);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const last = data?.at(-1);
   const prior = data && data.length > 1 ? data[data.length - 2] : null;
-  const maximum = Math.max(1, ...((data ?? []).map((entry) => entry.totalPower)));
+  const maximum = Math.max(1, ...(data ?? []).map((entry) => entry.totalPower));
   const toY = (value: number) => 182 - (value / maximum) * 145;
 
   return (
     <section className="panel insight-widget clan-growth-widget">
-      <h2><Activity size={19} /> {t('clanGrowthTitle')}</h2>
+      <h2>
+        <Activity size={19} /> {t('clanGrowthTitle')}
+      </h2>
       {error && <p className="error-strip">{error}</p>}
       {data === null && !error && <p className="muted tiny">{t('loading')}</p>}
       {data && data.length === 0 && <p className="muted">{t('clanGrowthEmpty')}</p>}
       {last && (
         <>
           <div className="growth-headline">
-            <div><strong>{last.totalPowerText}</strong><small>{t('clanPower')}</small></div>
-            <div><strong>{last.memberCount}</strong><small>{t('clanExpectedCount')}</small></div>
+            <div>
+              <strong>{last.totalPowerText}</strong>
+              <small>{t('clanPower')}</small>
+            </div>
+            <div>
+              <strong>{last.memberCount}</strong>
+              <small>{t('clanExpectedCount')}</small>
+            </div>
             {prior && (
               <div>
                 <strong className={last.totalPower >= prior.totalPower ? 'positive' : 'negative'}>
@@ -226,18 +253,32 @@ export function ClanGrowthWidget() {
             )}
           </div>
           <div className="growth-plot">
-            <svg viewBox="0 0 640 285" role="img" preserveAspectRatio="xMidYMid meet"
-              aria-label={t('clanPowerTrend')}>
+            <svg
+              viewBox="0 0 640 285"
+              role="img"
+              preserveAspectRatio="xMidYMid meet"
+              aria-label={t('clanPowerTrend')}
+            >
               {[0, 0.5, 1].map((fraction) => (
                 <g key={fraction}>
-                  <line x1="48" x2="590" y1={toY(maximum * fraction)}
-                    y2={toY(maximum * fraction)} stroke="#554c5b" strokeDasharray="4 5" />
+                  <line
+                    x1="48"
+                    x2="590"
+                    y1={toY(maximum * fraction)}
+                    y2={toY(maximum * fraction)}
+                    stroke="#554c5b"
+                    strokeDasharray="4 5"
+                  />
                   <text x="5" y={toY(maximum * fraction) - 5} fontSize="12" fill="#d2c9d5">
-                    {fraction === 0 ? '0' : (last.totalPowerText && fraction === 1 ? 'Max' : '½')}
+                    {fraction === 0 ? '0' : last.totalPowerText && fraction === 1 ? 'Max' : '½'}
                   </text>
                 </g>
               ))}
-              {trendLine(data.map((entry) => entry.totalPower), toY, '#7ee899')}
+              {trendLine(
+                data.map((entry) => entry.totalPower),
+                toY,
+                '#7ee899',
+              )}
               <line x1="48" x2="590" y1="232" y2="232" stroke="#6f6574" />
               {data.map((entry, index) => {
                 const x = 48 + (index * 542) / Math.max(1, data.length - 1);
@@ -245,25 +286,46 @@ export function ClanGrowthWidget() {
                 const height = Math.min(36, change * 10);
                 return (
                   <g key={entry.id}>
-                    {(entry.joined ?? 0) > 0 && <rect x={x - 8} y={232 - height} width="7" height={height}
-                      fill="#75d894"><title>+{entry.joined} {t('clanJoined')}</title></rect>}
-                    {(entry.left ?? 0) > 0 && <rect x={x + 1} y="232" width="7"
-                      height={Math.min(33, entry.left! * 10)} fill="#ee8e93">
-                      <title>−{entry.left} {t('clanLeft')}</title>
-                    </rect>}
-                    {(data.length <= 6 || index === 0 || index === data.length - 1) &&
+                    {(entry.joined ?? 0) > 0 && (
+                      <rect x={x - 8} y={232 - height} width="7" height={height} fill="#75d894">
+                        <title>
+                          +{entry.joined} {t('clanJoined')}
+                        </title>
+                      </rect>
+                    )}
+                    {(entry.left ?? 0) > 0 && (
+                      <rect
+                        x={x + 1}
+                        y="232"
+                        width="7"
+                        height={Math.min(33, entry.left! * 10)}
+                        fill="#ee8e93"
+                      >
+                        <title>
+                          −{entry.left} {t('clanLeft')}
+                        </title>
+                      </rect>
+                    )}
+                    {(data.length <= 6 || index === 0 || index === data.length - 1) && (
                       <text x={x} y="279" fill="#bdb7c2" fontSize="12" textAnchor="middle">
                         {shortDate(entry.capturedAt, locale)}
-                      </text>}
+                      </text>
+                    )}
                   </g>
                 );
               })}
             </svg>
           </div>
           <div className="growth-legend">
-            <span><i className="growth-dot power" /> {t('clanPowerTrend')}</span>
-            <span><i className="growth-dot joined" /> {t('clanJoined')}</span>
-            <span><i className="growth-dot left" /> {t('clanLeft')}</span>
+            <span>
+              <i className="growth-dot power" /> {t('clanPowerTrend')}
+            </span>
+            <span>
+              <i className="growth-dot joined" /> {t('clanJoined')}
+            </span>
+            <span>
+              <i className="growth-dot left" /> {t('clanLeft')}
+            </span>
           </div>
           <p className="muted tiny">{t('clanSnapshotNote', { count: data.length })}</p>
         </>
@@ -279,54 +341,97 @@ export function WarPointsWidget() {
   React.useEffect(() => {
     let active = true;
     api<WarPointsPoint[]>('insights/war-points')
-      .then((result) => { if (active) setData(result); })
-      .catch((failure) => { if (active) setError((failure as Error).message); });
-    return () => { active = false; };
+      .then((result) => {
+        if (active) setData(result);
+      })
+      .catch((failure) => {
+        if (active) setError((failure as Error).message);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const max = Math.max(1, ...(data ?? []).map((entry) => entry.total));
-  const overall = data?.length ? Math.round(data.reduce((sum, entry) => sum + entry.total, 0) / data.length) : 0;
+  const overall = data?.length
+    ? Math.round(data.reduce((sum, entry) => sum + entry.total, 0) / data.length)
+    : 0;
   const latest = data?.at(-1);
   const previous = data && data.length > 1 ? data[data.length - 2] : null;
 
   return (
     <section className="panel insight-widget war-points-widget">
-      <h2><Trophy size={19} /> {t('warPointsTitle')}</h2>
+      <h2>
+        <Trophy size={19} /> {t('warPointsTitle')}
+      </h2>
       {error && <p className="error-strip">{error}</p>}
       {data === null && !error && <p className="muted tiny">{t('loading')}</p>}
       {data?.length === 0 && <p className="muted">{t('warPointsEmpty')}</p>}
       {latest && (
         <>
           <div className="growth-headline">
-            <div><strong>{shortNumber(latest.total)}</strong><small>{t('warPointsLast')}</small></div>
-            <div><strong>{shortNumber(overall)}</strong><small>{t('warPointsAverage')}</small></div>
-            <div><strong>{shortNumber(latest.average)}</strong><small>{t('warPointsPerPlayer')}</small></div>
+            <div>
+              <strong>{shortNumber(latest.total)}</strong>
+              <small>{t('warPointsLast')}</small>
+            </div>
+            <div>
+              <strong>{shortNumber(overall)}</strong>
+              <small>{t('warPointsAverage')}</small>
+            </div>
+            <div>
+              <strong>{shortNumber(latest.average)}</strong>
+              <small>{t('warPointsPerPlayer')}</small>
+            </div>
           </div>
           <div className="growth-plot">
             <svg viewBox="0 0 640 235" role="img" aria-label={t('warPointsTitle')}>
               {[0, 0.5, 1].map((fraction) => (
                 <g key={fraction}>
-                  <line x1="48" x2="590" y1={190 - fraction * 150}
-                    y2={190 - fraction * 150} stroke="#514d59" strokeDasharray="4 5" />
+                  <line
+                    x1="48"
+                    x2="590"
+                    y1={190 - fraction * 150}
+                    y2={190 - fraction * 150}
+                    stroke="#514d59"
+                    strokeDasharray="4 5"
+                  />
                   <text x="3" y={185 - fraction * 150} fontSize="12" fill="#c9c0cb">
                     {shortNumber(max * fraction)}
                   </text>
                 </g>
               ))}
-              {trendLine(data.map((entry) => entry.total), (value) => 190 - (value / max) * 150, '#88c7f5')}
-              {data.filter((_, index) => data.length <= 6 || index === 0 || index === data.length - 1)
+              {trendLine(
+                data.map((entry) => entry.total),
+                (value) => 190 - (value / max) * 150,
+                '#88c7f5',
+              )}
+              {data
+                .filter((_, index) => data.length <= 6 || index === 0 || index === data.length - 1)
                 .map((entry) => {
                   const x = 48 + (data.indexOf(entry) * 542) / Math.max(1, data.length - 1);
-                  return <text key={entry.start} x={x} y="226" fill="#bfbac5" fontSize="12"
-                    textAnchor="middle">{shortDate(entry.start, locale)}</text>;
+                  return (
+                    <text
+                      key={entry.start}
+                      x={x}
+                      y="226"
+                      fill="#bfbac5"
+                      fontSize="12"
+                      textAnchor="middle"
+                    >
+                      {shortDate(entry.start, locale)}
+                    </text>
+                  );
                 })}
             </svg>
           </div>
-          {previous && <p className="muted tiny">
-            {t('warPointsDelta')}: {latest.total >= previous.total ? '+' : ''}
-            {shortNumber(latest.total - previous.total)}
-            {' · '}{t('warPointsPlayers')}: {latest.playerCount}
-          </p>}
+          {previous && (
+            <p className="muted tiny">
+              {t('warPointsDelta')}: {latest.total >= previous.total ? '+' : ''}
+              {shortNumber(latest.total - previous.total)}
+              {' · '}
+              {t('warPointsPlayers')}: {latest.playerCount}
+            </p>
+          )}
         </>
       )}
     </section>

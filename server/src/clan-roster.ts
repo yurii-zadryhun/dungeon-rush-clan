@@ -39,13 +39,17 @@ export class ClanRosterService {
 
   async candidates() {
     const [players, aliases, latest] = await Promise.all([
-      this.db.query.selectFrom('players').select(['id', 'name', 'active'])
-        .orderBy('name').execute(),
-      this.db.query.selectFrom('player_aliases')
-        .select(['normalized_name as normalizedName', 'player_id as playerId']).execute(),
-      this.db.query.selectFrom('clan_roster_snapshots')
+      this.db.query.selectFrom('players').select(['id', 'name', 'active']).orderBy('name').execute(),
+      this.db.query
+        .selectFrom('player_aliases')
+        .select(['normalized_name as normalizedName', 'player_id as playerId'])
+        .execute(),
+      this.db.query
+        .selectFrom('clan_roster_snapshots')
         .select(['id', 'captured_at as capturedAt', 'reported_members as reportedMembers'])
-        .orderBy('captured_at', 'desc').orderBy('id', 'desc').executeTakeFirst(),
+        .orderBy('captured_at', 'desc')
+        .orderBy('id', 'desc')
+        .executeTakeFirst(),
     ]);
     return { players, aliases, latest: latest ?? null };
   }
@@ -90,17 +94,16 @@ export class ClanRosterService {
 
     let snapshotId = 0;
     await this.db.query.transaction().execute(async (trx) => {
-      const existing = await trx.selectFrom('players')
-        .select(['id', 'account_id']).execute();
+      const existing = await trx.selectFrom('players').select(['id', 'account_id']).execute();
       const ids = new Set(existing.map((player) => player.id));
       const selected = new Set<number>();
       const entryIds: number[] = [];
       for (const [index, player] of data.players.entries()) {
-        let id = player.playerId ??
-          await this.identities.resolve(trx, player.name);
+        let id = player.playerId ?? (await this.identities.resolve(trx, player.name));
         if (id && !ids.has(id)) throw new BadRequestException('Unknown matched player ID');
         if (!id) {
-          const inserted = await trx.insertInto('players')
+          const inserted = await trx
+            .insertInto('players')
             .values({
               name: player.name,
               normalized_name: normalizeName(player.name),
@@ -108,7 +111,8 @@ export class ClanRosterService {
               active: 1,
               created_at: capturedAt,
             })
-            .returning('id').executeTakeFirstOrThrow();
+            .returning('id')
+            .executeTakeFirstOrThrow();
           id = inserted.id;
           ids.add(id);
         }
@@ -119,36 +123,50 @@ export class ClanRosterService {
         entryIds.push(id);
       }
       // Preserve the association between existing site accounts and newly recognized players.
-      const availableAccounts = await trx.selectFrom('accounts')
+      const availableAccounts = await trx
+        .selectFrom('accounts')
         .select(['id', 'username'])
-        .where('active', '=', 1).execute();
-      const linked = new Set(existing.filter((player) => player.account_id !== null)
-        .map((player) => player.account_id));
+        .where('active', '=', 1)
+        .execute();
+      const linked = new Set(
+        existing.filter((player) => player.account_id !== null).map((player) => player.account_id),
+      );
       for (const [index, id] of entryIds.entries()) {
-        const matched = availableAccounts.find((account) =>
-          normalizeName(account.username) === normalizeName(data.players[index].name));
+        const matched = availableAccounts.find(
+          (account) => normalizeName(account.username) === normalizeName(data.players[index].name),
+        );
         if (matched && !linked.has(matched.id)) {
-          const update = await trx.updateTable('players').set({ account_id: matched.id })
-            .where('id', '=', id).where('account_id', 'is', null).executeTakeFirst();
+          const update = await trx
+            .updateTable('players')
+            .set({ account_id: matched.id })
+            .where('id', '=', id)
+            .where('account_id', 'is', null)
+            .executeTakeFirst();
           if (update.numUpdatedRows) linked.add(matched.id);
         }
       }
-      const snapshot = await trx.insertInto('clan_roster_snapshots')
+      const snapshot = await trx
+        .insertInto('clan_roster_snapshots')
         .values({
           captured_at: capturedAt,
           imported_at: Date.now(),
           reported_members: data.reportedMembers,
           reported_power: reported,
           screenshot_count: data.screenshotCount,
-        }).returning('id').executeTakeFirstOrThrow();
+        })
+        .returning('id')
+        .executeTakeFirstOrThrow();
       snapshotId = snapshot.id;
       for (const [index, player] of data.players.entries()) {
-        await trx.insertInto('clan_roster_entries').values({
-          snapshot_id: snapshot.id,
-          player_id: entryIds[index],
-          power: powers[index]!,
-          power_text: player.powerText,
-        }).execute();
+        await trx
+          .insertInto('clan_roster_entries')
+          .values({
+            snapshot_id: snapshot.id,
+            player_id: entryIds[index],
+            power: powers[index]!,
+            power_text: player.powerText,
+          })
+          .execute();
       }
       await this.membership.refresh(trx);
     });
@@ -157,9 +175,15 @@ export class ClanRosterService {
 
   async timeline() {
     const [snapshots, entries] = await Promise.all([
-      this.db.query.selectFrom('clan_roster_snapshots').selectAll()
-        .orderBy('captured_at', 'asc').orderBy('id', 'asc').execute(),
-      this.db.query.selectFrom('clan_roster_entries').select(['snapshot_id', 'player_id', 'power'])
+      this.db.query
+        .selectFrom('clan_roster_snapshots')
+        .selectAll()
+        .orderBy('captured_at', 'asc')
+        .orderBy('id', 'asc')
+        .execute(),
+      this.db.query
+        .selectFrom('clan_roster_entries')
+        .select(['snapshot_id', 'player_id', 'power'])
         .execute(),
     ]);
     const grouped = new Map<number, { ids: Set<number>; power: number }>();
@@ -192,7 +216,8 @@ export class ClanRosterService {
   async playerHistory(playerId: number) {
     if (!Number.isSafeInteger(playerId) || playerId < 1)
       throw new BadRequestException('Invalid player ID');
-    const rows = await this.db.query.selectFrom('clan_roster_entries')
+    const rows = await this.db.query
+      .selectFrom('clan_roster_entries')
       .innerJoin('clan_roster_snapshots', 'clan_roster_entries.snapshot_id', 'clan_roster_snapshots.id')
       .select([
         'clan_roster_snapshots.id as snapshotId',
@@ -201,7 +226,8 @@ export class ClanRosterService {
         'clan_roster_entries.power_text as powerText',
       ])
       .where('clan_roster_entries.player_id', '=', playerId)
-      .orderBy('clan_roster_snapshots.captured_at').execute();
+      .orderBy('clan_roster_snapshots.captured_at')
+      .execute();
     return rows.map((row) => ({
       ...row,
       capturedAt: new Date(row.capturedAt).toISOString(),
@@ -209,15 +235,25 @@ export class ClanRosterService {
   }
 
   async latest() {
-    const snapshot = await this.db.query.selectFrom('clan_roster_snapshots')
-      .selectAll().orderBy('captured_at', 'desc').orderBy('id', 'desc')
+    const snapshot = await this.db.query
+      .selectFrom('clan_roster_snapshots')
+      .selectAll()
+      .orderBy('captured_at', 'desc')
+      .orderBy('id', 'desc')
       .executeTakeFirst();
     if (!snapshot) return null;
-    const entries = await this.db.query.selectFrom('clan_roster_entries')
+    const entries = await this.db.query
+      .selectFrom('clan_roster_entries')
       .innerJoin('players', 'players.id', 'clan_roster_entries.player_id')
-      .select(['players.id', 'players.name', 'clan_roster_entries.power', 'clan_roster_entries.power_text as powerText'])
+      .select([
+        'players.id',
+        'players.name',
+        'clan_roster_entries.power',
+        'clan_roster_entries.power_text as powerText',
+      ])
       .where('clan_roster_entries.snapshot_id', '=', snapshot.id)
-      .orderBy('players.name').execute();
+      .orderBy('players.name')
+      .execute();
     return {
       id: snapshot.id,
       capturedAt: new Date(snapshot.captured_at).toISOString(),
@@ -234,19 +270,29 @@ export class ClanRosterController {
   constructor(private readonly roster: ClanRosterService) {}
 
   @Get('timeline')
-  timeline() { return this.roster.timeline(); }
+  timeline() {
+    return this.roster.timeline();
+  }
 
   @Get('latest')
-  latest() { return this.roster.latest(); }
+  latest() {
+    return this.roster.latest();
+  }
 
   @Get('players/:id')
-  history(@Param('id') id: string) { return this.roster.playerHistory(Number(id)); }
+  history(@Param('id') id: string) {
+    return this.roster.playerHistory(Number(id));
+  }
 
   @UseGuards(AdminGuard)
   @Get('candidates')
-  candidates() { return this.roster.candidates(); }
+  candidates() {
+    return this.roster.candidates();
+  }
 
   @UseGuards(AdminGuard)
   @Post('confirm')
-  confirm(@Body() body: unknown) { return this.roster.confirm(body); }
+  confirm(@Body() body: unknown) {
+    return this.roster.confirm(body);
+  }
 }

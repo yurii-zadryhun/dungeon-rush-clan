@@ -76,7 +76,8 @@ export class RankingService {
         contactUrl: settings.contact_url,
       },
       calculated: ranking.slice().sort((a, b) => b.score - a.score),
-      allTime: ranking.filter((player) => player.appearances > 0)
+      allTime: ranking
+        .filter((player) => player.appearances > 0)
         .sort((a, b) => b.average - a.average || b.appearances - a.appearances),
       latest: ranking
         .filter((p) => p.lastPoints !== null)

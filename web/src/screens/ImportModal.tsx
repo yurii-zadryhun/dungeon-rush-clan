@@ -126,7 +126,8 @@ export function ImportModal({
         try {
           const prepared = await prepareScreenshots(rankingImages, 'ranking');
           prepared.parts.forEach((blob, index) =>
-            form.append('rankingMosaic', blob, 'rankings-' + index + '.jpg'));
+            form.append('rankingMosaic', blob, 'rankings-' + index + '.jpg'),
+          );
         } catch {
           rankingImages.forEach((file) => form.append('ranking', file));
         }

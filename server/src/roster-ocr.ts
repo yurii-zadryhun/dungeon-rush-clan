@@ -46,10 +46,16 @@ function lines(words: Word[]): { y: number; text: string }[] {
     row.words.push(word);
     row.y += (word.y - row.y) / row.words.length;
   }
-  return groups.sort((a, b) => a.y - b.y).map((row) => ({
-    y: row.y,
-    text: row.words.sort((a, b) => a.x - b.x).map((word) => word.text).join(' ').trim(),
-  }));
+  return groups
+    .sort((a, b) => a.y - b.y)
+    .map((row) => ({
+      y: row.y,
+      text: row.words
+        .sort((a, b) => a.x - b.x)
+        .map((word) => word.text)
+        .join(' ')
+        .trim(),
+    }));
 }
 
 export function parseRosterScreenshot(
@@ -59,10 +65,15 @@ export function parseRosterScreenshot(
 ): RosterRecognition {
   const warnings: string[] = [];
   const all = lines(text.words);
-  const header = all.filter((row) => row.y <= headerHeight + 5).map((row) => row.text).join('\n');
+  const header = all
+    .filter((row) => row.y <= headerHeight + 5)
+    .map((row) => row.text)
+    .join('\n');
   // Cloud Vision may split '48/50' or '77.80q' over multiple words.
   const members = header.match(/Members?\s*[:\s]*?(\d{1,3})\s*\/\s*(\d{1,3})/i);
-  const headerPower = header.match(/\bPower\s*[:\s\S]*?(\d{1,5}(?:[.,]\d{1,4})?)\s*([KMBTqQ])(?=$|[^\p{L}])/u);
+  const headerPower = header.match(
+    /\bPower\s*[:\s\S]*?(\d{1,5}(?:[.,]\d{1,4})?)\s*([KMBTqQ])(?=$|[^\p{L}])/u,
+  );
   const reportedPowerText = headerPower ? headerPower[1] + headerPower[2] : null;
   const output: RecognizedPower[] = [];
   let previous = '';

@@ -10,7 +10,14 @@ import {
   UploadCloud,
   Users,
 } from 'lucide-react';
-import { api, shortNumber, type Account, type ClanRosterSnapshot, type Dashboard, type Player } from '../api';
+import {
+  api,
+  shortNumber,
+  type Account,
+  type ClanRosterSnapshot,
+  type Dashboard,
+  type Player,
+} from '../api';
 import { useI18n } from '../i18n';
 const ClanRosterImportModal = React.lazy(() =>
   import('./ClanRosterImportModal').then((m) => ({ default: m.ClanRosterImportModal })),
@@ -85,7 +92,9 @@ export function PlayersPage({
       .then(([players, rosterSnapshot, accounts]) => {
         if (!alive) return;
         setMembers(players);
-        setPowerByPlayer(new Map(rosterSnapshot?.entries.map((entry) => [entry.id, entry.powerText]) ?? []));
+        setPowerByPlayer(
+          new Map(rosterSnapshot?.entries.map((entry) => [entry.id, entry.powerText]) ?? []),
+        );
         setAccountsTotal(isStaff ? accounts.filter((item) => item.active).length : null);
         const linked = new Set(players.map((player) => player.accountId).filter((id) => id != null));
         setStandaloneAccounts(accounts.filter((item) => !linked.has(item.id)));
@@ -142,10 +151,14 @@ export function PlayersPage({
           </h1>
           <p className="muted">{t('playersDirectoryHelp')}</p>
         </div>
-        {isStaff && <button className="game-button blue clan-import-trigger"
-          onClick={() => setRosterImportOpen(true)}>
-          <UploadCloud size={16} /> {t('clanImportTitle')}
-        </button>}
+        {isStaff && (
+          <button
+            className="game-button blue clan-import-trigger"
+            onClick={() => setRosterImportOpen(true)}
+          >
+            <UploadCloud size={16} /> {t('clanImportTitle')}
+          </button>
+        )}
       </header>
 
       {isStaff && (
@@ -260,7 +273,12 @@ export function PlayersPage({
                   </div>
                   <div className="players-directory-list" role="rowgroup">
                     {visible.map((player) => (
-                      <DirectoryRow key={player.id} player={player} stat={stats.get(player.id)} power={powerByPlayer.get(player.id)} />
+                      <DirectoryRow
+                        key={player.id}
+                        player={player}
+                        stat={stats.get(player.id)}
+                        power={powerByPlayer.get(player.id)}
+                      />
                     ))}
                   </div>
                 </div>
@@ -294,18 +312,28 @@ export function PlayersPage({
       )}
       {rosterImportOpen && (
         <React.Suspense fallback={null}>
-          <ClanRosterImportModal onClose={() => setRosterImportOpen(false)}
+          <ClanRosterImportModal
+            onClose={() => setRosterImportOpen(false)}
             onDone={(dashboard) => {
               merged(dashboard);
               setRosterImportOpen(false);
-            }} />
+            }}
+          />
         </React.Suspense>
       )}
     </main>
   );
 }
 
-function DirectoryRow({ player, stat, power }: { player: DirectoryPlayer; stat?: Player; power?: string }) {
+function DirectoryRow({
+  player,
+  stat,
+  power,
+}: {
+  player: DirectoryPlayer;
+  stat?: Player;
+  power?: string;
+}) {
   const { t } = useI18n();
   return (
     <div className={'directory-player' + (!player.active ? ' inactive' : '')} role="row">

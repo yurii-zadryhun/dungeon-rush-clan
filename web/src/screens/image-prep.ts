@@ -67,10 +67,14 @@ function drawRegion(
 
 function toJpeg(canvas: HTMLCanvasElement): Promise<Blob> {
   return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (blob) resolve(blob);
-      else reject(new Error('Failed to prepare the screenshot for OCR'));
-    }, 'image/jpeg', 0.87);
+    canvas.toBlob(
+      (blob) => {
+        if (blob) resolve(blob);
+        else reject(new Error('Failed to prepare the screenshot for OCR'));
+      },
+      'image/jpeg',
+      0.87,
+    );
   });
 }
 
@@ -100,10 +104,10 @@ export async function prepareScreenshots(
       const includeHeader = mode === 'clan' && start === 0 && profile.header;
       const headerHeight = includeHeader ? scaledHeight(current[0], profile.header!) : 0;
       const headerGap = headerHeight ? SEPARATOR : 0;
-      const height = headerHeight + headerGap + current.reduce(
-        (sum, image) => sum + scaledHeight(image, profile.rows) + SEPARATOR,
-        0,
-      );
+      const height =
+        headerHeight +
+        headerGap +
+        current.reduce((sum, image) => sum + scaledHeight(image, profile.rows) + SEPARATOR, 0);
       const canvas = document.createElement('canvas');
       canvas.width = IMAGE_WIDTH;
       canvas.height = height;

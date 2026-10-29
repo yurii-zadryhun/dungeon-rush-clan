@@ -127,61 +127,110 @@ function ProgressChart({ main, compare }: { main: PlayerProgress; compare: Playe
   );
 }
 
-
 function PowerHistoryChart({ history }: { history: PlayerPowerEntry[] }) {
   const { t, locale } = useI18n();
   if (!history.length) return <p className="muted">{t('noPowerHistory')}</p>;
   const values = history.map((entry) => entry.power);
   const max = Math.max(1, ...values);
   const width = 640;
-  const x = (index: number) => 36 + index * 568 / Math.max(1, history.length - 1);
+  const x = (index: number) => 36 + (index * 568) / Math.max(1, history.length - 1);
   const y = (power: number) => 179 - (power / max) * 143;
-  const dates = history.map((entry) => new Intl.DateTimeFormat(locale === 'uk' ? 'uk-UA' : 'en-US', {
-    month: 'short', day: 'numeric', timeZone: 'UTC',
-  }).format(new Date(entry.capturedAt)));
+  const dates = history.map((entry) =>
+    new Intl.DateTimeFormat(locale === 'uk' ? 'uk-UA' : 'en-US', {
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC',
+    }).format(new Date(entry.capturedAt)),
+  );
   return (
     <div className="power-chart">
-      <svg viewBox="0 0 640 217" role="img" aria-label={t('powerHistoryTitle')}
-        preserveAspectRatio="xMidYMid meet">
-        {[0, .5, 1].map((fraction) => (
+      <svg
+        viewBox="0 0 640 217"
+        role="img"
+        aria-label={t('powerHistoryTitle')}
+        preserveAspectRatio="xMidYMid meet"
+      >
+        {[0, 0.5, 1].map((fraction) => (
           <g key={fraction}>
-            <line x1="36" x2="604" y1={y(max * fraction)} y2={y(max * fraction)}
-              stroke="#554d5d" strokeDasharray="4 5" />
+            <line
+              x1="36"
+              x2="604"
+              y1={y(max * fraction)}
+              y2={y(max * fraction)}
+              stroke="#554d5d"
+              strokeDasharray="4 5"
+            />
             <text x="3" y={y(max * fraction) - 5} fill="#d5cad6" fontSize="11">
-              {fraction === 1 ? history.reduce((a, b) => a.power > b.power ? a : b).powerText :
-                fraction === 0 ? '0' : '½'}
+              {fraction === 1
+                ? history.reduce((a, b) => (a.power > b.power ? a : b)).powerText
+                : fraction === 0
+                  ? '0'
+                  : '½'}
             </text>
           </g>
         ))}
         {history.length > 1 && (
-          <polyline fill="none" stroke="#e6c16f" strokeWidth="3.4"
-            strokeLinecap="round" strokeLinejoin="round"
-            points={values.map((value, index) => x(index) + ',' + y(value)).join(' ')} />
+          <polyline
+            fill="none"
+            stroke="#e6c16f"
+            strokeWidth="3.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            points={values.map((value, index) => x(index) + ',' + y(value)).join(' ')}
+          />
         )}
         {history.map((entry, index) => (
-          <circle key={entry.snapshotId} cx={x(index)} cy={y(entry.power)} r="5"
-            stroke="#1b1c1f" strokeWidth="2" fill="#f3c975">
-            <title>{dates[index]}: {entry.powerText}</title>
+          <circle
+            key={entry.snapshotId}
+            cx={x(index)}
+            cy={y(entry.power)}
+            r="5"
+            stroke="#1b1c1f"
+            strokeWidth="2"
+            fill="#f3c975"
+          >
+            <title>
+              {dates[index]}: {entry.powerText}
+            </title>
           </circle>
         ))}
-        {history.filter((_, index) => history.length <= 6 || index === 0 || index === history.length - 1)
+        {history
+          .filter((_, index) => history.length <= 6 || index === 0 || index === history.length - 1)
           .map((entry) => {
             const index = history.indexOf(entry);
-            return <text key={entry.snapshotId} x={x(index)} y="208" fontSize="12"
-              fill="#c9c0cb" textAnchor="middle">{dates[index]}</text>;
+            return (
+              <text
+                key={entry.snapshotId}
+                x={x(index)}
+                y="208"
+                fontSize="12"
+                fill="#c9c0cb"
+                textAnchor="middle"
+              >
+                {dates[index]}
+              </text>
+            );
           })}
       </svg>
       <div className="power-chart-summary">
-        <span><strong>{history.at(-1)?.powerText}</strong><small>{t('latestPower')}</small></span>
-        <span><strong>{history.length}</strong><small>{t('powerObservations')}</small></span>
-        {history.length > 1 && <span>
-          <strong className={history.at(-1)!.power >= history.at(-2)!.power ? 'friendly' : 'danger'}>
-            {history.at(-2)!.power > 0
-              ? ((history.at(-1)!.power / history.at(-2)!.power - 1) * 100).toFixed(1) + '%'
-              : '—'}
-          </strong>
-          <small>{t('clanPowerChange')}</small>
-        </span>}
+        <span>
+          <strong>{history.at(-1)?.powerText}</strong>
+          <small>{t('latestPower')}</small>
+        </span>
+        <span>
+          <strong>{history.length}</strong>
+          <small>{t('powerObservations')}</small>
+        </span>
+        {history.length > 1 && (
+          <span>
+            <strong className={history.at(-1)!.power >= history.at(-2)!.power ? 'friendly' : 'danger'}>
+              {history.at(-2)!.power > 0
+                ? ((history.at(-1)!.power / history.at(-2)!.power - 1) * 100).toFixed(1) + '%'
+                : '—'}
+            </strong>
+            <small>{t('clanPowerChange')}</small>
+          </span>
+        )}
       </div>
     </div>
   );
@@ -329,7 +378,9 @@ export function PlayerInsightsPage({
 
           <section className="panel player-trends power-history-panel">
             <div className="player-section-heading">
-              <h2><TrendingUp size={19} /> {t('powerHistoryTitle')}</h2>
+              <h2>
+                <TrendingUp size={19} /> {t('powerHistoryTitle')}
+              </h2>
             </div>
             <PowerHistoryChart history={player.powerHistory || []} />
           </section>

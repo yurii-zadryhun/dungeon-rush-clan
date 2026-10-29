@@ -16,13 +16,20 @@ describe('clan power units', () => {
     expect(formatPower(91.78e12)).toBe('91.78T');
   });
   it('recognizes two-row cards and the first screenshot header', () => {
-    const words = ([
-      ['Power', 13, 40], ['77.80q', 220, 40],
-      ['Members', 13, 92], ['48/50', 220, 92],
-      ['КРОСТ', 15, 180], ['6.98q', 15, 238],
-      ['aywy', 15, 348], ['9.64q', 15, 403],
-      ['GIBURGERJOEY', 15, 516], ['2.46q', 15, 573],
-    ] as const).map(([text, x, y]) => ({ text, x, y }));
+    const words = (
+      [
+        ['Power', 13, 40],
+        ['77.80q', 220, 40],
+        ['Members', 13, 92],
+        ['48/50', 220, 92],
+        ['КРОСТ', 15, 180],
+        ['6.98q', 15, 238],
+        ['aywy', 15, 348],
+        ['9.64q', 15, 403],
+        ['GIBURGERJOEY', 15, 516],
+        ['2.46q', 15, 573],
+      ] as const
+    ).map(([text, x, y]) => ({ text, x, y }));
     const input: VisionText = { raw: '', width: 600, height: 700, words };
     const result = parseRosterScreenshot(input, 1, 120);
     expect(result.reportedMembers).toBe(48);
