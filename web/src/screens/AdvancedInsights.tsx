@@ -1,54 +1,21 @@
 import React from 'react';
-import { Activity, ChartScatter, TrendingUp, Users } from 'lucide-react';
+import { Activity, Scale, TrendingUp, Users } from 'lucide-react';
 import { api, shortNumber, type ExtendedInsights } from '../api';
 import { useI18n } from '../i18n';
 import './AdvancedInsights.css';
+import { DataTable, DataTableRow, DataTableCell } from './DataTable';
+import { PlayerLink } from './PlayerLink';
+import { formatWarRange } from '../date-format';
 
-function ScatterPlot({ data }: { data: ExtendedInsights['powerContribution'] }) {
-  const maxPower = Math.max(1, ...data.map((item) => item.power));
-  const maxPoints = Math.max(1, ...data.map((item) => item.points));
-  const logPower = (power: number) => Math.log10(Math.max(1, power));
-  const maximum = logPower(maxPower);
-  const minimum = Math.min(maximum, ...data.map((item) => logPower(item.power)));
-  const scaleX = (power: number) =>
-    40 + (520 * (logPower(power) - minimum)) / Math.max(1, maximum - minimum);
-  const scaleY = (points: number) => 215 - (170 * points) / maxPoints;
-  return (
-    <svg
-      className="advanced-scatter"
-      viewBox="0 0 600 260"
-      role="img"
-      aria-label="Power versus contribution"
-    >
-      {[0, 0.5, 1].map((fraction) => (
-        <g key={fraction}>
-          <line
-            x1="40"
-            x2="560"
-            y1={scaleY(fraction * maxPoints)}
-            y2={scaleY(fraction * maxPoints)}
-            stroke="#504b57"
-            strokeDasharray="4 4"
-          />
-          <text x="2" y={scaleY(fraction * maxPoints) + 5} fill="#ccc" fontSize="11">
-            {shortNumber(maxPoints * fraction)}
-          </text>
-        </g>
-      ))}
-      {data.map((item) => (
-        <a href={'#/players/' + item.id} key={item.id}>
-          <circle cx={scaleX(item.power)} cy={scaleY(item.points)} r="5" fill="#8ecdf4" opacity=".82">
-            <title>
-              {item.name}: {shortNumber(item.power)} · {shortNumber(item.points)}
-            </title>
-          </circle>
-        </a>
-      ))}
-      <text x="300" y="252" fill="#c5c0cb" textAnchor="middle" fontSize="12">
-        Power (log scale)
-      </text>
-    </svg>
-  );
+/** Contribution share minus power share, in percentage points; not a combat model. */
+export function contributionBalance(data: ExtendedInsights['powerContribution']) {
+  const powerTotal = data.reduce((sum, item) => sum + Math.max(0, item.power), 0);
+  const pointsTotal = data.reduce((sum, item) => sum + Math.max(0, item.points), 0);
+  return data.map((item) => {
+    const powerShare = powerTotal ? item.power / powerTotal : 0;
+    const pointsShare = pointsTotal ? item.points / pointsTotal : 0;
+    return { ...item, powerShare, pointsShare, surplus: 100 * (pointsShare - powerShare) };
+  });
 }
 
 export function AdvancedInsights() {
@@ -56,6 +23,8 @@ export function AdvancedInsights() {
   const uk = locale === 'uk';
   const [data, setData] = React.useState<ExtendedInsights | null>(null);
   const [error, setError] = React.useState('');
+  const [powerSort, setPowerSort] = React.useState<'surplus' | 'points' | 'power'>('surplus');
+  const [descending, setDescending] = React.useState(true);
   React.useEffect(() => {
     let active = true;
     api<ExtendedInsights>('insights/extended')
@@ -76,6 +45,14 @@ export function AdvancedInsights() {
       </div>
     );
   if (!data) return <div className="panel">{uk ? 'Завантаження аналітики…' : 'Loading analytics…'}</div>;
+  const balance = contributionBalance(data.powerContribution).sort((left, right) =>
+    (descending ? -1 : 1) * (left[powerSort] - right[powerSort]) || left.name.localeCompare(right.name));
+  function sortBalance(value: 'surplus' | 'points' | 'power') {
+    if (powerSort === value) setDescending((current) => !current);
+    else { setPowerSort(value); setDescending(true); }
+  }
+  const marker = (value: 'surplus' | 'points' | 'power') =>
+    powerSort === value ? (descending ? ' ↓' : ' ↑') : '';
   const groups = [
     { label: uk ? 'Новачки' : 'Newcomers', value: data.activityGroups.newcomer },
     { label: uk ? 'Нижче мінімуму' : 'Below minimum', value: data.activityGroups.below },
@@ -96,6 +73,9 @@ export function AdvancedInsights() {
             </div>
           ))}
         </div>
+        <p className="muted tiny">{uk
+          ? 'Новачки також враховуються в категоріях очок; три категорії за очками не перетинаються.'
+          : 'Newcomers also belong to a points tier; the three points tiers do not overlap.'}</p>
       </section>
       <section className="panel insight-widget">
         <h2>
@@ -109,51 +89,82 @@ export function AdvancedInsights() {
               </b>
               <strong>{entry.rate === null ? '—' : entry.rate + '%'}</strong>
               <small>
-                {entry.retained} / {entry.eligible}
+                {entry.eligible > 0 ? entry.retained + ' / ' + entry.eligible :
+                  uk ? 'Недостатньо даних' : 'Not enough data'}
               </small>
             </div>
           ))}
         </div>
       </section>
-      <section className="panel insight-widget">
-        <h2>
-          <ChartScatter size={19} /> Power vs Contribution
-        </h2>
-        <ScatterPlot data={data.powerContribution} />
-        {data.asOf && (
-          <p className="muted tiny">
-            {uk ? 'Склад за' : 'Roster as of'} {new Date(data.asOf).toLocaleDateString(locale)}
-          </p>
-        )}
+      <section className="panel insight-widget advanced-balance">
+        <h2><Scale size={19} /> {uk ? 'Сила та внесок' : 'Power vs Contribution'}</h2>
+        <p className="muted tiny">{uk
+          ? 'Різниця між часткою очок і часткою сили серед зіставлених гравців (п.п.). Це не оцінка ефективності білда.'
+          : 'Contribution share minus power share among matched players (percentage points). Not a build-efficiency rating.'}</p>
+        {balance.length > 0 ? (
+          <DataTable label={uk ? 'Сила та внесок гравців' : 'Power vs contribution'}
+            columns="minmax(0,1fr) minmax(58px,90px) minmax(58px,90px) minmax(58px,90px)"
+            headers={[uk ? 'Гравець' : 'Player',
+              <button onClick={() => sortBalance('power')}>{uk ? 'Сила' : 'Power'}{marker('power')}</button>,
+              <button onClick={() => sortBalance('points')}>{uk ? 'Очки' : 'Points'}{marker('points')}</button>,
+              <button onClick={() => sortBalance('surplus')} title="Contribution share − power share">Δ pp{marker('surplus')}</button>]}>
+            {balance.map((person) => (
+              <DataTableRow key={person.id}>
+                <DataTableCell><PlayerLink id={person.id} name={person.name} /></DataTableCell>
+                <DataTableCell numeric>{shortNumber(person.power)}</DataTableCell>
+                <DataTableCell numeric>{shortNumber(person.points)}</DataTableCell>
+                <DataTableCell numeric>
+                  <span className={person.surplus > 0 ? 'friendly' : person.surplus < 0 ? 'enemy' : ''}
+                    title={(person.pointsShare * 100).toFixed(1) + '% − ' + (person.powerShare * 100).toFixed(1) + '%'}>
+                    {person.surplus > 0 ? '+' : ''}{person.surplus.toFixed(1)}
+                  </span>
+                </DataTableCell>
+              </DataTableRow>
+            ))}
+          </DataTable>
+        ) : <p className="muted">{uk ? 'Потрібні очки війни та знімок сили.' : 'War scores and a roster power snapshot are required.'}</p>}
+        <p className="muted tiny">{uk ? 'Зіставлених гравців' : 'Matched players'}: {balance.length}.
+          {' '}{uk ? 'Знімок складу' : 'Roster snapshot'}: {data.asOf ? new Date(data.asOf).toLocaleDateString(locale) : '—'}.
+          {' '}{uk ? 'Остання війна' : 'Latest war'}: {data.latestWar ? formatWarRange(data.latestWar, locale) : '—'}.
+        </p>
+        <p className="muted tiny">{uk ? 'Знімок сили може бути зроблений пізніше за війну, тому це орієнтовне порівняння.'
+          : 'Power may have been captured after the war; interpret the comparison cautiously.'}</p>
       </section>
       <section className="panel insight-widget">
         <h2>
           <TrendingUp size={19} /> {uk ? 'Лідери зростання сили' : 'Power growth leaders'}
         </h2>
-        <div className="advanced-ranking">
-          {data.powerGrowth.map((player) => (
-            <a key={player.id} href={'#/players/' + player.id}>
-              <span>{player.name}</span>
-              <b>
-                {player.delta >= 0 ? '+' : ''}
-                {shortNumber(player.delta)}
-              </b>
-              <small>{player.percentage === null ? '—' : player.percentage + '%'}</small>
-            </a>
-          ))}
-        </div>
+        {data.rosterHistoryCount < 2 ? (
+          <p className="muted">{uk ? 'Потрібно два знімки складу. Імпортуй склад ще раз пізніше.'
+            : 'Two roster snapshots required. Import another roster later to track growth.'}</p>
+        ) : data.powerGrowth.length === 0 ? (
+          <p className="muted">{uk ? 'Немає спільних гравців у двох знімках.' : 'No matching players between snapshots.'}</p>
+        ) : (
+          <DataTable label="Power growth" columns="minmax(0,1fr) 90px 65px"
+            headers={[uk ? 'Гравець' : 'Player', uk ? 'Приріст' : 'Growth', '%']}>
+            {data.powerGrowth.map((person) => (
+              <DataTableRow key={person.id}>
+                <DataTableCell><PlayerLink id={person.id} name={person.name} /></DataTableCell>
+                <DataTableCell numeric>{person.delta >= 0 ? '+' : ''}{shortNumber(person.delta)}</DataTableCell>
+                <DataTableCell numeric>{person.percentage === null ? '—' : person.percentage + '%'}</DataTableCell>
+              </DataTableRow>
+            ))}
+          </DataTable>
+        )}
       </section>
       <section className="panel insight-widget">
         <h2>{uk ? 'Найстабільніші гравці' : 'Most consistent contributors'}</h2>
-        <div className="advanced-ranking">
-          {data.consistency.map((player) => (
-            <a key={player.id} href={'#/players/' + player.id}>
-              <span>{player.name}</span>
-              <b>{player.consistency}%</b>
-              <small>{shortNumber(player.average)}</small>
-            </a>
+        <DataTable label="Contribution consistency"
+          columns="minmax(0,1fr) minmax(55px,75px) minmax(65px,100px)"
+          headers={[uk ? 'Гравець' : 'Player', '%', uk ? 'Середнє' : 'Average']}>
+          {data.consistency.map((person) => (
+            <DataTableRow key={person.id}>
+              <DataTableCell><PlayerLink id={person.id} name={person.name} /></DataTableCell>
+              <DataTableCell numeric>{person.consistency}%</DataTableCell>
+              <DataTableCell numeric>{shortNumber(person.average)}</DataTableCell>
+            </DataTableRow>
           ))}
-        </div>
+        </DataTable>
       </section>
     </div>
   );

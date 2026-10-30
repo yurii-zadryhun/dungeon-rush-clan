@@ -93,13 +93,13 @@ export function RecognitionWidget() {
               <h3>{uk ? 'Герої останніх воєн' : 'Recent war leaders'}</h3>
               <div className="recognition-recent">
                 {data.recent.map((entry) => (
-                  <a href={'#/wars/' + entry.start} key={entry.start}>
-                    <span>
+                  <div key={entry.start}>
+                    <a href={'#/wars/' + entry.start}>
                       {formatWarRange(entry.start, locale)} {entry.championship && '🏆'}
-                    </span>
+                    </a>
                     <strong><PlayerLink id={entry.id} name={entry.name} /></strong>
                     <b>{shortNumber(entry.points)}</b>
-                  </a>
+                  </div>
                 ))}
               </div>
             </>
