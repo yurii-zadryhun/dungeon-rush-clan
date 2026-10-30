@@ -325,6 +325,14 @@ export class OcrController {
     }
     const warnings: string[] = [];
     const all = [];
+    // Staff-only diagnostic data: preserve what Vision recognized before our parser
+    // groups lines and removes duplicates. No images, credentials or API payloads.
+    const diagnostics: {
+      image: number;
+      headerHeight: number;
+      vision: VisionText;
+      parsed: ReturnType<typeof parseRosterScreenshot>;
+    }[] = [];
     let reportedMembers: number | null = null;
     let reportedPower: number | null = null;
     let reportedPowerText: string | null = null;
@@ -332,6 +340,12 @@ export class OcrController {
     for (const [index, buffer] of mosaics.entries()) {
       const extracted = await this.vision.read(buffer);
       const parsed = parseRosterScreenshot(extracted, index + 1, index === 0 ? headerHeight : 0);
+      diagnostics.push({
+        image: index + 1,
+        headerHeight: index === 0 ? headerHeight : 0,
+        vision: extracted,
+        parsed,
+      });
       all.push(...parsed.players);
       warnings.push(...parsed.warnings.map((warning) => 'Image ' + (index + 1) + ': ' + warning));
       if (index === 0) {
@@ -382,6 +396,7 @@ export class OcrController {
       reportedPowerText,
       capacity,
       warnings,
+      diagnostics,
     };
   }
 
