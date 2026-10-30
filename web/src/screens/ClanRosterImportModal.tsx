@@ -1,4 +1,5 @@
 import React from 'react';
+import { useModalHistory } from './useModalHistory';
 import { Camera, CheckCircle, Copy, Plus, Trash2, UploadCloud, X } from 'lucide-react';
 import {
   api,
@@ -61,6 +62,7 @@ export function ClanRosterImportModal({
   onClose: () => void;
   onDone: (dashboard: Dashboard) => void;
 }) {
+  useModalHistory(onClose);
   const { t, locale } = useI18n();
   const [files, setFiles] = React.useState<File[]>([]);
   const [sourceUrls, setSourceUrls] = React.useState<string[]>([]);

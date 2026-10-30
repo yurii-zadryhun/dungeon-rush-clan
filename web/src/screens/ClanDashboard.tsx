@@ -15,6 +15,7 @@ import { formatWarRange } from '../date-format';
 import { nChoice, useI18n, type Locale } from '../i18n';
 
 import { SiteHeader } from './SiteHeader';
+import { ToastHost, notify } from './Toast';
 import { ClanSocialLinks } from './ClanSocialLinks';
 
 // Route-only screens and heavy editors should not be bundled into the archive's first paint.
@@ -435,6 +436,7 @@ export function ClanDashboard({
     } catch (failure) {
       restore.current = null;
       setHistoryError((failure as Error).message);
+      notify((failure as Error).message, 'error');
     } finally {
       setLoadingOlder(false);
     }
@@ -474,11 +476,21 @@ export function ClanDashboard({
   if (!data)
     return (
       <main className="loading-page">
-        <span className="spinner" /> {error || t('loadingRecords')}
+        {error ? (
+          <div role="alert">
+            <p>{error}</p>
+            <button className="game-button blue" onClick={() => window.location.reload()}>
+              {t('retrySave')}
+            </button>
+          </div>
+        ) : (
+          <><span className="spinner" /> {t('loadingRecords')}</>
+        )}
       </main>
     );
   return (
     <div className="page">
+      <ToastHost />
       <SiteHeader
         user={user}
         isWiki={isWiki}

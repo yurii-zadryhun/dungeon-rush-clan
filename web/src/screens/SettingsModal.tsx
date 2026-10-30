@@ -1,4 +1,5 @@
 import React from 'react';
+import { useModalHistory } from './useModalHistory';
 import { Plus, Save, Settings, Trash2, X } from 'lucide-react';
 import { api, json, type Dashboard } from '../api';
 import { useI18n } from '../i18n';
@@ -12,6 +13,7 @@ export function SettingsModal({
   onClose: () => void;
   onDone: (next: Dashboard) => void;
 }) {
+  useModalHistory(onClose);
   const { t } = useI18n();
   const [clanName, setClanName] = React.useState(current.clanName);
   const [leaderName, setLeaderName] = React.useState(current.leaderName);

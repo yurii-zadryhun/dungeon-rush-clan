@@ -1,4 +1,5 @@
 import React from 'react';
+import { useModalHistory } from './useModalHistory';
 import { KeyRound, Trash2, UserRound, X } from 'lucide-react';
 import { api, json, type Account } from '../api';
 import { useI18n } from '../i18n';
@@ -14,6 +15,7 @@ export function ProfileModal({
   onSaved: (account: Account) => Promise<void>;
   onDeleted: () => void;
 }) {
+  useModalHistory(onClose);
   const { t } = useI18n();
   const [name, setName] = React.useState(account.displayName);
   const [changingPassword, setChangingPassword] = React.useState(false);

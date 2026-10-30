@@ -1,4 +1,5 @@
 import React from 'react';
+import { useModalHistory } from './useModalHistory';
 import { Pencil, Save, X } from 'lucide-react';
 import { api, json, type Dashboard, type Roster, type Week } from '../api';
 import { formatWarRange } from '../date-format';
@@ -23,6 +24,7 @@ export function EditWarModal({
   onClose: () => void;
   onDone: (dashboard: Dashboard, updatedWeek: Week) => void;
 }) {
+  useModalHistory(onClose);
   const { t, locale } = useI18n();
   const [draft, setDraft] = React.useState<WarDraft>(() => draftFromWeek(week));
   const [roster, setRoster] = React.useState<Roster>(emptyRoster);

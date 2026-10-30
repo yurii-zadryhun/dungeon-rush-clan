@@ -1,4 +1,5 @@
 import React from 'react';
+import { notify } from './Toast';
 import {
   AlertCircle,
   CheckCircle2,
@@ -31,7 +32,6 @@ const initialLabels: PlayerLabels = {
   exceptionReason: '',
 };
 
-type Toast = { message: string; kind: 'success' | 'error'; id: number };
 
 export function PlayerManagementPanel({ playerId }: { playerId: number }) {
   const { t, locale } = useI18n();
@@ -45,21 +45,10 @@ export function PlayerManagementPanel({ playerId }: { playerId: number }) {
   const [loadError, setLoadError] = React.useState('');
   const [saveError, setSaveError] = React.useState('');
   const [noteError, setNoteError] = React.useState('');
-  const [toast, setToast] = React.useState<Toast | null>(null);
   const latestLabels = React.useRef(labels);
   const playerEpoch = React.useRef(0);
 
   latestLabels.current = labels;
-
-  function notify(message: string, kind: Toast['kind'] = 'success') {
-    setToast({ message, kind, id: Date.now() });
-  }
-
-  React.useEffect(() => {
-    if (!toast) return;
-    const timeout = setTimeout(() => setToast(null), 3200);
-    return () => clearTimeout(timeout);
-  }, [toast]);
 
   React.useEffect(() => {
     const epoch = ++playerEpoch.current;
@@ -70,7 +59,6 @@ export function PlayerManagementPanel({ playerId }: { playerId: number }) {
     setLoadError('');
     setSaveError('');
     setNoteError('');
-    setToast(null);
     setBody('');
     api<PlayerManagement>('player-management/' + playerId)
       .then((value) => {
@@ -372,16 +360,7 @@ export function PlayerManagementPanel({ playerId }: { playerId: number }) {
           </div>
         </>
       )}
-      {toast && (
-        <div
-          key={toast.id}
-          className={'management-toast ' + toast.kind}
-          role={toast.kind === 'error' ? 'alert' : 'status'}
-        >
-          {toast.kind === 'error' ? <AlertCircle size={18} /> : <CheckCircle2 size={18} />}
-          <span>{toast.message}</span>
-        </div>
-      )}
+
     </section>
   );
 }

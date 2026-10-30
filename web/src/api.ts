@@ -1,5 +1,6 @@
 import { localizeError, type Locale } from './i18n';
 import { initialLocale } from './locale';
+import { cachedRead, invalidateReads } from './request-cache';
 export type Role = 'owner' | 'admin' | 'member';
 
 export interface Account {
@@ -291,6 +292,14 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   headers.set('X-Requested-With', 'clan-stats');
   if (options.body && !(options.body instanceof FormData))
     headers.set('Content-Type', 'application/json');
+  const method = options.method?.toUpperCase() ?? 'GET';
+  if (method !== 'GET') invalidateReads();
+  return method === 'GET' && /^(players|clan-roster\/latest|auth\/accounts|insights\/|clan-roster\/timeline)/.test(path)
+    ? cachedRead(path, () => request<T>(path, options, headers))
+    : request<T>(path, options, headers);
+}
+
+async function request<T>(path: string, options: RequestInit, headers: Headers): Promise<T> {
   const response = await fetch('/api/' + path.replace(/^\//, ''), {
     ...options,
     credentials: 'same-origin',

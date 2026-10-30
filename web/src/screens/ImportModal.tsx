@@ -1,4 +1,5 @@
 import React from 'react';
+import { useModalHistory } from './useModalHistory';
 import { CheckCircle, ScanLine, UploadCloud, X } from 'lucide-react';
 import {
   api,
@@ -33,6 +34,7 @@ function FileChooser({
   multiple: boolean;
   onSelect: (files: File[]) => void;
 }) {
+  useModalHistory(onClose);
   const { t } = useI18n();
   return (
     <label className="war-editor-file">
