@@ -52,9 +52,7 @@ async function bootstrap() {
     }
     // Apply OCR limits after authentication in OcrController so anonymous traffic
     // cannot consume a staff member's scan allowance.
-    const rule = /^\/api\/ocr(?:\/clan)?$/.test(pathname)
-      ? null
-      : limitFor(request.method, pathname);
+    const rule = /^\/api\/ocr(?:\/clan)?$/.test(pathname) ? null : limitFor(request.method, pathname);
     if (rule) {
       const retry = requestLimiter.check(request.ip, rule);
       if (retry > 0) {

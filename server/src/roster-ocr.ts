@@ -47,7 +47,6 @@ function inferredPower(row: string): { value: string; original: string } | null 
   return null;
 }
 
-
 function lines(words: Word[]): { y: number; text: string }[] {
   const groups: { y: number; words: Word[] }[] = [];
   for (const word of words.slice().sort((a, b) => a.y - b.y || a.x - b.x)) {
@@ -119,9 +118,7 @@ export function parseRosterScreenshot(
       // the nearest plausible name above it, within one player card.
       const inline = power ? cleanCandidate(row.text.slice(0, power.index ?? 0)) : '';
       const preceding =
-        candidate && row.y > candidate.y && row.y - candidate.y < 145
-          ? candidate.name
-          : null;
+        candidate && row.y > candidate.y && row.y - candidate.y < 145 ? candidate.name : null;
       // The game paints rarity/tier labels ("IM", "M", "E") directly beside
       // the power. In particular "IM 101.29T" belongs to the name on the
       // row above, not to a player called IM.
@@ -131,8 +128,13 @@ export function parseRosterScreenshot(
         output.push({ name, power: powerValue, powerText, source });
         if (inferred) {
           warnings.push(
-            'Verify ' + name + ' power: OCR read "' + inferred.original +
-              '", interpreted as ' + powerText + '.',
+            'Verify ' +
+              name +
+              ' power: OCR read "' +
+              inferred.original +
+              '", interpreted as ' +
+              powerText +
+              '.',
           );
         }
       } else {

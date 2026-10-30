@@ -285,8 +285,11 @@ async function run() {
   ensure(quotaBefore.body.windowSeconds, 600, 'OCR budget resets in 10 minutes');
   const malformedScan = await request('ocr/clan', 'POST', {}, ownerCookie);
   assert.notEqual(malformedScan.status, 200, 'Malformed scan is not accepted');
-  ensure((await request('ocr/limit', 'GET', null, ownerCookie)).body.remaining, 7,
-    'Both clan and war OCR share the same authenticated scan budget');
+  ensure(
+    (await request('ocr/limit', 'GET', null, ownerCookie)).body.remaining,
+    7,
+    'Both clan and war OCR share the same authenticated scan budget',
+  );
 
   ensure(
     (await request('public/clan')).body.leader,
@@ -591,8 +594,11 @@ async function run() {
   });
   ensure(member.status, 201, 'Member account registered');
   const memberCookie = member.cookie;
-  ensure((await request('ocr/limit', 'GET', null, memberCookie)).status, 403,
-    'Members cannot inspect OCR scan usage');
+  ensure(
+    (await request('ocr/limit', 'GET', null, memberCookie)).status,
+    403,
+    'Members cannot inspect OCR scan usage',
+  );
 
   ensure(
     (await request('auth/impersonate', 'POST', { accountId: owner.body.id }, memberCookie)).status,

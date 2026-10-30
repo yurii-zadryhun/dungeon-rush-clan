@@ -102,10 +102,20 @@ describe('clan power units', () => {
     ];
     const result = parseRosterScreenshot({ raw: '', width: 420, height: 4277, words }, 1);
     expect(result.players.map((entry) => entry.name)).toEqual([
-      'КРОСТ', 'aywy', 'GIBURGERJOEY', 'Mishko', 'Den Haag Wartet', 'ilbctc',
+      'КРОСТ',
+      'aywy',
+      'GIBURGERJOEY',
+      'Mishko',
+      'Den Haag Wartet',
+      'ilbctc',
     ]);
     expect(result.players.map((entry) => entry.powerText)).toEqual([
-      '6.98q', '9.64q', '2.46q', '4.37q', '101.29T', '509.77T',
+      '6.98q',
+      '9.64q',
+      '2.46q',
+      '4.37q',
+      '101.29T',
+      '509.77T',
     ]);
     expect(result.warnings.filter((warning) => warning.startsWith('Verify '))).toHaveLength(3);
     expect(result.warnings.some((warning) => warning.includes('Conflicting power values'))).toBe(false);

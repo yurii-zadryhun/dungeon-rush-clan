@@ -12,8 +12,25 @@
   font-weight: 850;
   line-height: 1.4;
 }
-.ocr-limit-status svg { flex: none; color: #8bc5f1; }
-.ocr-limit-status span { display: grid; gap: 2px; min-width: 0; }
-.ocr-limit-status small { color: #adbfce; font-size: 10px; font-weight: 550; }
-.ocr-limit-status.exhausted { background: #423222; border-color: #98713e; color: #ffe5a6; }
-.ocr-limit-status.exhausted svg { color: #f0c075; }
+.ocr-limit-status svg {
+  flex: none;
+  color: #8bc5f1;
+}
+.ocr-limit-status span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.ocr-limit-status small {
+  color: #adbfce;
+  font-size: 10px;
+  font-weight: 550;
+}
+.ocr-limit-status.exhausted {
+  background: #423222;
+  border-color: #98713e;
+  color: #ffe5a6;
+}
+.ocr-limit-status.exhausted svg {
+  color: #f0c075;
+}
