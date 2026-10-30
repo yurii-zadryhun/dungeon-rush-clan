@@ -125,7 +125,7 @@ export class SitePagesController {
 
   private app(reply: FastifyReply) {
     return reply
-      .header('Cache-Control', 'no-store')
+      .header('Cache-Control', 'no-cache')
       .type('text/html; charset=utf-8')
       .send(readFileSync(resolve(__dirname, '../../web/dist/index.html'), 'utf8'));
   }

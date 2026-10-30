@@ -5,6 +5,8 @@ import cookie from '@fastify/cookie';
 import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
 import { existsSync } from 'node:fs';
+import { createBrotliCompress, createGzip, brotliCompressSync, gzipSync } from 'node:zlib';
+import { Readable } from 'node:stream';
 import { resolve } from 'node:path';
 import { AppModule } from './module';
 import { limitFor, requestLimiter } from './security';
@@ -87,6 +89,45 @@ async function bootstrap() {
     if (request.headers['x-requested-with'] !== 'clan-stats') {
       return reply.code(403).send({ message: 'Invalid request header' });
     }
+  });
+  // Compression is handled by Fastify for both streaming static files and HTML.
+  // No extra proxy module or dependency is needed; avoid compressing private binary uploads.
+  http.addHook('onSend', async (request, reply, payload) => {
+    if (request.method !== 'GET' || reply.statusCode !== 200) return payload;
+    const pathname = request.url.split('?')[0] || '/';
+    if (!pathname.startsWith('/api/')) {
+      if (/^\/assets\/.+-[a-zA-Z0-9_-]{8,}\.(?:js|css|png|svg|woff2?)$/.test(pathname)) {
+        reply.header('Cache-Control', 'public, max-age=31536000, immutable');
+      } else if (pathname === '/manifest.webmanifest' || pathname === '/sw.js' || pathname === '/') {
+        reply.header('Cache-Control', 'no-cache');
+      } else if (/^\/icons\/.+\.png$/.test(pathname)) {
+        reply.header('Cache-Control', 'public, max-age=86400');
+      }
+    }
+    if (reply.getHeader('content-encoding') || request.headers.range) return payload;
+    const type = String(reply.getHeader('content-type') ?? '');
+    if (!/^(text\/|application\/(?:javascript|json|manifest\+json|xml|wasm))/.test(type)) {
+      return payload;
+    }
+    const accepted = String(request.headers['accept-encoding'] ?? '');
+    const encoding = /\bbr\b/.test(accepted) ? 'br' : /\bgzip\b/.test(accepted) ? 'gzip' : null;
+    if (!encoding) return payload;
+    const existingVary = String(reply.getHeader('vary') ?? '');
+    reply.header('Vary', existingVary
+      ? existingVary.includes('Accept-Encoding') ? existingVary : existingVary + ', Accept-Encoding'
+      : 'Accept-Encoding');
+    reply.header('Content-Encoding', encoding);
+    reply.removeHeader('Content-Length');
+    reply.removeHeader('ETag');
+    if (typeof payload === 'string' || Buffer.isBuffer(payload)) {
+      const buffer = Buffer.isBuffer(payload) ? payload : Buffer.from(payload);
+      return encoding === 'br' ? brotliCompressSync(buffer) : gzipSync(buffer);
+    }
+    if (payload instanceof Readable) {
+      return payload.pipe(encoding === 'br' ? createBrotliCompress() : createGzip());
+    }
+    reply.removeHeader('Content-Encoding');
+    return payload;
   });
   const webRoot = resolve(__dirname, '../../web/dist');
   if (existsSync(webRoot)) {
