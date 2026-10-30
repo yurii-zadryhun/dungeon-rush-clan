@@ -7,7 +7,7 @@ import fastifyStatic from '@fastify/static';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { AppModule } from './module';
-import { limitFor, RequestLimiter } from './security';
+import { limitFor, requestLimiter } from './security';
 
 async function bootstrap() {
   try {
@@ -31,7 +31,6 @@ async function bootstrap() {
   await app.register(cookie);
   await app.register(multipart, { limits: { fileSize: 6 * 1024 * 1024, files: 11, fields: 2 } });
   const http = app.getHttpAdapter().getInstance();
-  const limiter = new RequestLimiter();
   http.addHook('onRequest', async (request, reply) => {
     reply.header('X-Content-Type-Options', 'nosniff');
     reply.header('X-Frame-Options', 'DENY');
@@ -51,9 +50,13 @@ async function bootstrap() {
     if (pathname.startsWith('/api/') && pathname !== '/api/public/clan') {
       reply.header('Cache-Control', 'no-store');
     }
-    const rule = limitFor(request.method, pathname);
+    // Apply OCR limits after authentication in OcrController so anonymous traffic
+    // cannot consume a staff member's scan allowance.
+    const rule = /^\/api\/ocr(?:\/clan)?$/.test(pathname)
+      ? null
+      : limitFor(request.method, pathname);
     if (rule) {
-      const retry = limiter.check(request.ip, rule);
+      const retry = requestLimiter.check(request.ip, rule);
       if (retry > 0) {
         return reply
           .code(429)

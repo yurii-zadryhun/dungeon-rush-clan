@@ -1,9 +1,10 @@
-import { BadRequestException, Controller, Injectable, Post, Req, UseGuards } from '@nestjs/common';
+import { BadRequestException, Controller, Get, HttpException, Injectable, Post, Req, UseGuards } from '@nestjs/common';
 import { FastifyRequest } from 'fastify';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
-import { AdminGuard, SessionGuard } from './auth';
+import { AdminGuard, SessionGuard, type AuthenticatedRequest } from './auth';
+import { OCR_SCAN_LIMIT, requestLimiter } from './security';
 import { DAY_POINTS } from './calendar';
 import { Db, normalizeName } from './database';
 import { parseRosterScreenshot } from './roster-ocr';
@@ -294,8 +295,25 @@ export class OcrController {
     private readonly db: Db,
   ) {}
 
+  @Get('limit')
+  limit(@Req() req: AuthenticatedRequest) {
+    return requestLimiter.usage(String(req.account!.id), OCR_SCAN_LIMIT);
+  }
+
+  private consumeOcrScan(req: FastifyRequest): void {
+    const request = req as AuthenticatedRequest;
+    const retry = requestLimiter.check(String(request.account!.id), OCR_SCAN_LIMIT);
+    if (retry) {
+      throw new HttpException(
+        { message: 'OCR scan limit reached. Try again in ' + retry + ' seconds.', retryAfter: retry },
+        429,
+      );
+    }
+  }
+
   @Post('clan')
   async clan(@Req() req: FastifyRequest) {
+    this.consumeOcrScan(req);
     const mosaics: Buffer[] = [];
     let headerHeight = 0;
     for await (const part of (req as any).parts()) {
@@ -402,6 +420,7 @@ export class OcrController {
 
   @Post()
   async process(@Req() req: FastifyRequest) {
+    this.consumeOcrScan(req);
     const files: { type: 'ranking' | 'rankingMosaic' | 'result'; buffer: Buffer }[] = [];
     for await (const part of (req as any).parts()) {
       if (part.type !== 'file') continue;
