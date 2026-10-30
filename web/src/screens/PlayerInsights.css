@@ -78,7 +78,7 @@
   gap: 5px;
   text-align: center;
   border: 2px solid #09090b;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   background: #302e32;
   padding: 12px 5px;
 }
@@ -187,7 +187,7 @@
   display: flex;
   gap: 3px;
   background: #1c1c22;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   padding: 3px;
 }
 .period-options button {
@@ -200,7 +200,7 @@
 }
 .period-options button.selected {
   background: #407fac;
-  color: #fff;
+  color: var(--text-on-accent);
 }
 .profile-history-list {
   display: grid;
@@ -216,7 +216,7 @@
   background: #232326;
   padding: 9px 12px;
   border: 1px solid #48434a;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 .profile-history-row span {
   font-size: 12px;
@@ -299,7 +299,7 @@
   justify-items: center;
   padding: 9px 5px;
   border: 1px solid #605767;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: #27262c;
 }
 .power-chart-summary strong {

@@ -24,7 +24,7 @@
 }
 .health-counter {
   border: 1px solid #5d5358;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   min-width: 0;
   display: grid;
   gap: 4px;
@@ -73,7 +73,7 @@
   background: #232326;
   border: 1px solid #44414a;
   padding: 8px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 .health-person:hover {
   background: #364454;
@@ -203,7 +203,7 @@
   padding: 11px 4px;
   background: #24232a;
   border: 1px solid #544e5a;
-  border-radius: 9px;
+  border-radius: var(--radius-md);
 }
 .growth-headline strong {
   color: #8be998;
