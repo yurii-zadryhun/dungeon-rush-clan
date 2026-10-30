@@ -24,6 +24,7 @@ interface DraftEntry {
   playerId: number | null;
   source: number;
   y?: number;
+  confidence?: number;
   ocrName?: string;
 }
 let nextKey = 1;
@@ -204,7 +205,8 @@ export function ClanRosterImportModal({
     [rows, compareNames],
   );
   const suspicious = (row: DraftEntry) => {
-    if (row.ocrName || row.playerId === null || magnitude(row.powerText) === null) return true;
+    if (row.ocrName || row.playerId === null || magnitude(row.powerText) === null ||
+      (row.confidence !== undefined && row.confidence < 0.85)) return true;
     const older = previous?.entries.find((entry) => entry.id === row.playerId);
     const current = magnitude(row.powerText);
     return !!(older && current !== null && older.power > 0 &&
@@ -318,6 +320,9 @@ export function ClanRosterImportModal({
           const match = matchRosterName(player.name, known);
           return {
             ...player,
+            confidence: result.positions.find((position) => position.source === player.source &&
+              normalizeName(position.name) === normalizeName(player.name) &&
+              position.powerText === player.powerText)?.confidence,
             y: result.positions.find((position) => position.source === player.source &&
               normalizeName(position.name) === normalizeName(player.name) &&
               position.powerText === player.powerText)?.y,
@@ -459,7 +464,7 @@ export function ClanRosterImportModal({
                             className="clan-thumbnail-remove"
                             type="button"
                             onClick={() => setFiles((current) => current.filter((_, i) => i !== index))}
-                            aria-label={t('remove') + ': ' + (index + 1)}
+                            aria-label={t('remove') + ': ' + (sortedRows.indexOf(row) + 1)}
                             title={t('remove')}
                           >
                             <X size={14} />
@@ -619,6 +624,7 @@ export function ClanRosterImportModal({
                       />
                     </label>
                     <input
+                      aria-invalid={magnitude(row.powerText) === null}
                       aria-label={t('clanPower') + ' ' + row.name}
                       value={row.powerText}
                       onChange={(event) => update(row.key, { powerText: event.target.value })}
@@ -631,6 +637,11 @@ export function ClanRosterImportModal({
                       onChange={(value) => choosePlayer(row.key, value)}
                     />
                     <div className="clan-roster-row-actions">
+                      {row.confidence !== undefined && row.confidence < 0.85 && (
+                        <small className="warning-text" title="Low OCR confidence">
+                          {Math.round(row.confidence * 100)}%
+                        </small>
+                      )}
                       {suspicious(row) && (
                         <button type="button" className="clan-crop-button"
                           title={locale === 'uk' ? 'Показати фрагмент скриншота' : 'Show screenshot crop'}

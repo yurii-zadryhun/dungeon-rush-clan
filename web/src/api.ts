@@ -221,7 +221,7 @@ export interface ClanOcrPlayer {
 }
 export interface ClanOcrResponse {
   players: ClanOcrPlayer[];
-  positions: Array<{ name: string; powerText: string; source: number; y: number }>;
+  positions: Array<{ name: string; powerText: string; source: number; y: number; confidence?: number }>;
   reportedMembers: number | null;
   capacity: number | null;
   reportedPower: number | null;
@@ -277,6 +277,7 @@ export interface OcrPlayer {
   points: number;
   source: number;
   y?: number;
+  confidence?: number;
   playerId?: number | null;
 }
 
@@ -290,7 +291,7 @@ export interface OcrResult {
 
 export interface OcrResponse {
   players: OcrPlayer[];
-  positions: Array<{ source: number; position: number; y: number }>;
+  positions: Array<{ source: number; position: number; y: number; confidence?: number }>;
   result: OcrResult | null;
   warnings: string[];
 }

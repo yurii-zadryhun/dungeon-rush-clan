@@ -202,6 +202,7 @@ export function ImportModal({
         players: recognized.players.map((player) => ({
           ...player,
           y: recognized.positions?.find((item) => item.position === player.position && item.source === player.source)?.y,
+          confidence: recognized.positions?.find((item) => item.position === player.position && item.source === player.source)?.confidence,
           playerId:
             available.all.find((existing) => normalizeName(existing.name) === normalizeName(player.name))
               ?.id ??

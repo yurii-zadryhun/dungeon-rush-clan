@@ -132,6 +132,10 @@ function PlayersPanel({
   crop?: { position: number; url: string } | null;
 }) {
   const { t, locale } = useI18n();
+  const [suspiciousOnly, setSuspiciousOnly] = React.useState(false);
+  const isSuspicious = (player: OcrPlayer) => !player.playerId ||
+    (player.confidence !== undefined && player.confidence < 0.85);
+  const suspiciousCount = players.filter(isSuspicious).length;
   const previousIds = new Set(roster.previous.map((player) => player.id));
   const participants = new Set(players.map((player) => player.playerId).filter(Boolean));
   const departures = roster.previous.filter((player) => !participants.has(player.id));
@@ -167,12 +171,20 @@ function PlayersPanel({
         <strong>
           {t('players')} · {players.length}
         </strong>
-        <button type="button" className="game-button secondary compact-add" onClick={add}>
+        <div className="war-review-controls">
+          <button type="button" className="game-button secondary compact-add"
+            aria-pressed={suspiciousOnly} onClick={() => setSuspiciousOnly((value) => !value)}>
+            {suspiciousOnly ? (locale === 'uk' ? 'Усі' : 'All') :
+              (locale === 'uk' ? 'Перевірити' : 'Review')} ({suspiciousCount})
+          </button>
+          <button type="button" className="game-button secondary compact-add" onClick={add}>
           <Plus size={15} /> {t('addRow')}
-        </button>
+          </button>
+        </div>
       </div>
       <div className="war-editor-players">
         {players.map((player, index) => {
+          if (suspiciousOnly && !isSuspicious(player)) return null;
           const isNew = !player.playerId;
           const isReturning = !!player.playerId && !previousIds.has(player.playerId);
           const near = !player.playerId
@@ -244,6 +256,9 @@ function PlayersPanel({
                 <span className="war-editor-short-score">{shortNumber(player.points)}</span>
                 {suggestion && (
                   <span className="warning-text tiny">{t('possibleMatch', { name: suggestion })}</span>
+                )}
+                {player.confidence !== undefined && player.confidence < 0.85 && (
+                  <span className="warning-text tiny">OCR {Math.round(player.confidence * 100)}%</span>
                 )}
                 {onShowCrop && player.y !== undefined && (
                   <button type="button" className="war-crop-action"

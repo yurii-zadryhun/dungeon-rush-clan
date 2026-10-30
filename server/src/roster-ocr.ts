@@ -26,7 +26,7 @@ export interface RecognizedPower {
 }
 export interface RosterRecognition {
   players: RecognizedPower[];
-  positions: Array<{ name: string; powerText: string; source: number; y: number }>;
+  positions: Array<{ name: string; powerText: string; source: number; y: number; confidence?: number }>;
   reportedMembers: number | null;
   capacity: number | null;
   reportedPower: number | null;
@@ -128,7 +128,11 @@ export function parseRosterScreenshot(
       const name = preceding && tierOnly ? preceding : plausibleName(inline) ? inline : preceding;
       if (powerValue !== null && name) {
         output.push({ name, power: powerValue, powerText, source });
-        positions.push({ name, powerText, source, y: row.y });
+        const confident = text.words.filter((word) => word.confidence !== undefined &&
+          Math.abs(word.y - row.y) <= 18);
+        positions.push({ name, powerText, source, y: row.y,
+          ...(confident.length ? { confidence: Math.min(...confident.map((word) => word.confidence!)) } : {}),
+        });
         if (inferred) {
           warnings.push(
             'Verify ' +

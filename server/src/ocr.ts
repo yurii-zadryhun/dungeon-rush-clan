@@ -22,6 +22,7 @@ export interface Word {
   text: string;
   x: number;
   y: number;
+  confidence?: number;
 }
 
 export interface VisionText {
@@ -85,10 +86,10 @@ export function parsePlayers(
   text: VisionText,
   source = 0,
   prepared = false,
-): { players: OcrPlayer[]; warnings: string[]; positions: Array<{ source: number; position: number; y: number }> } {
+): { players: OcrPlayer[]; warnings: string[]; positions: Array<{ source: number; position: number; y: number; confidence?: number }> } {
   const warnings: string[] = [];
   const players: OcrPlayer[] = [];
-  const positions: Array<{ source: number; position: number; y: number }> = [];
+  const positions: Array<{ source: number; position: number; y: number; confidence?: number }> = [];
   const lines = groupLines(
     text.words.filter((w) => prepared || (w.y >= text.height * 0.39 && w.y <= text.height * 0.8)),
     prepared ? 12 : Math.max(10, text.height * 0.012),
@@ -128,7 +129,12 @@ export function parsePlayers(
       continue;
     }
     players.push({ position, name, points, source });
-    positions.push({ source, position, y: row[rankIndex].y });
+    const confidenceValues = row.map((word) => word.confidence)
+      .filter((value): value is number => value !== undefined);
+    positions.push({
+      source, position, y: row[rankIndex].y,
+      ...(confidenceValues.length ? { confidence: Math.min(...confidenceValues) } : {}),
+    });
   }
   if (!players.length) {
     warnings.push(
@@ -285,6 +291,7 @@ export class VisionService {
             text,
             x: Math.min(...box.map((p: any) => p.x || 0)),
             y: Math.min(...box.map((p: any) => p.y || 0)),
+            ...(typeof word.confidence === 'number' ? { confidence: word.confidence } : {}),
           });
         }
     const extracted: VisionText = {
@@ -463,7 +470,7 @@ export class OcrController {
       .executeTakeFirstOrThrow();
     const warnings: string[] = [];
     const players: OcrPlayer[] = [];
-    const positions: Array<{ source: number; position: number; y: number }> = [];
+    const positions: Array<{ source: number; position: number; y: number; confidence?: number }> = [];
     for (const [index, file] of rankingImages.entries()) {
       const result = parsePlayers(
         await this.vision.read(file.buffer),
