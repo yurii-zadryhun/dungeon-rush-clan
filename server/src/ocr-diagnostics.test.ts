@@ -21,6 +21,7 @@ describe('clan OCR diagnostic response', () => {
     const read = vi.fn().mockResolvedValue(recognized);
     const vision = { read } as unknown as VisionService;
     const request = {
+      account: { id: 9001, role: 'admin' },
       parts: async function* () {
         yield { type: 'field', fieldname: 'headerHeight', value: '120' };
         yield {
