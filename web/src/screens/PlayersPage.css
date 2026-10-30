@@ -537,3 +537,8 @@
   min-width: 100px;
   max-width: 220px;
 }
+
+.directory-player:has(.player-link.is-me) {
+  border-color: var(--color-gold);
+  background: rgba(242, 189, 69, 0.09);
+}

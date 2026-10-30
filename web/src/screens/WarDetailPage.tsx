@@ -16,8 +16,10 @@ function reportText(war: WarDetail, clanName: string, uk: boolean): string {
       ? 'Результат очікується'
       : 'Result pending';
   const top = [...war.players].sort((a, b) => b.points - a.points).slice(0, 5);
-  const winnerWidth = Math.max(0, ...war.days.map((day) =>
-    (day.winner === 'ours' ? clanName : war.opponent || '?').length));
+  const winnerWidth = Math.max(
+    0,
+    ...war.days.map((day) => (day.winner === 'ours' ? clanName : war.opponent || '?').length),
+  );
   return [
     `⚔️ ${clanName} vs ${war.opponent || '?'}`,
     `${formatWarRange(war.start, uk ? 'uk' : 'en')}${war.championship ? ' 🏆 Championship' : ''}`,
@@ -191,12 +193,18 @@ export function WarDetailPage({ start, clanName }: { start: string; clanName: st
                 {war.days.some((day) => day.winner === 'ours') && (
                   <span>
                     🏆 {uk ? 'MVP наших перемог' : 'Our winning MVPs'}:{' '}
-                    {war.days.filter((day) => day.winner === 'ours').map((day, index) => (
-                      <React.Fragment key={day.day}>
-                        {index > 0 && ', '}
-                        {day.mvpPlayerId ? <PlayerLink id={day.mvpPlayerId} name={day.mvp} /> : day.mvp}
-                      </React.Fragment>
-                    ))}
+                    {war.days
+                      .filter((day) => day.winner === 'ours')
+                      .map((day, index) => (
+                        <React.Fragment key={day.day}>
+                          {index > 0 && ', '}
+                          {day.mvpPlayerId ? (
+                            <PlayerLink id={day.mvpPlayerId} name={day.mvp} />
+                          ) : (
+                            day.mvp
+                          )}
+                        </React.Fragment>
+                      ))}
                   </span>
                 )}
               </div>
@@ -218,18 +226,30 @@ export function WarDetailPage({ start, clanName }: { start: string; clanName: st
                 {war.summary.topTenShare - war.summary.topFiveShare}% · {uk ? 'Інші' : 'Others'}:{' '}
                 {100 - war.summary.topTenShare}%
               </p>
-              <DataTable label={uk ? 'Рейтинг гравців' : 'Player ranking'}
+              <DataTable
+                label={uk ? 'Рейтинг гравців' : 'Player ranking'}
                 columns="minmax(44px,70px) minmax(0,1fr) minmax(75px,115px)"
                 headers={[
-                  <button onClick={() => orderBy('position')}>{uk ? 'Місце' : 'Rank'} {sort === 'position' ? (descending ? '↓' : '↑') : ''}</button>,
-                  <button onClick={() => orderBy('name')}>{uk ? 'Гравець' : 'Player'} {sort === 'name' ? (descending ? '↓' : '↑') : ''}</button>,
-                  <button onClick={() => orderBy('points')}>{uk ? 'Очки' : 'Points'} {sort === 'points' ? (descending ? '↓' : '↑') : ''}</button>,
-                ]}>
+                  <button onClick={() => orderBy('position')}>
+                    {uk ? 'Місце' : 'Rank'} {sort === 'position' ? (descending ? '↓' : '↑') : ''}
+                  </button>,
+                  <button onClick={() => orderBy('name')}>
+                    {uk ? 'Гравець' : 'Player'} {sort === 'name' ? (descending ? '↓' : '↑') : ''}
+                  </button>,
+                  <button onClick={() => orderBy('points')}>
+                    {uk ? 'Очки' : 'Points'} {sort === 'points' ? (descending ? '↓' : '↑') : ''}
+                  </button>,
+                ]}
+              >
                 {players.map((player) => (
                   <DataTableRow key={player.id}>
                     <DataTableCell>{player.position}</DataTableCell>
-                    <DataTableCell><PlayerLink id={player.id} name={player.name} /></DataTableCell>
-                    <DataTableCell numeric><strong>{shortNumber(player.points)}</strong></DataTableCell>
+                    <DataTableCell>
+                      <PlayerLink id={player.id} name={player.name} />
+                    </DataTableCell>
+                    <DataTableCell numeric>
+                      <strong>{shortNumber(player.points)}</strong>
+                    </DataTableCell>
                   </DataTableRow>
                 ))}
               </DataTable>

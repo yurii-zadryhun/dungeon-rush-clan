@@ -1,5 +1,6 @@
 import React from 'react';
 import { PlayerLink } from './PlayerLink';
+import { DataTable } from './DataTable';
 import {
   Activity,
   ArrowUpRight,
@@ -410,32 +411,36 @@ export function PlayersPage({
                 <p className="empty">{t('noMatchingPlayers')}</p>
               )}
               {visible.length > 0 && (
-                <div className="players-table" role="table" aria-label={t('clanRoster')}>
-                  <div className="players-column-head" role="row">
-                    <button role="columnheader" onClick={() => sortBy('name')}>
+                <DataTable
+                  className="players-table"
+                  headerClassName="players-column-head"
+                  bodyClassName="players-directory-list"
+                  label={t('clanRoster')}
+                  columns="var(--player-columns)"
+                  headers={[
+                    <button onClick={() => sortBy('name')}>
                       {t('playerColumn')} {order === 'name' ? (descending ? '↓' : '↑') : ''}
-                    </button>
-                    <button role="columnheader" onClick={() => sortBy('score')}>
+                    </button>,
+                    <button onClick={() => sortBy('score')}>
                       {t('scoreColumn')} {order === 'score' ? (descending ? '↓' : '↑') : ''}
-                    </button>
-                    <button role="columnheader" onClick={() => sortBy('latest')}>
+                    </button>,
+                    <button onClick={() => sortBy('latest')}>
                       {t('lastWarColumn')} {order === 'latest' ? (descending ? '↓' : '↑') : ''}
-                    </button>
-                    <button role="columnheader" onClick={() => sortBy('weeks')}>
+                    </button>,
+                    <button onClick={() => sortBy('weeks')}>
                       {t('warsColumn')} {order === 'weeks' ? (descending ? '↓' : '↑') : ''}
-                    </button>
-                  </div>
-                  <div className="players-directory-list" role="rowgroup">
-                    {visible.map((player) => (
-                      <DirectoryRow
-                        key={player.id}
-                        player={player}
-                        stat={stats.get(player.id)}
-                        power={powerByPlayer.get(player.id)}
-                      />
-                    ))}
-                  </div>
-                </div>
+                    </button>,
+                  ]}
+                >
+                  {visible.map((player) => (
+                    <DirectoryRow
+                      key={player.id}
+                      player={player}
+                      stat={stats.get(player.id)}
+                      power={powerByPlayer.get(player.id)}
+                    />
+                  ))}
+                </DataTable>
               )}
               {matchingUnlinked.length > 0 && (
                 <div className="players-unlinked">
@@ -492,7 +497,9 @@ function DirectoryRow({
   return (
     <div className={'directory-player' + (!player.active ? ' inactive' : '')} role="row">
       <div className="directory-player-main" role="cell">
-        <span className="directory-player-name"><PlayerLink id={player.id} name={player.name} /> <ArrowUpRight size={15} /></span>
+        <span className="directory-player-name">
+          <PlayerLink id={player.id} name={player.name} /> <ArrowUpRight size={15} />
+        </span>
         {power && <small className="directory-player-power">⚔ {power}</small>}
         <div className="directory-player-flags">
           <span

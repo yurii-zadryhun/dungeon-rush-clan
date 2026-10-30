@@ -65,7 +65,9 @@ export function RecognitionWidget() {
                 )}
                 <span>
                   <small>{labels[award.kind][uk ? 0 : 1]}</small>
-                  <strong><PlayerLink id={award.playerId} name={award.name} /></strong>
+                  <strong>
+                    <PlayerLink id={award.playerId} name={award.name} />
+                  </strong>
                 </span>
                 <b>
                   {award.kind === 'points' || award.kind === 'championship'
@@ -76,15 +78,23 @@ export function RecognitionWidget() {
             ))}
           </div>
           <h3>{uk ? 'Лідери за всі війни' : 'All-time contributors'}</h3>
-          <DataTable label={uk ? 'Лідери за всі війни' : 'All-time contributors'}
+          <DataTable
+            label={uk ? 'Лідери за всі війни' : 'All-time contributors'}
             columns="26px minmax(0,1fr) minmax(64px,95px) minmax(70px,95px)"
-            headers={['#', uk ? 'Гравець' : 'Player', 'MVP / #1', uk ? 'Очки' : 'Points']}>
-            {data.leaderboard.slice(0,10).map((person,index) => (
+            headers={['#', uk ? 'Гравець' : 'Player', 'MVP / #1', uk ? 'Очки' : 'Points']}
+          >
+            {data.leaderboard.slice(0, 10).map((person, index) => (
               <DataTableRow key={person.id}>
                 <DataTableCell>{index + 1}</DataTableCell>
-                <DataTableCell><PlayerLink id={person.id} name={person.name} /></DataTableCell>
-                <DataTableCell numeric>{person.mvps} / {person.firstPlaces}</DataTableCell>
-                <DataTableCell numeric><strong>{shortNumber(person.points)}</strong></DataTableCell>
+                <DataTableCell>
+                  <PlayerLink id={person.id} name={person.name} />
+                </DataTableCell>
+                <DataTableCell numeric>
+                  {person.mvps} / {person.firstPlaces}
+                </DataTableCell>
+                <DataTableCell numeric>
+                  <strong>{shortNumber(person.points)}</strong>
+                </DataTableCell>
               </DataTableRow>
             ))}
           </DataTable>
@@ -97,7 +107,9 @@ export function RecognitionWidget() {
                     <a href={'#/wars/' + entry.start}>
                       {formatWarRange(entry.start, locale)} {entry.championship && '🏆'}
                     </a>
-                    <strong><PlayerLink id={entry.id} name={entry.name} /></strong>
+                    <strong>
+                      <PlayerLink id={entry.id} name={entry.name} />
+                    </strong>
                     <b>{shortNumber(entry.points)}</b>
                   </div>
                 ))}

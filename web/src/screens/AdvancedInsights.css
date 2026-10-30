@@ -1,15 +1,58 @@
-.advanced-insights { display:contents; }
-.advanced-group-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
-.advanced-group-grid > div { display:grid; gap:5px; padding:12px; background:rgba(255,255,255,.04); border-radius:var(--radius-md); }
-.advanced-group-grid strong { font-size:25px; }
-.advanced-group-grid small { color:var(--text-soft); }
-.advanced-retention { display:flex; justify-content:space-around; flex-wrap:wrap; gap:14px; }
-.advanced-retention > div { display:grid; gap:5px; text-align:center; }
-.advanced-retention strong { font-size:24px; }
-.advanced-retention small { color:var(--text-muted); font-size:10px; }
-.advanced-balance { grid-column:1 / -1; }
-.advanced-insights .data-table { margin-top:12px; }
-.advanced-insights .data-table-header > :not(:first-child) { text-align:right; }
-.advanced-insights .data-table-header button { text-align:right; }
-.advanced-insights .data-table-body { max-height:480px; overflow-y:auto; }
-.advanced-insights .data-table-cell.numeric { white-space:nowrap; }
+.advanced-insights {
+  display: contents;
+}
+.advanced-group-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+.advanced-group-grid > div {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-md);
+}
+.advanced-group-grid strong {
+  font-size: 25px;
+}
+.advanced-group-grid small {
+  color: var(--text-soft);
+}
+.advanced-retention {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.advanced-retention > div {
+  display: grid;
+  gap: 5px;
+  text-align: center;
+}
+.advanced-retention strong {
+  font-size: 24px;
+}
+.advanced-retention small {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+.advanced-balance {
+  grid-column: 1 / -1;
+}
+.advanced-insights .data-table {
+  margin-top: 12px;
+}
+.advanced-insights .data-table-header > :not(:first-child) {
+  text-align: right;
+}
+.advanced-insights .data-table-header button {
+  text-align: right;
+}
+.advanced-insights .data-table-body {
+  max-height: 480px;
+  overflow-y: auto;
+}
+.advanced-insights .data-table-cell.numeric {
+  white-space: nowrap;
+}

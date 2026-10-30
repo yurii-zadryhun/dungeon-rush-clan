@@ -55,11 +55,21 @@
   border-bottom: 1px solid var(--stroke-subtle);
 }
 .recognition-recent > div {
-  display:grid; grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) auto;
-  gap:8px; align-items:center; padding:9px; border-bottom:1px solid var(--stroke-subtle);
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 9px;
+  border-bottom: 1px solid var(--stroke-subtle);
 }
-.recognition-recent > div > a { color:var(--color-blue); text-decoration:none; font-size:12px; }
-.recognition-recent > div > a:hover { text-decoration:underline; }
+.recognition-recent > div > a {
+  color: var(--color-blue);
+  text-decoration: none;
+  font-size: 12px;
+}
+.recognition-recent > div > a:hover {
+  text-decoration: underline;
+}
 .recognition-leaders small {
   color: var(--text-muted);
 }
