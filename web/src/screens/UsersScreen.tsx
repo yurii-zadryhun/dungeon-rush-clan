@@ -1,5 +1,6 @@
 import React from 'react';
 import { AuditHistory } from './AuditHistory';
+import { useModalHistory } from './useModalHistory';
 import { Copy, Eye, Link2, Pencil, Trash2, UserPlus, Users, X } from 'lucide-react';
 import { api, json, type Account, type Dashboard, type Role } from '../api';
 import { useI18n } from '../i18n';
@@ -56,6 +57,7 @@ export function UsersScreen({
   const [error, setError] = React.useState('');
   const [groupExpanded, setGroupExpanded] = React.useState(false);
   const [editing, setEditing] = React.useState<ManagedAccount | null>(null);
+  useModalHistory(() => setEditing(null), editing !== null);
   const [editName, setEditName] = React.useState('');
   const [editRole, setEditRole] = React.useState<Role>('member');
   const owner = account.role === 'owner';

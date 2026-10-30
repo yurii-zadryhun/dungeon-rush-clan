@@ -451,3 +451,15 @@
 .player-saved-views label { display:grid; gap:4px; font-size:12px; }
 .player-saved-views input { width:140px; max-width:100%; }
 .directory-flag.new-player { background:#254d34; color:#98f0b4; border-color:#448856; }
+
+.player-focus-filters { display:flex; flex-wrap:wrap; gap:6px; }
+.player-focus-filters button { border:1px solid var(--muted); border-radius:8px; padding:7px 10px; background:var(--panel-2); color:inherit; font-size:12px; }
+.player-focus-filters button.selected { border-color:var(--blue); background:var(--blue-shade); }
+.player-saved-views { display:grid; gap:8px; }
+.player-view-chips { display:flex; gap:6px; flex-wrap:wrap; }
+.player-view-chip { display:inline-flex; border:1px solid #6d6973; border-radius:8px; overflow:hidden; background:var(--panel-2); }
+.player-view-chip.active { border-color:var(--blue); }
+.player-view-chip button { border:0; background:none; color:inherit; font-size:12px; padding:6px 9px; }
+.player-view-chip button + button { border-left:1px solid #625b67; padding:6px 8px; }
+.player-view-create { display:flex; gap:7px; flex-wrap:wrap; }
+.player-view-create input { flex:1 1 135px; min-width:100px; max-width:220px; }

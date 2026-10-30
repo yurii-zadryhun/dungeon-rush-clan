@@ -48,7 +48,16 @@ interface StandaloneAccount {
 type Membership = 'active' | 'all' | 'left';
 type Registration = 'all' | 'registered' | 'unregistered';
 type Order = 'score' | 'latest' | 'name' | 'weeks';
-type SavedView = { name: string; membership: Membership; registration: Registration; order: Order; search: string };
+type Focus = 'all' | 'newcomer' | 'below' | 'attention';
+type SavedView = {
+  name: string;
+  membership: Membership;
+  registration: Registration;
+  order: Order;
+  search: string;
+  focus?: Focus;
+  descending?: boolean;
+};
 
 export function PlayersPage({
   account,
@@ -63,7 +72,7 @@ export function PlayersPage({
   onImpersonate: (account: Account) => void;
   initialAccess?: boolean;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const isStaff = account.role !== 'member';
   const [rosterImportOpen, setRosterImportOpen] = React.useState(false);
   const [tab, setTab] = React.useState<'roster' | 'access'>(
@@ -79,6 +88,8 @@ export function PlayersPage({
   const [search, setSearch] = React.useState('');
   const [membership, setMembership] = React.useState<Membership>('active');
   const [registration, setRegistration] = React.useState<Registration>('all');
+  const [focus, setFocus] = React.useState<Focus>('all');
+  const [activeView, setActiveView] = React.useState('');
   const [order, setOrder] = React.useState<Order>('score');
   const [descending, setDescending] = React.useState(true);
   const [viewName, setViewName] = React.useState('');
@@ -98,10 +109,18 @@ export function PlayersPage({
     const name = viewName.trim().slice(0, 35);
     if (!name) return;
     const next = [...savedViews.filter((item) => item.name !== name),
-      { name, membership, registration, order, search }].slice(-10);
+      { name, membership, registration, order, search, focus, descending }].slice(-10);
     setSavedViews(next);
     localStorage.setItem('clan:player-views:v1', JSON.stringify(next));
     setViewName('');
+    setActiveView(name);
+  }
+
+  function deleteView(name: string) {
+    const next = savedViews.filter((item) => item.name !== name);
+    setSavedViews(next);
+    localStorage.setItem('clan:player-views:v1', JSON.stringify(next));
+    if (activeView === name) setActiveView('');
   }
 
   function selectView(name: string) {
@@ -111,6 +130,9 @@ export function PlayersPage({
     setRegistration(view.registration);
     setOrder(view.order);
     setSearch(view.search);
+    setFocus(view.focus ?? 'all');
+    setDescending(view.descending ?? view.order !== 'name');
+    setActiveView(name);
   }
 
   React.useEffect(() => {
@@ -146,6 +168,10 @@ export function PlayersPage({
   const stats = new Map(dashboard.rankings.calculated.map((player) => [player.id, player]));
   const visible = members
     .filter((player) => {
+      const stat = stats.get(player.id);
+      if (focus === 'newcomer' && !stat?.newcomer) return false;
+      if (focus === 'below' && !stat?.belowRequirement) return false;
+      if (focus === 'attention' && !player.attention) return false;
       if (membership === 'active' && !player.active) return false;
       if (membership === 'left' && player.active) return false;
       if (registration === 'registered' && !(player.hasAccount && player.accountActive)) return false;
@@ -280,18 +306,36 @@ export function PlayersPage({
                 </select>
               </label>
             </div>
+            <div className="player-focus-filters" role="group" aria-label={locale === 'uk' ? 'Швидкі фільтри' : 'Quick filters'}>
+              {(['all', 'newcomer', 'below', ...(isStaff ? ['attention'] : [])] as Focus[]).map((value) => (
+                <button key={value} type="button" className={focus === value ? 'selected' : ''}
+                  aria-pressed={focus === value} onClick={() => { setFocus(value); setActiveView(''); }}>
+                  {value === 'all' ? (locale === 'uk' ? 'Усі' : 'All') :
+                    value === 'newcomer' ? (locale === 'uk' ? 'Новачки' : 'Newcomers') :
+                    value === 'below' ? (locale === 'uk' ? 'Нижче мінімуму' : 'Below minimum') :
+                    (locale === 'uk' ? 'Увага' : 'Attention')}
+                </button>
+              ))}
+            </div>
             <div className="player-saved-views">
-              <label>
-                <span>{t('save')}</span>
-                <select defaultValue="" onChange={(event) => selectView(event.target.value)}>
-                  <option value="">—</option>
-                  {savedViews.map((view) => <option key={view.name} value={view.name}>{view.name}</option>)}
-                </select>
-              </label>
-              <input value={viewName} onChange={(event) => setViewName(event.target.value)}
-                maxLength={35} placeholder={t('name')} aria-label={t('name')}/>
-              <button type="button" className="game-button secondary" disabled={!viewName.trim()}
-                onClick={saveView}>{t('save')}</button>
+              {savedViews.length > 0 && (
+                <div className="player-view-chips">
+                  {savedViews.map((view) => (
+                    <span className={'player-view-chip' + (activeView === view.name ? ' active' : '')} key={view.name}>
+                      <button type="button" onClick={() => selectView(view.name)}>{view.name}</button>
+                      <button type="button" aria-label={(locale === 'uk' ? 'Видалити' : 'Delete') + ': ' + view.name}
+                        onClick={() => deleteView(view.name)}>×</button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div className="player-view-create">
+                <input value={viewName} onChange={(event) => setViewName(event.target.value)}
+                  maxLength={35} placeholder={locale === 'uk' ? 'Назва фільтра' : 'View name'}
+                  aria-label={locale === 'uk' ? 'Назва фільтра' : 'View name'}/>
+                <button type="button" className="game-button secondary" disabled={!viewName.trim()}
+                  onClick={saveView}>{locale === 'uk' ? 'Зберегти фільтр' : 'Save view'}</button>
+              </div>
             </div>
           </div>
           {error && (
