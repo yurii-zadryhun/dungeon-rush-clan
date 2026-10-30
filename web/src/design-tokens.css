@@ -1,0 +1,70 @@
+:root {
+  /* Surfaces and hierarchy */
+  --color-page: #101113;
+  --surface-panel: #302e2f;
+  --surface-secondary: #1d1c1e;
+  --surface-raised: #292729;
+  --surface-inset: #211f21;
+  --surface-field: #252427;
+  --surface-input: #161618;
+  --surface-control: #3a3740;
+  --surface-button: #262426;
+
+  /* Typography */
+  --text-primary: #f7f6f6;
+  --text-on-accent: #fff;
+  --text-secondary: #aaa;
+  --text-muted: #aaa6a8;
+  --text-soft: #b8aeb2;
+  --text-light: #ddd;
+
+  /* Outlines and focus */
+  --stroke-heavy: #080808;
+  --stroke-strong: #070708;
+  --stroke-deep: #090909;
+  --stroke-black: #060606;
+  --stroke-dark: #0b0b0b;
+  --stroke-subtle: #504c4e;
+  --stroke-control: #706a77;
+  --focus-glow: #3aa4e82f;
+
+  /* Semantic accents */
+  --color-success: #59ef53;
+  --color-blue: #38a3e8;
+  --color-blue-shade: #155f86;
+  --color-danger: #ff5b64;
+  --color-danger-shade: #9d323b;
+  --color-gold: #f2bd45;
+  --color-highlight: #e8ba55;
+  --color-gold-muted: #d5ab4c;
+
+  /* Component geometry */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 9px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --control-height: 40px;
+  --control-gap: 8px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --shadow-popover: 0 10px 25px #000a;
+
+  /* Legacy aliases until existing markup migrates to semantic names. */
+  --bg: var(--color-page);
+  --panel: var(--surface-panel);
+  --panel-2: var(--surface-secondary);
+  --panel-3: var(--surface-raised);
+  --border: var(--stroke-strong);
+  --green: var(--color-success);
+  --blue: var(--color-blue);
+  --blue-shade: var(--color-blue-shade);
+  --red: var(--color-danger);
+  --red-shade: var(--color-danger-shade);
+  --gold: var(--color-gold);
+  --muted: var(--text-muted);
+  --control-radius: var(--radius-md);
+  --focus-outline: 2px solid var(--color-gold);
+  --space-control: var(--control-gap);
+}

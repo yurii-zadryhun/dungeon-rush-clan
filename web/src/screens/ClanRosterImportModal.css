@@ -28,14 +28,14 @@
   width: 104px;
   padding: 5px;
   border: 1px solid #615b66;
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   background: #27252d;
 }
 .clan-thumbnail-image {
   position: relative;
   height: 120px;
   overflow: hidden;
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
   background: #121216;
 }
 .clan-thumbnail-image img {
@@ -54,9 +54,9 @@
   width: 23px;
   height: 23px;
   border: 1px solid #b7cbe1;
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
   background: #263b50;
-  color: #fff;
+  color: var(--text-on-accent);
   font-size: 12px;
   font-weight: 900;
 }
@@ -72,7 +72,7 @@
   border: 1px solid #d5c5cd;
   border-radius: 7px;
   background: #302b37ed;
-  color: #fff;
+  color: var(--text-on-accent);
   cursor: pointer;
 }
 .clan-thumbnail-remove:hover {
@@ -90,9 +90,9 @@
   width: 29px;
   height: 29px;
   padding: 4px;
-  border: 1px solid #706a77;
-  border-radius: 6px;
-  background: #3a3740;
+  border: 1px solid var(--stroke-control);
+  border-radius: var(--radius-xs);
+  background: var(--surface-control);
   color: #f1eef3;
   cursor: pointer;
 }
@@ -120,7 +120,7 @@
   text-align: center;
   padding: 7px;
   background: #24252b;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 .clan-summary-figure strong {
   color: #7ee893;
@@ -144,7 +144,7 @@
   color: #f1c18b;
   padding: 10px 12px;
   background: #3c3226;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 .clan-roster-warnings summary {
   cursor: pointer;
@@ -156,7 +156,7 @@
 }
 .clan-ocr-response {
   border: 1px solid #5a6574;
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   background: #252933;
   overflow: hidden;
 }
@@ -225,7 +225,7 @@
   flex-wrap: wrap;
   gap: 8px 13px;
   background: #22252a;
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   padding: 9px;
 }
 .clan-roster-changes .joined {
@@ -259,13 +259,13 @@
   border-radius: 7px;
   font-size: 11px;
   font-weight: 900;
-  color: #ddd;
+  color: var(--text-light);
 }
 .clan-roster-entry {
   padding: 6px 8px;
   background: #27252b;
   border: 1px solid #504951;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 .clan-roster-entry.invalid {
   border-color: #eb8f88;
@@ -358,19 +358,19 @@
   min-height: 72px;
   gap: 12px;
   padding: 13px;
-  background: #252427;
+  background: var(--surface-field);
   border: 2px dashed #72645c;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
 }
 .clan-roster-file:focus-within {
-  border-color: #e8ba55;
+  border-color: var(--color-highlight);
   outline: 2px solid #a78d5b;
   outline-offset: 2px;
 }
 .clan-roster-file svg {
   flex: none;
-  color: #e8ba55;
+  color: var(--color-highlight);
 }
 .clan-roster-file span {
   display: grid;
@@ -381,7 +381,7 @@
   font-size: 13px;
 }
 .clan-roster-file small {
-  color: #b8aeb2;
+  color: var(--text-soft);
   font-size: 11px;
   overflow-wrap: anywhere;
 }
@@ -412,7 +412,7 @@
 .clan-player-crop { display:block; grid-column:1 / -1; max-width:100%; max-height:220px; object-fit:contain; border-radius:8px; margin:4px auto; }
 
 .clan-roster-row-actions { display:flex; gap:5px; justify-content:flex-end; }
-.clan-roster-row-actions > button { width:29px; height:29px; border:1px solid #706a77; border-radius:6px; background:#3a3740; color:#f1eef3; cursor:pointer; }
+.clan-roster-row-actions > button { width:29px; height:29px; border:1px solid var(--stroke-control); border-radius:6px; background:var(--surface-control); color:#f1eef3; cursor:pointer; }
 .clan-roster-entry label .clan-new-label { flex:0 0 auto; }
 
 .clan-review-reattach { display:grid; gap:7px; font-size:12px; padding:10px; border:1px dashed #675d70; border-radius:8px; }

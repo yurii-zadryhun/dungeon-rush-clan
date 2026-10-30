@@ -1,23 +1,8 @@
 :root {
   font-family: 'Arial Rounded MT Bold', 'Trebuchet MS', system-ui, sans-serif;
-  color: #f7f6f6;
-  background: #101113;
+  color: var(--text-primary);
+  background: var(--color-page);
   font-synthesis: none;
-  --bg: #101113;
-  --panel: #302e2f;
-  --panel-2: #1d1c1e;
-  --panel-3: #292729;
-  --border: #070708;
-  --green: #59ef53;
-  --blue: #38a3e8;
-  --blue-shade: #155f86;
-  --red: #ff5b64;
-  --red-shade: #9d323b;
-  --gold: #f2bd45;
-  --muted: #aaa6a8;
-  --control-radius: 9px;
-  --focus-outline: 2px solid var(--gold);
-  --space-control: 8px;
 }
 
 * {
@@ -30,7 +15,7 @@ body {
   min-height: 100vh;
   background:
     radial-gradient(ellipse at 10% 0%, #322135 0, transparent 34rem),
-    radial-gradient(ellipse at 94% 62%, #183047 0, transparent 40rem), #101113;
+    radial-gradient(ellipse at 94% 62%, #183047 0, transparent 40rem), var(--color-page);
 }
 
 button,
@@ -50,12 +35,12 @@ button:disabled {
 
 input,
 select {
-  background: #161618;
-  border: 2px solid #080808;
-  color: #fff;
+  background: var(--surface-input);
+  border: 2px solid var(--stroke-heavy);
+  color: var(--text-on-accent);
   padding: 10px 12px;
   min-height: 40px;
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   outline: none;
   min-width: 0;
 }
@@ -63,7 +48,7 @@ select {
 input:focus,
 select:focus {
   border-color: var(--blue);
-  box-shadow: 0 0 0 2px #3aa4e82f;
+  box-shadow: 0 0 0 2px var(--focus-glow);
 }
 
 label {
@@ -97,11 +82,11 @@ h3 {
 
 h1,
 h2 {
-  color: #fff;
+  color: var(--text-on-accent);
   text-shadow:
-    0 3px 0 #080808,
-    1px 0 #080808,
-    -1px 0 #080808;
+    0 3px 0 var(--stroke-heavy),
+    1px 0 var(--stroke-heavy),
+    -1px 0 var(--stroke-heavy);
 }
 
 h2 {
@@ -165,7 +150,7 @@ b {
 .game-button {
   min-height: 39px;
   padding: 8px 13px;
-  border: 3px solid #070708;
+  border: 3px solid var(--stroke-strong);
   color: white;
   border-radius: 11px;
   display: inline-flex;
@@ -175,7 +160,7 @@ b {
   font-size: 12px;
   font-weight: 950;
   text-shadow: 0 2px 0 #101010;
-  box-shadow: 0 4px 0 #090909;
+  box-shadow: 0 4px 0 var(--stroke-deep);
   white-space: nowrap;
   transition:
     transform 0.08s,
@@ -208,10 +193,10 @@ b {
   height: 40px;
   display: grid;
   place-items: center;
-  border: 2px solid #090909;
-  border-radius: 10px;
+  border: 2px solid var(--stroke-deep);
+  border-radius: var(--radius-lg);
   color: #dedbdc;
-  background: #292729;
+  background: var(--surface-raised);
 }
 
 .icon-button:hover {
@@ -224,7 +209,7 @@ b {
 
 .close-button {
   background: var(--red);
-  color: #fff;
+  color: var(--text-on-accent);
   box-shadow: 0 3px 0 var(--red-shade);
   width: 42px;
   height: 42px;
@@ -236,7 +221,7 @@ b {
   font-weight: 900;
   color: #d8d5d6;
   background: #29272a;
-  border: 2px solid #0b0b0b;
+  border: 2px solid var(--stroke-dark);
   border-radius: 18px;
   padding: 5px 8px;
 }
@@ -271,7 +256,7 @@ b {
 .info-strip {
   margin: 11px 0;
   padding: 10px 12px;
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   background: #3d2527;
   border: 2px solid #784044;
   color: #ffbfc3;
@@ -355,8 +340,8 @@ b {
 .qr-box {
   padding: 14px;
   background: #232223;
-  border-radius: 12px;
-  border: 2px solid #090909;
+  border-radius: var(--radius-xl);
+  border: 2px solid var(--stroke-deep);
   text-align: center;
 }
 
@@ -366,7 +351,7 @@ b {
   image-rendering: pixelated;
   background: white;
   padding: 6px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 
 .qr-box p {

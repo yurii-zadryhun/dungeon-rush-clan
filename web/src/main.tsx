@@ -8,6 +8,7 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
 import { createRoot } from 'react-dom/client';
 import { LanguageProvider } from './i18n';
 import { initialLocale } from './locale';
+import './design-tokens.css';
 import './styles.css';
 import './styles-dashboard.css';
 import './styles-forms.css';

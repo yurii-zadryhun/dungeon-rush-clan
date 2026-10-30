@@ -1,0 +1,44 @@
+.management-toast {
+  position: fixed;
+  right: 20px;
+  bottom: 24px;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  max-width: min(430px, calc(100vw - 30px));
+  padding: 13px 16px;
+  border: 1px solid #4f9369;
+  border-radius: var(--radius-xl);
+  color: #d8ffdf;
+  background: #1e4932;
+  box-shadow: var(--shadow-popover);
+  font-size: 12px;
+  font-weight: 900;
+}
+.management-toast svg {
+  flex: 0 0 auto;
+}
+.management-toast.error {
+  border-color: #af6568;
+  color: #ffe4e3;
+  background: #5a3038;
+}
+
+.management-toast > button {
+  display:inline-grid;
+  place-items:center;
+  color:inherit;
+  background:transparent;
+  border:0;
+  padding:4px;
+  margin-left:8px;
+}
+@media (max-width: 650px) {
+  .management-toast {
+    right: 12px;
+    bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+    left: 12px;
+    max-width: none;
+  }
+}

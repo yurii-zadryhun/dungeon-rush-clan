@@ -1,4 +1,5 @@
 import React from 'react';
+import './Toast.css';
 import { AlertCircle, CheckCircle2, X } from 'lucide-react';
 import { ModalDialog } from './ModalDialog';
 import { useI18n } from '../i18n';

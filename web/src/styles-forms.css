@@ -43,8 +43,8 @@
 .stepper {
   display: flex;
   justify-content: space-around;
-  background: #211f21;
-  border-bottom: 2px solid #090909;
+  background: var(--surface-inset);
+  border-bottom: 2px solid var(--stroke-deep);
   padding: 9px;
   gap: 4px;
 }
@@ -67,7 +67,7 @@
   display: grid;
   gap: 14px;
   scrollbar-width: thin;
-  scrollbar-color: #625b60 #211f21;
+  scrollbar-color: #625b60 var(--surface-inset);
 }
 
 .modal-content p {
@@ -132,7 +132,7 @@
 .file-names {
   max-width: 100%;
   overflow-wrap: anywhere;
-  color: #aaa;
+  color: var(--text-secondary);
   font-size: 10px;
 }
 
@@ -159,8 +159,8 @@
 }
 
 .review-player {
-  border: 2px solid #0b0b0b;
-  background: #262426;
+  border: 2px solid var(--stroke-dark);
+  background: var(--surface-button);
   padding: 10px;
   border-radius: 11px;
   display: grid;
@@ -203,7 +203,7 @@
 }
 
 .tag {
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
   padding: 4px 7px;
   border: 1px solid #555;
   font-size: 9px;
@@ -225,7 +225,7 @@
 .warning-list {
   background: #413423;
   border: 2px solid #8b602d;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   padding: 10px;
   color: #ffdfad;
 }
@@ -280,7 +280,7 @@
   gap: 8px;
   background: #252326;
   border: 2px solid #0e0c0e;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   padding: 8px;
 }
 
@@ -321,9 +321,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #262426;
+  background: var(--surface-button);
   padding: 8px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   border: 2px solid #0d0d0d;
   font-size: 12px;
 }
@@ -377,9 +377,9 @@
 .created-invite img {
   width: 185px;
   max-width: 100%;
-  background: #fff;
+  background: var(--text-on-accent);
   padding: 6px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 
 .accounts-list {
@@ -392,9 +392,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  background: #211f21;
-  border: 2px solid #0b0b0b;
-  border-radius: 9px;
+  background: var(--surface-inset);
+  border: 2px solid var(--stroke-dark);
+  border-radius: var(--radius-md);
   padding: 7px 9px;
 }
 
@@ -404,7 +404,7 @@
 
 .account-row small {
   display: block;
-  color: #aaa;
+  color: var(--text-secondary);
   font-size: 10px;
   margin-top: 3px;
 }
@@ -610,7 +610,7 @@
 }
 
 .day-winner {
-  color: #ddd;
+  color: var(--text-light);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -623,7 +623,7 @@
   display: inline-flex;
   gap: 3px;
   align-items: center;
-  border: 2px solid #080808;
+  border: 2px solid var(--stroke-heavy);
   background: #242224;
   padding: 3px;
   border-radius: 11px;
@@ -639,7 +639,7 @@
   padding: 5px 6px;
 }
 .language-choice.selected {
-  color: #fff;
+  color: var(--text-on-accent);
   background: #386c96;
 }
 .language-choice span {
@@ -680,7 +680,7 @@
   font-size: clamp(24px, 3vw, 37px);
   line-height: 1.05;
   font-weight: 1000;
-  text-shadow: 0 2px 0 #080808;
+  text-shadow: 0 2px 0 var(--stroke-heavy);
   font-variant-numeric: tabular-nums;
 }
 .clan-record-entry small {
@@ -723,4 +723,3 @@
 
 .confirm-dialog { width:min(100%, 440px); }
 .confirm-dialog .modal-content p { margin:0; line-height:1.5; }
-.management-toast > button { background:transparent; color:inherit; border:0; padding:4px; margin-left:8px; display:inline-grid; place-items:center; }

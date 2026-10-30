@@ -15,7 +15,7 @@
   gap: 6px;
   min-height: 33px;
   border: 1px solid #b97573;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   padding: 6px 10px;
   color: #ffe6db;
   background: #66373b;
@@ -41,7 +41,7 @@
   align-content: start;
   min-width: 0;
   padding: 12px;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   background: #25252b;
 }
 .management-block h3 {
@@ -95,13 +95,13 @@
   background: #383239;
   color: #cec2cc;
   padding: 7px 9px;
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   font-size: 11px;
   font-weight: 800;
 }
 .player-tag-button.selected {
   border-color: #8fc5d8;
-  color: #fff;
+  color: var(--text-on-accent);
   background: #305c71;
 }
 .player-tag-button:focus-visible {
@@ -114,10 +114,10 @@
   min-width: 0;
   resize: vertical;
   background: #18191d;
-  border: 2px solid #080808;
-  border-radius: 9px;
+  border: 2px solid var(--stroke-heavy);
+  border-radius: var(--radius-md);
   padding: 10px;
-  color: #fff;
+  color: var(--text-on-accent);
   font: inherit;
   font-size: 12px;
 }
@@ -125,14 +125,14 @@
 .note-form textarea:focus {
   outline: 0;
   border-color: #3ca4e8;
-  box-shadow: 0 0 0 2px #3aa4e82f;
+  box-shadow: 0 0 0 2px var(--focus-glow);
 }
 .management-save-error {
   display: flex;
   align-items: center;
   gap: 8px;
   border: 1px solid #a45f61;
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   padding: 9px 11px;
   background: #4b292e;
   color: #ffd5d4;
@@ -210,7 +210,7 @@
   gap: 7px;
   border: 1px solid #5a525b;
   border-left: 4px solid #607d9c;
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   padding: 10px;
   background: #24252a;
 }
@@ -246,32 +246,6 @@
   overflow-wrap: anywhere;
 }
 /* Visible independently of scroll position; mobile stays above the bottom nav. */
-.management-toast {
-  position: fixed;
-  right: 20px;
-  bottom: 24px;
-  z-index: 500;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  max-width: min(430px, calc(100vw - 30px));
-  padding: 13px 16px;
-  border: 1px solid #4f9369;
-  border-radius: 12px;
-  color: #d8ffdf;
-  background: #1e4932;
-  box-shadow: 0 10px 25px #000a;
-  font-size: 12px;
-  font-weight: 900;
-}
-.management-toast svg {
-  flex: 0 0 auto;
-}
-.management-toast.error {
-  border-color: #af6568;
-  color: #ffe4e3;
-  background: #5a3038;
-}
 @media (max-width: 750px) {
   .management-grid {
     grid-template-columns: 1fr;
@@ -280,12 +254,6 @@
 @media (max-width: 650px) {
   .management-heading h2 {
     font-size: 16px;
-  }
-  .management-toast {
-    right: 12px;
-    bottom: calc(90px + env(safe-area-inset-bottom, 0px));
-    left: 12px;
-    max-width: none;
   }
   .note-form {
     grid-template-columns: minmax(0, 1fr) minmax(120px, 38%);

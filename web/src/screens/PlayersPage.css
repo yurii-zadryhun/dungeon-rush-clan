@@ -31,8 +31,8 @@
   min-width: 0;
   min-height: 45px;
   padding: 10px 14px;
-  border: 2px solid #080808;
-  border-radius: 10px;
+  border: 2px solid var(--stroke-heavy);
+  border-radius: var(--radius-lg);
   background: #2b292c;
   color: #c0b9c3;
   font-size: 12px;
@@ -41,12 +41,12 @@
 }
 .players-tabs button.selected {
   background: #325473;
-  color: #fff;
+  color: var(--text-on-accent);
   border-color: #65a9dd;
 }
 .players-tabs button:hover:not(.selected) {
   background: #39363d;
-  color: #fff;
+  color: var(--text-on-accent);
 }
 .players-tabs button:focus-visible {
   outline: 2px solid #e9c66e;
@@ -87,10 +87,10 @@
   align-items: center;
   gap: 9px;
   padding: 0 11px;
-  border: 2px solid #070708;
-  border-radius: 10px;
-  background: #161618;
-  color: #aaa;
+  border: 2px solid var(--stroke-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface-input);
+  color: var(--text-secondary);
 }
 .players-search:focus-within {
   border-color: var(--blue);
@@ -119,7 +119,7 @@
 .players-segments button {
   flex: 1;
   border: 1px solid #5e5961;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   padding: 9px 12px;
   background: #242327;
   color: #c8c5cc;
@@ -130,7 +130,7 @@
 .players-segments button.selected {
   background: #396a86;
   border-color: #80bff1;
-  color: #fff;
+  color: var(--text-on-accent);
 }
 .players-filter-select {
   display: grid;
@@ -164,7 +164,7 @@
   padding: 10px 12px;
   background: #333139;
   border: 1px solid #625b66;
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   color: #c9c5ce;
   font-size: 11px;
   font-weight: 900;
@@ -185,7 +185,7 @@
   min-width: 0;
   padding: 9px 12px;
   border: 1px solid #514b54;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   background: #222126;
 }
 .directory-player.inactive {

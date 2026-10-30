@@ -1,6 +1,6 @@
 .site-header {
   height: 77px;
-  border-bottom: 4px solid #060606;
+  border-bottom: 4px solid var(--stroke-black);
   background: #171719;
   display: flex;
   justify-content: space-between;
@@ -20,7 +20,7 @@
   height: 47px;
   display: grid;
   place-items: center;
-  border: 3px solid #060606;
+  border: 3px solid var(--stroke-black);
   background: linear-gradient(135deg, #70502a, #d4a63a);
   color: #ffe79e;
   border-radius: 13px;
@@ -89,7 +89,7 @@
   display: flex;
   align-items: baseline;
   gap: 8px;
-  border: 3px solid #080808;
+  border: 3px solid var(--stroke-heavy);
   border-radius: 13px;
   background: #1e1d1e;
   padding: 10px 14px;
@@ -100,7 +100,7 @@
   font-size: clamp(34px, 4.5vw, 55px);
   font-variant-numeric: tabular-nums;
   line-height: 1;
-  text-shadow: 0 4px #080808;
+  text-shadow: 0 4px var(--stroke-heavy);
 }
 
 .record > span:not(.record-label) {
@@ -164,8 +164,8 @@
   gap: 8px;
   align-items: center;
   background: #161617;
-  border: 2px solid #070708;
-  border-radius: 10px;
+  border: 2px solid var(--stroke-strong);
+  border-radius: var(--radius-lg);
   padding: 7px 10px;
   min-height: 47px;
 }
@@ -274,10 +274,10 @@
   flex: 0 0 290px;
   scroll-snap-align: center;
   background: #1b1a1c;
-  border: 3px solid #070708;
+  border: 3px solid var(--stroke-strong);
   border-radius: 15px;
   overflow: hidden;
-  box-shadow: 0 4px 0 #060606;
+  box-shadow: 0 4px 0 var(--stroke-black);
   display: flex;
   flex-direction: column;
   min-height: 440px;
@@ -296,14 +296,14 @@
   border-color: #d9a449;
   box-shadow:
     0 0 0 2px #806222,
-    0 5px 0 #060606;
+    0 5px 0 var(--stroke-black);
 }
 
 .war-heading {
   text-align: center;
   background: #3d393b;
   padding: 11px 8px 10px;
-  border-bottom: 3px solid #080808;
+  border-bottom: 3px solid var(--stroke-heavy);
   min-height: 66px;
 }
 
@@ -322,8 +322,8 @@
 .war-date {
   font-size: 17px;
   font-weight: 950;
-  color: #fff;
-  text-shadow: 0 2px #090909;
+  color: var(--text-on-accent);
+  text-shadow: 0 2px var(--stroke-deep);
 }
 
 .war-status {
@@ -370,7 +370,7 @@
   align-items: center;
   gap: 12px;
   background: #100f10;
-  border: 2px solid #060606;
+  border: 2px solid var(--stroke-black);
   border-radius: 11px;
   padding: 5px 9px;
   font-size: 32px;
@@ -420,7 +420,7 @@
   gap: 5px;
   align-items: center;
   background: #292728;
-  border: 1px solid #0b0b0b;
+  border: 1px solid var(--stroke-dark);
   border-radius: 5px;
   padding: 5px 6px;
   font-size: 11px;
@@ -446,7 +446,7 @@
 .war-placeholder {
   text-align: center;
   border: 2px dashed #393639;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   padding: 14px;
   color: #807b7f;
   font-size: 11px;
