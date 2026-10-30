@@ -1,7 +1,3 @@
-.war-detail-page {
-  width: 100%;
-  min-width: 0;
-}
 .war-detail-back {
   display: inline-flex;
   align-items: center;
@@ -29,11 +25,9 @@
 .war-detail-page .data-table {
   margin-top: 16px;
 }
-.war-report-preview {
-  overflow-x: auto;
-  tab-size: 4;
-}
 .war-detail-page {
+  width: 100%;
+  min-width: 0;
   display: grid;
   gap: 16px;
   max-width: 1200px;
@@ -102,8 +96,7 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.09);
   padding: 9px 2px;
 }
-.war-detail-day a,
-.war-detail-row a {
+.war-detail-day a {
   color: inherit;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -125,37 +118,6 @@
 .war-distribution span:nth-child(3) {
   background: #625f71;
 }
-.war-detail-table {
-  margin-top: 16px;
-}
-.war-detail-row {
-  display: grid;
-  grid-template-columns: 75px minmax(130px, 1fr) 115px;
-  gap: 12px;
-  align-items: center;
-  padding: 9px 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
-}
-.war-detail-row strong {
-  text-align: right;
-}
-.war-detail-columns {
-  background: rgba(255, 255, 255, 0.045);
-  border-radius: 7px 7px 0 0;
-}
-.war-detail-columns button {
-  background: none;
-  border: 0;
-  color: inherit;
-  cursor: pointer;
-  text-align: left;
-  font: inherit;
-  font-weight: 700;
-  padding: 5px 0;
-}
-.war-detail-columns button:last-child {
-  text-align: right;
-}
 .war-detail-report-heading {
   display: flex;
   justify-content: space-between;
@@ -163,6 +125,8 @@
   gap: 12px;
 }
 .war-report-preview {
+  overflow-x: auto;
+  tab-size: 4;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   line-height: 1.6;
@@ -185,10 +149,6 @@
   }
   .war-detail-day > span:last-child {
     grid-column: 2 / -1;
-  }
-  .war-detail-row {
-    grid-template-columns: 48px minmax(80px, 1fr) 75px;
-    padding: 9px 4px;
   }
 }
 

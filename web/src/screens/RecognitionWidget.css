@@ -38,21 +38,9 @@
 .recognition-awards b {
   color: var(--color-gold);
 }
-.recognition-leaders,
 .recognition-recent {
   display: grid;
   gap: 4px;
-}
-.recognition-leaders a,
-.recognition-recent a {
-  display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) auto auto;
-  gap: 10px;
-  align-items: center;
-  padding: 9px;
-  color: inherit;
-  text-decoration: none;
-  border-bottom: 1px solid var(--stroke-subtle);
 }
 .recognition-recent > div {
   display: grid;
@@ -70,21 +58,11 @@
 .recognition-recent > div > a:hover {
   text-decoration: underline;
 }
-.recognition-leaders small {
-  color: var(--text-muted);
-}
-.recognition-leaders b,
 .recognition-recent b {
   text-align: right;
 }
 @media (max-width: 650px) {
-  .recognition-leaders a {
-    grid-template-columns: 25px minmax(0, 1fr) auto;
-  }
-  .recognition-leaders small {
-    display: none;
-  }
-  .recognition-recent a {
+  .recognition-recent > div > a {
     font-size: 11px;
   }
 }
