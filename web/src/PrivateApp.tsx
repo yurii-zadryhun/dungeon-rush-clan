@@ -109,6 +109,11 @@ export function PrivateApp() {
 
   async function logout() {
     await api('auth/logout', { method: 'POST' });
+    for (const key of Object.keys(sessionStorage)) {
+      if (key.startsWith('clan:roster-review:') || key.startsWith('clan:war-review:')) {
+        sessionStorage.removeItem(key);
+      }
+    }
     setAccount(null);
     setDashboard(null);
     setPhase('login');

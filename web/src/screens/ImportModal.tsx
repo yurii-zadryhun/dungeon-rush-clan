@@ -123,6 +123,7 @@ export function ImportModal({
       if (!raw) return;
       const saved = JSON.parse(raw) as {
         at: number; draft: WarDraft; sections: WarSections; roster: Roster; warnings: string[];
+        cropSegments?: CropSegment[]; optimizedCrop?: boolean;
       };
       if (Date.now() - saved.at > 86_400_000) {
         sessionStorage.removeItem(storageKey);
@@ -133,6 +134,8 @@ export function ImportModal({
       setSections(saved.sections);
       setRoster(saved.roster ?? emptyRoster);
       setWarnings(saved.warnings ?? []);
+      setCropSegments(saved.cropSegments ?? []);
+      setOptimizedCrop(saved.optimizedCrop ?? false);
       setStage('review');
     } catch { /* Invalid draft is ignored. */ }
   }, [storageKey]);
@@ -141,9 +144,9 @@ export function ImportModal({
     if (stage !== 'review') return;
     try {
       sessionStorage.setItem(storageKey,
-        JSON.stringify({ at: Date.now(), draft, sections, roster, warnings }));
+        JSON.stringify({ at: Date.now(), draft, sections, roster, warnings, cropSegments, optimizedCrop }));
     } catch { /* Browser storage may be unavailable. */ }
-  }, [stage, draft, sections, roster, warnings, storageKey]);
+  }, [stage, draft, sections, roster, warnings, cropSegments, optimizedCrop, storageKey]);
 
   async function scan() {
     if (!rankingImages.length && !resultImage) {
@@ -327,7 +330,7 @@ export function ImportModal({
           )}
           {stage === 'review' && !rankingImages.length && sections.players && (
             <label className="war-review-reattach">
-              {locale === 'uk' ? 'Додати оригінали для перегляду фрагментів' : 'Attach originals for screenshot crops'}
+              {locale === 'uk' ? 'Додайте оригінали в тому самому порядку для перевірки OCR' : 'Attach originals in the same order to inspect OCR'}
               <input type="file" multiple accept="image/png,image/jpeg,image/webp"
                 onChange={(event) => setRankingImages(Array.from(event.target.files || []))} />
             </label>

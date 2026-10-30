@@ -414,3 +414,7 @@
 .clan-roster-row-actions { display:flex; gap:5px; justify-content:flex-end; }
 .clan-roster-row-actions > button { width:29px; height:29px; border:1px solid #706a77; border-radius:6px; background:#3a3740; color:#f1eef3; cursor:pointer; }
 .clan-roster-entry label .clan-new-label { flex:0 0 auto; }
+
+.clan-review-reattach { display:grid; gap:7px; font-size:12px; padding:10px; border:1px dashed #675d70; border-radius:8px; }
+.clan-review-reattach input { max-width:100%; }
+.clan-return-label { border:1px solid #998364; color:#e7c788; border-radius:5px; padding:2px 5px; font-size:10px; }

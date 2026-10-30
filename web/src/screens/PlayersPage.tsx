@@ -93,9 +93,10 @@ export function PlayersPage({
   const [order, setOrder] = React.useState<Order>('score');
   const [descending, setDescending] = React.useState(true);
   const [viewName, setViewName] = React.useState('');
+  const viewsKey = 'clan:player-views:v1:' + account.id;
   const [savedViews, setSavedViews] = React.useState<SavedView[]>(() => {
     try {
-      const parsed: unknown = JSON.parse(localStorage.getItem('clan:player-views:v1') || '[]');
+      const parsed: unknown = JSON.parse(localStorage.getItem(viewsKey) || '[]');
       return Array.isArray(parsed) ? parsed.filter((item) => item && typeof item.name === 'string').slice(0, 10) : [];
     } catch { return []; }
   });
@@ -111,7 +112,7 @@ export function PlayersPage({
     const next = [...savedViews.filter((item) => item.name !== name),
       { name, membership, registration, order, search, focus, descending }].slice(-10);
     setSavedViews(next);
-    localStorage.setItem('clan:player-views:v1', JSON.stringify(next));
+    localStorage.setItem(viewsKey, JSON.stringify(next));
     setViewName('');
     setActiveView(name);
   }
@@ -119,7 +120,7 @@ export function PlayersPage({
   function deleteView(name: string) {
     const next = savedViews.filter((item) => item.name !== name);
     setSavedViews(next);
-    localStorage.setItem('clan:player-views:v1', JSON.stringify(next));
+    localStorage.setItem(viewsKey, JSON.stringify(next));
     if (activeView === name) setActiveView('');
   }
 

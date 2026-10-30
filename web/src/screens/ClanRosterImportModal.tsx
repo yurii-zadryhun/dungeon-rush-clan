@@ -118,6 +118,22 @@ export function ClanRosterImportModal({
   }, []);
 
   React.useEffect(() => {
+    if (!restored) return;
+    let active = true;
+    Promise.all([
+      api<ClanRosterCandidates>('clan-roster/candidates'),
+      api<ClanRosterSnapshot | null>('clan-roster/latest'),
+    ]).then(([known, latest]) => {
+      if (!active) return;
+      setCandidates(known);
+      setPrevious(latest);
+    }).catch((failure) => {
+      if (active) setError((failure as Error).message);
+    });
+    return () => { active = false; };
+  }, [restored]);
+
+  React.useEffect(() => {
     if (stage !== 'review' || !rows.length) return;
     try {
       sessionStorage.setItem('clan:roster-review:v1', JSON.stringify({
@@ -585,6 +601,15 @@ export function ClanRosterImportModal({
                   )}
                 </div>
               )}
+              {restored && !files.length && (
+                <label className="clan-review-reattach">
+                  {locale === 'uk'
+                    ? 'Додайте оригінали скриншотів у тому самому порядку для перегляду фрагментів'
+                    : 'Attach original screenshots in the same order to inspect crops'}
+                  <input type="file" multiple accept="image/png,image/jpeg,image/webp"
+                    onChange={(event) => setFiles(Array.from(event.target.files ?? []))} />
+                </label>
+              )}
               <div className="clan-review-tools">
                 {restored && <span>{locale === 'uk' ? 'Чернетку відновлено' : 'Draft restored'}</span>}
                 <button className={!reviewOnly ? 'selected' : ''} onClick={() => setReviewOnly(false)}>
@@ -612,9 +637,11 @@ export function ClanRosterImportModal({
                   >
                     <label>
                       <span className="clan-roster-row-number">{sortedRows.indexOf(row) + 1}</span>
-                      {(!previous?.entries.some((entry) => entry.id === row.playerId) || row.playerId === null) && (
+                      {row.playerId === null ? (
                         <span className="clan-new-label">New</span>
-                      )}
+                      ) : previous && !previous.entries.some((entry) => entry.id === row.playerId) ? (
+                        <span className="clan-return-label">{locale === 'uk' ? 'Повернувся' : 'Returned'}</span>
+                      ) : null}
                       <input
                         aria-label={t('playerColumn') + ' ' + (sortedRows.indexOf(row) + 1)}
                         value={row.name}
