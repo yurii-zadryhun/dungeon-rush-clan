@@ -79,6 +79,67 @@ describe('clan power units', () => {
     expect(result.players).toEqual([{ name: 'КРОСТ', power: 5.59e15, powerText: '5.59q', source: 1 }]);
   });
 
+  it('recovers the reported OCR failure: IM is a tier badge, not a player', () => {
+    // Positions and strings are taken from a real multi-page roster OCR response.
+    const words = [
+      { text: 'КРОСТ', x: 26, y: 157 },
+      { text: '6.989', x: 88, y: 205 },
+      { text: 'aywy', x: 27, y: 323 },
+      { text: '9.649', x: 89, y: 364 },
+      { text: 'GIBURGERJOEY', x: 27, y: 470 },
+      { text: '2.469', x: 90, y: 523 },
+      { text: 'Mishko', x: 27, y: 627 },
+      { text: 'M', x: 43, y: 679 },
+      { text: '4.37q', x: 90, y: 679 },
+      { text: 'Den', x: 28, y: 2140 },
+      { text: 'Haag', x: 99, y: 2140 },
+      { text: 'Wartet', x: 192, y: 2140 },
+      { text: 'IM', x: 33, y: 2192 },
+      { text: '101.29T', x: 91, y: 2192 },
+      { text: 'ilbctc', x: 27, y: 3491 },
+      { text: 'IM', x: 33, y: 3544 },
+      { text: '509.77T', x: 92, y: 3544 },
+    ];
+    const result = parseRosterScreenshot({ raw: '', width: 420, height: 4277, words }, 1);
+    expect(result.players.map((entry) => entry.name)).toEqual([
+      'КРОСТ', 'aywy', 'GIBURGERJOEY', 'Mishko', 'Den Haag Wartet', 'ilbctc',
+    ]);
+    expect(result.players.map((entry) => entry.powerText)).toEqual([
+      '6.98q', '9.64q', '2.46q', '4.37q', '101.29T', '509.77T',
+    ]);
+    expect(result.warnings.filter((warning) => warning.startsWith('Verify '))).toHaveLength(3);
+    expect(result.warnings.some((warning) => warning.includes('Conflicting power values'))).toBe(false);
+  });
+
+  it('keeps the names lost because Vision read q/T as digits on the second screenshot', () => {
+    const words = [
+      { text: 'Lareauz', x: 28, y: 189 },
+      { text: '1.299', x: 90, y: 240 },
+      { text: 'noobgo', x: 27, y: 1488 },
+      { text: 'IM', x: 33, y: 1540 },
+      { text: '244.30T', x: 91, y: 1541 },
+      { text: 'Point', x: 28, y: 2014 },
+      { text: 'Jam', x: 126, y: 2014 },
+      { text: '106.847', x: 92, y: 2065 },
+    ];
+    const result = parseRosterScreenshot({ raw: '', width: 420, height: 2200, words }, 2);
+    expect(result.players.map((entry) => entry.name)).toEqual(['Lareauz', 'noobgo', 'Point Jam']);
+    expect(result.players.map((entry) => entry.powerText)).toEqual(['1.29q', '244.30T', '106.84T']);
+    expect(result.warnings.filter((warning) => warning.startsWith('Verify '))).toHaveLength(2);
+  });
+
+  it('does not silently reinterpret arbitrary numbers or erase a legitimate short name', () => {
+    const words = [
+      { text: 'IM', x: 20, y: 200 },
+      { text: '4.99q', x: 130, y: 200 },
+      { text: 'Other', x: 22, y: 340 },
+      { text: '2.123', x: 90, y: 390 },
+    ];
+    const result = parseRosterScreenshot({ raw: '', width: 420, height: 500, words }, 1);
+    expect(result.players.map((entry) => entry.name)).toEqual(['IM']);
+    expect(result.warnings.every((warning) => !warning.includes('interpreted as'))).toBe(true);
+  });
+
   it('does not warn about repeated cards from overlapping screenshots', () => {
     const words = [
       { text: 'Mishko', x: 22, y: 200 },
