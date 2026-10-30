@@ -716,3 +716,7 @@
     font-size: 25px;
   }
 }
+
+/* Shared keyboard-accessible modal shell. */
+.modal[role='dialog']:focus { outline: none; }
+.modal-backdrop { overscroll-behavior: contain; }

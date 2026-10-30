@@ -1,6 +1,6 @@
 import React from 'react';
 import { AuditHistory } from './AuditHistory';
-import { useModalHistory } from './useModalHistory';
+import { ModalDialog } from './ModalDialog';
 import { Copy, Eye, Link2, Pencil, Trash2, UserPlus, Users, X } from 'lucide-react';
 import { api, json, type Account, type Dashboard, type Role } from '../api';
 import { useI18n } from '../i18n';
@@ -57,7 +57,6 @@ export function UsersScreen({
   const [error, setError] = React.useState('');
   const [groupExpanded, setGroupExpanded] = React.useState(false);
   const [editing, setEditing] = React.useState<ManagedAccount | null>(null);
-  useModalHistory(() => setEditing(null), editing !== null);
   const [editName, setEditName] = React.useState('');
   const [editRole, setEditRole] = React.useState<Role>('member');
   const owner = account.role === 'owner';
@@ -366,18 +365,7 @@ export function UsersScreen({
       </div>
       <AuditHistory />
       {editing && (
-        <div
-          className="modal-backdrop"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setEditing(null);
-          }}
-        >
-          <section
-            className="panel modal user-edit-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-label={t('editUser')}
-          >
+        <ModalDialog onClose={() => setEditing(null)} ariaLabel={t('editUser')} className="panel modal user-edit-modal">
             <header className="modal-header">
               <h2>
                 <Pencil size={19} /> {t('editUser')}
@@ -426,8 +414,7 @@ export function UsersScreen({
                 </button>
               </footer>
             </form>
-          </section>
-        </div>
+        </ModalDialog>
       )}
     </section>
   );

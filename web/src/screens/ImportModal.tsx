@@ -1,5 +1,5 @@
 import React from 'react';
-import { useModalHistory } from './useModalHistory';
+import { ModalDialog } from './ModalDialog';
 import { CheckCircle, ScanLine, UploadCloud, X } from 'lucide-react';
 import {
   api,
@@ -35,7 +35,6 @@ function FileChooser({
   multiple: boolean;
   onSelect: (files: File[]) => void;
 }) {
-  useModalHistory(onClose);
   const { t } = useI18n();
   return (
     <label className="war-editor-file">
@@ -290,18 +289,7 @@ export function ImportModal({
   }
 
   return (
-    <div
-      className="modal-backdrop"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <section
-        className="panel modal import-modal war-editor-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-label={t('importWar')}
-      >
+    <ModalDialog onClose={onClose} ariaLabel={t('importWar')} className="panel modal import-modal war-editor-dialog">
         <header className="modal-header">
           <h2>
             <UploadCloud size={20} /> {t('importWar')} · {formatWarRange(week.start, locale)}
@@ -366,7 +354,6 @@ export function ImportModal({
             {busy ? t('pleaseWait') : stage === 'upload' ? t('scan') : t('confirmImport')}
           </button>
         </footer>
-      </section>
-    </div>
+    </ModalDialog>
   );
 }

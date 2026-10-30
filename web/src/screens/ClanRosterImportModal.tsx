@@ -1,5 +1,5 @@
 import React from 'react';
-import { useModalHistory } from './useModalHistory';
+import { ModalDialog } from './ModalDialog';
 import { Camera, CheckCircle, Copy, Plus, Trash2, UploadCloud, X } from 'lucide-react';
 import {
   api,
@@ -64,7 +64,6 @@ export function ClanRosterImportModal({
   onClose: () => void;
   onDone: (dashboard: Dashboard) => void;
 }) {
-  useModalHistory(onClose);
   const { t, locale } = useI18n();
   const [files, setFiles] = React.useState<File[]>([]);
   const [sourceUrls, setSourceUrls] = React.useState<string[]>([]);
@@ -411,18 +410,7 @@ export function ClanRosterImportModal({
   }
 
   return (
-    <div
-      className="modal-backdrop"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <section
-        className="panel modal clan-roster-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-label={t('clanImportTitle')}
-      >
+    <ModalDialog onClose={onClose} ariaLabel={t('clanRoster')} className="panel modal clan-roster-modal">
         <header className="modal-header">
           <h2>
             <UploadCloud size={20} /> {t('clanImportTitle')}
@@ -744,7 +732,6 @@ export function ClanRosterImportModal({
             {busy ? t('pleaseWait') : t(stage === 'upload' ? 'scan' : 'confirmImport')}
           </button>
         </footer>
-      </section>
-    </div>
+    </ModalDialog>
   );
 }

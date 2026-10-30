@@ -1,5 +1,5 @@
 import React from 'react';
-import { useModalHistory } from './useModalHistory';
+import { ModalDialog } from './ModalDialog';
 import { Plus, Save, Settings, Trash2, X } from 'lucide-react';
 import { api, json, type Dashboard } from '../api';
 import { useI18n } from '../i18n';
@@ -13,7 +13,6 @@ export function SettingsModal({
   onClose: () => void;
   onDone: (next: Dashboard) => void;
 }) {
-  useModalHistory(onClose);
   const { t } = useI18n();
   const [clanName, setClanName] = React.useState(current.clanName);
   const [leaderName, setLeaderName] = React.useState(current.leaderName);
@@ -69,18 +68,7 @@ export function SettingsModal({
 
   const sum = weights.reduce((total, weight) => total + (Number(weight) || 0), 0);
   return (
-    <div
-      className="modal-backdrop"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <section
-        className="panel modal settings-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-label={t('clanSettings')}
-      >
+    <ModalDialog onClose={onClose} ariaLabel={t('clanSettings')} className="panel modal settings-modal">
         <header className="modal-header">
           <h2>
             <Settings /> {t('clanSettings')}
@@ -204,7 +192,6 @@ export function SettingsModal({
             <Save size={17} /> {t('save')}
           </button>
         </footer>
-      </section>
-    </div>
+    </ModalDialog>
   );
 }

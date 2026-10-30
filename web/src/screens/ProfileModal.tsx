@@ -1,5 +1,5 @@
 import React from 'react';
-import { useModalHistory } from './useModalHistory';
+import { ModalDialog } from './ModalDialog';
 import { KeyRound, Trash2, UserRound, X } from 'lucide-react';
 import { api, json, type Account } from '../api';
 import { useI18n } from '../i18n';
@@ -15,7 +15,6 @@ export function ProfileModal({
   onSaved: (account: Account) => Promise<void>;
   onDeleted: () => void;
 }) {
-  useModalHistory(onClose);
   const { t } = useI18n();
   const [name, setName] = React.useState(account.displayName);
   const [changingPassword, setChangingPassword] = React.useState(false);
@@ -69,18 +68,7 @@ export function ProfileModal({
   }
 
   return (
-    <div
-      className="modal-backdrop"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <section
-        role="dialog"
-        aria-modal="true"
-        aria-label={t('profile')}
-        className="panel modal profile-modal"
-      >
+    <ModalDialog onClose={onClose} ariaLabel={t('profile')} className="panel modal profile-modal">
         <header className="modal-header">
           <h2>
             <UserRound /> {t('profile')}
@@ -239,7 +227,6 @@ export function ProfileModal({
             )}
           </section>
         )}
-      </section>
-    </div>
+    </ModalDialog>
   );
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useModalHistory } from './useModalHistory';
+import { ModalDialog } from './ModalDialog';
 import { Pencil, Save, X } from 'lucide-react';
 import { api, json, type Dashboard, type Roster, type Week } from '../api';
 import { formatWarRange } from '../date-format';
@@ -25,7 +25,6 @@ export function EditWarModal({
   onClose: () => void;
   onDone: (dashboard: Dashboard, updatedWeek: Week) => void;
 }) {
-  useModalHistory(onClose);
   const { t, locale } = useI18n();
   const [draft, setDraft] = React.useState<WarDraft>(() => draftFromWeek(week));
   const [roster, setRoster] = React.useState<Roster>(emptyRoster);
@@ -85,18 +84,7 @@ export function EditWarModal({
   }
 
   return (
-    <div
-      className="modal-backdrop"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <section
-        className="panel modal import-modal war-editor-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-label={t('editWar')}
-      >
+    <ModalDialog onClose={onClose} ariaLabel={t('editWar')} className="panel modal import-modal war-editor-dialog">
         <header className="modal-header">
           <h2>
             <Pencil size={20} /> {t('editWar')} · {formatWarRange(week.start, locale)}
@@ -131,7 +119,6 @@ export function EditWarModal({
             <Save size={16} /> {busy ? t('pleaseWait') : t('save')}
           </button>
         </footer>
-      </section>
-    </div>
+    </ModalDialog>
   );
 }
