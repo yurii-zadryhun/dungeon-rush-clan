@@ -34,9 +34,7 @@ describe('clan OCR diagnostic response', () => {
 
     const result = await new OcrController(vision, {} as Db).clan(request);
     expect(read).toHaveBeenCalledTimes(1);
-    expect(result.players).toEqual([
-      { name: 'КРОСТ', power: 5.59e15, powerText: '5.59q', source: 1 },
-    ]);
+    expect(result.players).toEqual([{ name: 'КРОСТ', power: 5.59e15, powerText: '5.59q', source: 1 }]);
     expect(result.diagnostics).toHaveLength(1);
     expect(result.diagnostics[0]).toEqual({
       image: 1,

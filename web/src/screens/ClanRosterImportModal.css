@@ -75,8 +75,14 @@
   color: #fff;
   cursor: pointer;
 }
-.clan-thumbnail-remove:hover { background: #ad404d; border-color: #ffb1b8; }
-.clan-thumbnail-remove:focus-visible { outline: 2px solid #f3d27f; outline-offset: 2px; }
+.clan-thumbnail-remove:hover {
+  background: #ad404d;
+  border-color: #ffb1b8;
+}
+.clan-thumbnail-remove:focus-visible {
+  outline: 2px solid #f3d27f;
+  outline-offset: 2px;
+}
 .clan-roster-entry > button {
   flex: 0 0 auto;
   display: grid;
@@ -161,8 +167,13 @@
   color: #bedaf0;
   cursor: pointer;
 }
-.clan-ocr-response > summary:hover { background: #303847; }
-.clan-ocr-response > summary:focus-visible { outline: 2px solid #eec977; outline-offset: -3px; }
+.clan-ocr-response > summary:hover {
+  background: #303847;
+}
+.clan-ocr-response > summary:focus-visible {
+  outline: 2px solid #eec977;
+  outline-offset: -3px;
+}
 .clan-ocr-response-body {
   display: grid;
   gap: 11px;
@@ -200,7 +211,11 @@
   background: #121820;
   color: #d7e8fa;
   border-radius: 7px;
-  font: 11px/1.45 ui-monospace, SFMono-Regular, Consolas, monospace;
+  font:
+    11px/1.45 ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
   white-space: pre;
   tab-size: 2;
 }
@@ -386,5 +401,4 @@
   .clan-thumbnail-image {
     height: 97px;
   }
-
 }

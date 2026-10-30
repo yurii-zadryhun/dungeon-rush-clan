@@ -389,7 +389,6 @@ export function ClanRosterImportModal({
                       {t('clanPreparingImages')}
                     </p>
                   )}
-
                 </div>
               )}
             </div>

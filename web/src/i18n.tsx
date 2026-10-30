@@ -26,7 +26,8 @@ const en = {
   clanImportTitle: 'Import clan roster',
   clanOcrCorrected: 'Recognized as: {name}',
   clanOcrResponse: 'OCR response (debug)',
-  clanOcrResponseHelp: 'Full OCR response, raw recognized text, word coordinates and parser output. Copy it to report recognition issues.',
+  clanOcrResponseHelp:
+    'Full OCR response, raw recognized text, word coordinates and parser output. Copy it to report recognition issues.',
   clanOcrCopy: 'Copy JSON',
   clanOcrCopyFailed: 'Could not copy OCR response. Please copy the text manually.',
   clanScreenshotNumber: 'Screenshot {number}',
@@ -415,7 +416,8 @@ const uk: Record<MessageKey, string> = {
   clanImportTitle: 'Імпорт складу клану',
   clanOcrCorrected: 'Розпізнано як: {name}',
   clanOcrResponse: 'Відповідь OCR (діагностика)',
-  clanOcrResponseHelp: 'Повна відповідь OCR: розпізнаний текст, координати слів та результат обробки. Скопіюйте для аналізу помилок.',
+  clanOcrResponseHelp:
+    'Повна відповідь OCR: розпізнаний текст, координати слів та результат обробки. Скопіюйте для аналізу помилок.',
   clanOcrCopy: 'Копіювати JSON',
   clanOcrCopyFailed: 'Не вдалося скопіювати відповідь OCR. Скопіюйте текст вручну.',
   clanScreenshotNumber: 'Скриншот {number}',
