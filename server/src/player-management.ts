@@ -12,6 +12,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { z } from 'zod';
+import { recordAudit } from './audit';
 import { AdminGuard, type AuthenticatedRequest, SessionGuard } from './auth';
 import { Db } from './database';
 
@@ -81,12 +82,13 @@ export class PlayerManagementService {
     return { labels, notes };
   }
 
-  async save(id: number, input: unknown) {
+  async save(id: number, input: unknown, actorId: number) {
     const result = labelsSchema.safeParse(input);
     if (!result.success) throw new BadRequestException('Invalid player labels');
     await this.requirePlayer(id);
     const labels = result.data;
-    await this.db.query
+    await this.db.query.transaction().execute(async (trx) => {
+    await trx
       .insertInto('player_labels')
       .values({
         player_id: id,
@@ -110,6 +112,11 @@ export class PlayerManagementService {
         }),
       )
       .execute();
+    await recordAudit(trx, {
+      actorId, action: 'player.labels.update', entity: 'player', entityId: id,
+      details: { tags: labels.tags, exception: !!labels.exceptionReason.trim(), telegram: labels.telegram, discord: labels.discord },
+    });
+    });
     return this.get(id);
   }
 
@@ -123,7 +130,8 @@ export class PlayerManagementService {
       .safeParse(input);
     if (!result.success) throw new BadRequestException('Invalid note');
     await this.requirePlayer(id);
-    await this.db.query
+    await this.db.query.transaction().execute(async (trx) => {
+    const note = await trx
       .insertInto('player_notes')
       .values({
         player_id: id,
@@ -131,18 +139,30 @@ export class PlayerManagementService {
         ...result.data,
         created_at: Date.now(),
       })
-      .execute();
+      .returning('id')
+      .executeTakeFirstOrThrow();
+    await recordAudit(trx, {
+      actorId: authorId, action: 'player.note.add', entity: 'player', entityId: id,
+      details: { noteId: note.id, category: result.data.category },
+    });
+    });
     return this.get(id);
   }
 
-  async removeNote(id: number, noteId: number) {
+  async removeNote(id: number, noteId: number, actorId: number) {
     await this.requirePlayer(id);
-    const result = await this.db.query
+    await this.db.query.transaction().execute(async (trx) => {
+    const result = await trx
       .deleteFrom('player_notes')
       .where('id', '=', noteId)
       .where('player_id', '=', id)
       .executeTakeFirst();
     if (!Number(result.numDeletedRows)) throw new BadRequestException('Note not found');
+    await recordAudit(trx, {
+      actorId, action: 'player.note.delete', entity: 'player', entityId: id,
+      details: { noteId },
+    });
+    });
     return this.get(id);
   }
 
@@ -167,8 +187,8 @@ export class PlayerManagementController {
   }
 
   @Patch(':id')
-  save(@Param('id') id: string, @Body() data: unknown) {
-    return this.service.save(Number(id), data);
+  save(@Param('id') id: string, @Body() data: unknown, @Req() request: AuthenticatedRequest) {
+    return this.service.save(Number(id), data, request.account!.id);
   }
 
   @Post(':id/notes')
@@ -177,7 +197,7 @@ export class PlayerManagementController {
   }
 
   @Delete(':id/notes/:noteId')
-  removeNote(@Param('id') id: string, @Param('noteId') noteId: string) {
-    return this.service.removeNote(Number(id), Number(noteId));
+  removeNote(@Param('id') id: string, @Param('noteId') noteId: string, @Req() request: AuthenticatedRequest) {
+    return this.service.removeNote(Number(id), Number(noteId), request.account!.id);
   }
 }

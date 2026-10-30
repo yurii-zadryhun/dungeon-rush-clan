@@ -95,6 +95,12 @@ export class InsightsService {
       belowRequirement: stats?.belowRequirement ?? false,
       weeks,
       powerHistory,
+      nameHistory: await this.db.query.selectFrom('player_events')
+        .select(['kind', 'previous_value as previousValue', 'next_value as nextValue',
+          'occurred_at as occurredAt'])
+        .where('player_id', '=', id)
+        .orderBy('occurred_at', 'desc')
+        .execute(),
     };
   }
 

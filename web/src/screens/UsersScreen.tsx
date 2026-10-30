@@ -1,4 +1,5 @@
 import React from 'react';
+import { AuditHistory } from './AuditHistory';
 import { Copy, Eye, Link2, Pencil, Trash2, UserPlus, Users, X } from 'lucide-react';
 import { api, json, type Account, type Dashboard, type Role } from '../api';
 import { useI18n } from '../i18n';
@@ -362,6 +363,7 @@ export function UsersScreen({
 
         <MergePlayers onMerged={onMerged} />
       </div>
+      <AuditHistory />
       {editing && (
         <div
           className="modal-backdrop"

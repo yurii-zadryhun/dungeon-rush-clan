@@ -108,6 +108,7 @@ export interface PlayerProgress {
   belowRequirement: boolean;
   weeks: PlayerProgressWeek[];
   powerHistory: PlayerPowerEntry[];
+  nameHistory: Array<{ kind: string; previousValue: string | null; nextValue: string | null; occurredAt: number }>;
 }
 export interface WarPointsPoint {
   start: string;

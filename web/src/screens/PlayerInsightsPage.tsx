@@ -451,6 +451,23 @@ export function PlayerInsightsPage({
                 ))}
             </div>
           </section>
+          {player.nameHistory.length > 0 && (
+            <section className="panel profile-history">
+              <h2>{locale === 'uk' ? 'Історія гравця' : 'Player history'}</h2>
+              <div className="profile-history-list">
+                {player.nameHistory.map((event, index) => (
+                  <div className="profile-history-row" key={index}>
+                    <span>{event.kind === 'rename'
+                      ? `${event.previousValue} → ${event.nextValue}`
+                      : event.kind === 'joined'
+                        ? (locale === 'uk' ? 'Приєднався до клану' : 'Joined the clan')
+                        : (locale === 'uk' ? 'Вийшов з клану' : 'Left the clan')}</span>
+                    <small>{new Date(event.occurredAt).toLocaleDateString(locale)}</small>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
           {canManage && <PlayerManagementPanel playerId={player.id} />}
         </>
       )}

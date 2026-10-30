@@ -11,6 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { z } from 'zod';
+import { recordAudit } from './audit';
 import { DAY_POINTS, importPermission, warStart } from './calendar';
 import { AdminGuard, SessionGuard, type AuthenticatedRequest } from './auth';
 import { Db, normalizeName } from './database';
@@ -297,14 +298,11 @@ export class ImportService {
               })
               .execute();
         }
-        await trx.insertInto('audit_log').values({
-          actor_id: actorId,
-          action: mode === 'create' ? 'war.import' : 'war.update',
-          entity: 'war',
-          entity_id: war.id,
-          details_json: JSON.stringify({ start: data.start, sections: { players: !!data.players, result: !!data.result }, championship: data.championship }),
-          created_at: Date.now(),
-        }).execute();
+        await recordAudit(trx, {
+          actorId, action: mode === 'create' ? 'war.import' : 'war.update',
+          entity: 'war', entityId: war.id,
+          details: { start: data.start, players: !!data.players, result: !!data.result, championship: data.championship },
+        });
       });
     } catch (e) {
       if (e instanceof BadRequestException) throw e;

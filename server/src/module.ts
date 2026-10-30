@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AuditController, AuditService } from './audit';
 import { Db } from './database';
 import { MembershipService } from './membership';
 import { ClanRosterController, ClanRosterService } from './clan-roster';
@@ -16,6 +17,7 @@ import { SitePagesController, SitePagesService } from './site-pages';
 
 @Module({
   controllers: [
+    AuditController,
     AuthController,
     WarsController,
     OcrController,
@@ -29,6 +31,7 @@ import { SitePagesController, SitePagesService } from './site-pages';
     SitePagesController,
   ],
   providers: [
+    AuditService,
     Db,
     MembershipService,
     ClanRosterService,
