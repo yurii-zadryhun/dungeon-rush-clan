@@ -20,7 +20,10 @@ assert.ok(rows.width >= 0.32 && rows.x + rows.width >= 0.59, 'Long nicknames mus
 assert.ok(rows.x + rows.width <= 0.64, 'Right-side clan role labels must be excluded');
 assert.ok(rows.y <= 0.48, 'The first player card must be included');
 assert.ok(rows.y + rows.height <= 0.79, 'Bottom game navigation must be excluded');
-assert.ok(header.y >= 0.35 && header.y <= 0.40, 'Header must start above Power and omit clan description');
+assert.ok(
+  header.y >= 0.35 && header.y <= 0.40,
+  'Header must start above Power and omit clan description',
+);
 assert.ok(header.y + header.height < rows.y, 'Header cannot overlap the first card');
 assert.ok(screenshotAspectSupported(709, 1536), 'Standard game screenshot is accepted');
 assert.equal(screenshotAspectSupported(1536, 709), false, 'Landscape screenshots are rejected');
