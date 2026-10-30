@@ -28,6 +28,10 @@ const AnalyticsPage = React.lazy(() =>
 const PlayerInsightsPage = React.lazy(() =>
   import('./PlayerInsightsPage').then((m) => ({ default: m.PlayerInsightsPage })),
 );
+import './WarDetailPage.css';
+const WarDetailPage = React.lazy(() =>
+  import('./WarDetailPage').then((module) => ({ default: module.WarDetailPage })),
+);
 const ImportModal = React.lazy(() => import('./ImportModal').then((m) => ({ default: m.ImportModal })));
 const EditWarModal = React.lazy(() =>
   import('./EditWarModal').then((m) => ({ default: m.EditWarModal })),
@@ -134,37 +138,6 @@ function Leaders({
   );
 }
 
-function DayTable({ week, clanName }: { week: Week; clanName: string }) {
-  const { t } = useI18n();
-  return (
-    <div className="day-table">
-      <div className="day-table-header">
-        <span>{t('day')}</span>
-        <span>{t('pts')}</span>
-        <span>{t('winner')}</span>
-        <span>MVP</span>
-      </div>
-      {week.days.map((day) => {
-        const winningClan = day.winner === 'ours' ? clanName : (week.opponent ?? t('opponent'));
-        return (
-          <div className={'day-row ' + day.winner} key={day.day}>
-            <span>
-              {t('day')} {day.day}
-            </span>
-            <b>{day.points}</b>
-            <span className="day-winner" title={winningClan}>
-              {winningClan}
-            </span>
-            <span className="daily-mvp" title={day.mvp}>
-              {day.mvp}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 function useWarLabels() {
   const { t } = useI18n();
   function status(week: Week): string {
@@ -241,21 +214,15 @@ function WarColumn({
             <span className="placeholder">— : —</span>
           )}
         </div>
-        {week.resultImported ? (
-          <>
-            <h3>{t('dailyScores')}</h3>
-            <DayTable week={week} clanName={clanName} />
-          </>
-        ) : (
-          <div className="war-placeholder">{t('finalPending')}</div>
-        )}
+        {week.championship && <span className="war-championship">🏆 Championship</span>}
+        {!week.resultImported && <div className="war-placeholder">{t('finalPending')}</div>}
         <div className="war-roster-head">
           <h3>{t('players')}</h3>
           {week.rankingImported && <span className="tiny muted">{week.players.length}</span>}
         </div>
         {week.rankingImported ? (
           <div className="war-player-list">
-            {week.players.map((player) => {
+            {week.players.slice(0, 5).map((player) => {
               const ranking = calculated.get(player.id);
               return (
                 <div
@@ -288,6 +255,11 @@ function WarColumn({
           </div>
         ) : (
           <div className="war-placeholder">{t('rankingPending')}</div>
+        )}
+        {imported && (
+          <a className="game-button secondary full" href={'#/wars/' + week.start}>
+            {locale === 'uk' ? 'Деталі війни' : 'War details'}
+          </a>
         )}
         {canImport && (
           <button className="game-button blue full import-btn" onClick={() => onImport(week)}>
@@ -367,15 +339,18 @@ export function ClanDashboard({
   const isWiki = Boolean(wikiMatch);
   const playerMatch = route.match(/^#\/players\/(\d+)\/?$/);
   const playerId = playerMatch ? Number(playerMatch[1]) : null;
+  const warMatch = route.match(/^#\/wars\/(\d{4}-\d{2}-\d{2})\/?$/);
+  const warDetailStart = warMatch?.[1] ?? null;
   const isAnalytics = route === '#/analytics';
   const legacyAccessRoute = route === '#/users';
   const isPlayers = route === '#/players' || legacyAccessRoute || playerId !== null;
-  const isArchive = !isWiki && !isPlayers && !isAnalytics;
+  const isArchive = !isWiki && !isPlayers && !isAnalytics && !warDetailStart;
   const wikiArticleId = wikiMatch?.[1];
   const [dialog, setDialog] = React.useState<'settings' | 'profile' | null>(null);
   const [importWeek, setImportWeek] = React.useState<Week | null>(null);
   const [editWeek, setEditWeek] = React.useState<Week | null>(null);
   const [loadingOlder, setLoadingOlder] = React.useState(false);
+  const [historyError, setHistoryError] = React.useState('');
   const [weeks, setWeeks] = React.useState<Week[]>([]);
   const track = React.useRef<HTMLDivElement>(null);
   const positioned = React.useRef(false);
@@ -447,18 +422,19 @@ export function ClanDashboard({
   async function loadOlder() {
     if (!weeks.length || loadingOlder) return;
     setLoadingOlder(true);
+    setHistoryError('');
     try {
       const container = track.current;
       if (container) restore.current = { left: container.scrollLeft, width: container.scrollWidth };
       const anchor = previousTuesday(weeks[0].start);
-      const next = await api<Dashboard>('dashboard?anchor=' + encodeURIComponent(anchor) + '&count=2');
-      const older = next.weeks.filter(
+      const next = await api<Week[]>('war-weeks?anchor=' + encodeURIComponent(anchor) + '&count=2');
+      const older = next.filter(
         (week) => !weeks.some((existing) => existing.start === week.start),
       );
       setWeeks((previous) => [...older, ...previous]);
     } catch (failure) {
       restore.current = null;
-      alert((failure as Error).message);
+      setHistoryError((failure as Error).message);
     } finally {
       setLoadingOlder(false);
     }
@@ -548,6 +524,8 @@ export function ClanDashboard({
           />
         ) : isAnalytics ? (
           <AnalyticsPage account={user} />
+        ) : warDetailStart ? (
+          <WarDetailPage start={warDetailStart} clanName={data.rankings.settings.clanName} />
         ) : isPlayers ? (
           <PlayersPage
             key={legacyAccessRoute ? 'access' : 'roster'}
@@ -573,6 +551,7 @@ export function ClanDashboard({
                   <History size={20} /> {t('warHistory')}
                 </h2>
               </header>
+              {historyError && <div className="error-strip" role="alert">{historyError} <button onClick={() => void loadOlder()}>Retry</button></div>}
               <div
                 className="timeline-scroll"
                 ref={track}
