@@ -35,6 +35,19 @@ export interface RosterRecognition {
 
 const powerMatch = /(?:^|[^\p{L}\p{N}])(\d{1,5}(?:[.,]\d{1,4})?)\s*([KMBTqQ])(?=$|[^\p{L}])/u;
 
+// Cloud Vision may recognize the terminal q as "9" (6.989 -> 6.98q)
+// or a terminal T as "7" (106.847 -> 106.84T). These patterns only
+// apply to isolated power values, not general numbers or player names.
+function inferredPower(row: string): { value: string; original: string } | null {
+  const raw = row.trim().replace(/\s+/g, '');
+  const quadrillion = raw.match(/^(\d{1,2}[.,]\d{2})9$/);
+  if (quadrillion) return { value: quadrillion[1] + 'q', original: row.trim() };
+  const trillion = raw.match(/^(\d{3,5}[.,]\d{2})7$/);
+  if (trillion) return { value: trillion[1] + 'T', original: row.trim() };
+  return null;
+}
+
+
 function lines(words: Word[]): { y: number; text: string }[] {
   const groups: { y: number; words: Word[] }[] = [];
   for (const word of words.slice().sort((a, b) => a.y - b.y || a.x - b.x)) {
@@ -98,19 +111,30 @@ export function parseRosterScreenshot(
   for (const row of all) {
     if (row.y <= headerHeight + 5) continue;
     const power = row.text.match(powerMatch);
-    if (power) {
-      const powerText = power[1] + power[2];
+    const inferred = power ? null : inferredPower(row.text);
+    if (power || inferred) {
+      const powerText = power ? power[1] + power[2] : inferred!.value;
       const powerValue = parsePower(powerText);
       // Vision may put the name on the same line as the power. Otherwise use
       // the nearest plausible name above it, within one player card.
-      const inline = cleanCandidate(row.text.slice(0, power.index ?? 0));
-      const name = plausibleName(inline)
-        ? inline
-        : candidate && row.y > candidate.y && row.y - candidate.y < 145
+      const inline = power ? cleanCandidate(row.text.slice(0, power.index ?? 0)) : '';
+      const preceding =
+        candidate && row.y > candidate.y && row.y - candidate.y < 145
           ? candidate.name
           : null;
+      // The game paints rarity/tier labels ("IM", "M", "E") directly beside
+      // the power. In particular "IM 101.29T" belongs to the name on the
+      // row above, not to a player called IM.
+      const tierOnly = /^(?:IM|M|E|D)$/i.test(inline);
+      const name = preceding && tierOnly ? preceding : plausibleName(inline) ? inline : preceding;
       if (powerValue !== null && name) {
         output.push({ name, power: powerValue, powerText, source });
+        if (inferred) {
+          warnings.push(
+            'Verify ' + name + ' power: OCR read "' + inferred.original +
+              '", interpreted as ' + powerText + '.',
+          );
+        }
       } else {
         warnings.push('Power without recognized player name near ' + powerText);
       }
