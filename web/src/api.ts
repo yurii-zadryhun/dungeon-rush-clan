@@ -117,6 +117,17 @@ export interface WarPointsPoint {
   total: number;
   playerCount: number;
   average: number;
+  median: number;
+  topTenShare: number;
+}
+export interface ExtendedInsights {
+  asOf: string | null;
+  latestWar: string | null;
+  powerContribution: Array<{ id: number; name: string; power: number; points: number }>;
+  powerGrowth: Array<{ id: number; name: string; power: number; delta: number; percentage: number | null }>;
+  retention: Array<{ wars: number; eligible: number; retained: number; rate: number | null }>;
+  consistency: Array<{ id: number; name: string; average: number; consistency: number }>;
+  activityGroups: { newcomer: number; below: number; meeting: number; exceeding: number };
 }
 
 export interface DayAnalytics {

@@ -282,7 +282,7 @@ export function PlayersPage({
             </div>
             <div className="player-saved-views">
               <label>
-                <span>{t('saved') || 'Saved views'}</span>
+                <span>{t('save')}</span>
                 <select defaultValue="" onChange={(event) => selectView(event.target.value)}>
                   <option value="">—</option>
                   {savedViews.map((view) => <option key={view.name} value={view.name}>{view.name}</option>)}
