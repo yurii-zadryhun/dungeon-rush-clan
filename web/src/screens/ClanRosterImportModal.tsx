@@ -10,7 +10,7 @@ import {
   type Dashboard,
 } from '../api';
 import { useI18n } from '../i18n';
-import { prepareScreenshots, type PreparedScreenshots } from './image-prep';
+import { MOSAIC_WIDTH, prepareScreenshots, type PreparedScreenshots } from './image-prep';
 import { SearchSelect } from './SearchSelect';
 import { matchRosterName } from './roster-match';
 import './ClanRosterImportModal.css';
@@ -419,7 +419,7 @@ export function ClanRosterImportModal({
                               <img
                                 src={url}
                                 alt={t('clanPreviewPart', { number: index + 1 })}
-                                width={600}
+                                width={MOSAIC_WIDTH.clan}
                               />
                             </div>
                           </div>
