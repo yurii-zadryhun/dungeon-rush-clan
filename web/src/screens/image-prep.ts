@@ -25,7 +25,7 @@ export const regions: Record<ScreenshotMode, { rows: CropRegion; header?: CropRe
   // Leader/Captain/Member labels. The bottom avoids the empty tab/button area.
   // The first screenshot contributes only Power/Tier/Type/Members from its header.
   clan: {
-    rows: { x: 0.26, y: 0.47, width: 0.35, height: 0.3 },
+    rows: { x: 0.26, y: 0.48, width: 0.35, height: 0.31 },
     header: { x: 0.13, y: 0.375, width: 0.75, height: 0.085 },
   },
   // Existing ranking OCR looked for ranks between 39% and 80% screen height.
