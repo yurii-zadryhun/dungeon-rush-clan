@@ -1,7 +1,12 @@
 import React from 'react';
 
-/** A modal owns a history entry, so Back closes the modal before navigating away. */
-export function useModalHistory(onClose: () => void) {
+const modalStack: string[] = [];
+export function isTopDialog(key: string): boolean {
+  return modalStack[modalStack.length - 1] === key;
+}
+
+/** One history entry per dialog; only the uppermost overlay reacts to Back. */
+export function useModalHistory(onClose: () => void): string {
   const onCloseRef = React.useRef(onClose);
   onCloseRef.current = onClose;
   const keyRef = React.useRef('clan-modal-' + Math.random().toString(36).slice(2));
@@ -16,17 +21,20 @@ export function useModalHistory(onClose: () => void) {
     if (window.history.state?.clanDialog !== key) {
       window.history.pushState({ ...window.history.state, clanDialog: key }, '');
     }
+    if (!modalStack.includes(key)) modalStack.push(key);
     let popped = false;
     function handleBack() {
-      if (window.history.state?.clanDialog === key) return;
+      if (!isTopDialog(key) || window.history.state?.clanDialog === key) return;
       popped = true;
       onCloseRef.current();
     }
     window.addEventListener('popstate', handleBack);
     return () => {
       window.removeEventListener('popstate', handleBack);
+      const position = modalStack.indexOf(key);
+      if (position >= 0) modalStack.splice(position, 1);
       if (!popped) {
-        // Delay cleanup to avoid StrictMode's effect replay popping a live modal.
+        // React StrictMode replays effects; allow a remount to cancel the cleanup.
         cleanupTimer.current = window.setTimeout(() => {
           cleanupTimer.current = null;
           if (window.history.state?.clanDialog === key) window.history.back();
@@ -34,4 +42,5 @@ export function useModalHistory(onClose: () => void) {
       }
     };
   }, []);
+  return keyRef.current;
 }

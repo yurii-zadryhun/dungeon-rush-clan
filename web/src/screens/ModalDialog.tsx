@@ -1,5 +1,6 @@
 import React from 'react';
-import { useModalHistory } from './useModalHistory';
+import { createPortal } from 'react-dom';
+import { isTopDialog, useModalHistory } from './useModalHistory';
 
 interface Props {
   children: React.ReactNode;
@@ -13,7 +14,7 @@ export function ModalDialog({ children, onClose, ariaLabel, className }: Props) 
   const dialog = React.useRef<HTMLElement>(null);
   const latestClose = React.useRef(onClose);
   latestClose.current = onClose;
-  useModalHistory(onClose);
+  const dialogKey = useModalHistory(onClose);
 
   React.useEffect(() => {
     const previousFocus = document.activeElement instanceof HTMLElement
@@ -24,6 +25,7 @@ export function ModalDialog({ children, onClose, ariaLabel, className }: Props) 
     (node?.querySelector<HTMLElement>('.close-button, [autofocus]') ?? node)?.focus();
 
     function onKey(event: KeyboardEvent) {
+      if (!isTopDialog(dialogKey)) return;
       if (event.key === 'Escape') {
         event.preventDefault();
         latestClose.current();
@@ -52,13 +54,14 @@ export function ModalDialog({ children, onClose, ariaLabel, className }: Props) 
     };
   }, []);
 
-  return (
+  return createPortal(
     <div className="modal-backdrop"
       onMouseDown={(event) => { if (event.target === event.currentTarget) latestClose.current(); }}>
       <section ref={dialog} tabIndex={-1} className={className}
         role="dialog" aria-modal="true" aria-label={ariaLabel}>
         {children}
       </section>
-    </div>
+    </div>,
+    document.body,
   );
 }
