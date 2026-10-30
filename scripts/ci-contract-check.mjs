@@ -1,10 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const workflow = readFileSync(
-  new URL('../.github/workflows/check.yml', import.meta.url),
-  'utf8',
-);
+const workflow = readFileSync(new URL('../.github/workflows/check.yml', import.meta.url), 'utf8');
 
 // The Check workflow must never be temporarily used as an autoformatter.
 // Validate the rules in CI so future changes cannot silently reintroduce this.

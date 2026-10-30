@@ -150,4 +150,3 @@ it validates Prettier, tests and builds but never writes to `master`.
 Do not temporarily grant `contents: write` or add `git push` to fix formatting.
 The workflow runs `scripts/ci-contract-check.mjs` to enforce this policy.
 The same rules apply to automated and AI-authored changes.
-

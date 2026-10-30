@@ -113,7 +113,10 @@ export async function prepareScreenshots(
       const height =
         headerHeight +
         headerGap +
-        current.reduce((sum, image) => sum + scaledHeight(image, profile.rows, targetWidth) + SEPARATOR, 0);
+        current.reduce(
+          (sum, image) => sum + scaledHeight(image, profile.rows, targetWidth) + SEPARATOR,
+          0,
+        );
       const canvas = document.createElement('canvas');
       canvas.width = targetWidth;
       canvas.height = height;
