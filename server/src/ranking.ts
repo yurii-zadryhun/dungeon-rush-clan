@@ -32,7 +32,13 @@ export class RankingService {
       .orderBy('start_date', 'desc')
       .limit(weights.length)
       .execute();
-    const players = await this.db.query.selectFrom('players').selectAll().execute();
+    const [players, importedWars] = await Promise.all([
+      this.db.query.selectFrom('players').selectAll().execute(),
+      this.db.query.selectFrom('wars').select('id')
+        .where('ranking_imported_at', 'is not', null)
+        .orderBy('start_date', 'asc').execute(),
+    ]);
+    const warIndexes = new Map(importedWars.map((war, index) => [war.id, index]));
     const scores = await this.db.query
       .selectFrom('player_scores')
       .innerJoin('wars', 'wars.id', 'player_scores.war_id')
@@ -55,7 +61,10 @@ export class RankingService {
       const average = entries.length
         ? Math.round(entries.reduce((sum, e) => sum + e.points, 0) / entries.length)
         : 0;
-      const newcomer = !!p.active && entries.length > 0 && entries.length <= 2;
+      const earliest = entries.length
+        ? Math.min(...entries.map((entry) => warIndexes.get(entry.war_id) ?? 0)) : -1;
+      const lastIndex = importedWars.length - 1;
+      const newcomer = !!p.active && earliest >= 0 && lastIndex - earliest < 2;
       return {
         newcomer,
         id: p.id,

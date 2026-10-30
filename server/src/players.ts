@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { Transaction } from 'kysely';
 import { z } from 'zod';
+import { recordAudit } from './audit';
 import { AdminGuard, SessionGuard, type AuthenticatedRequest } from './auth';
 import { Db, normalizeName, type Tables } from './database';
 import { WarsService } from './wars';
@@ -161,7 +162,7 @@ export class PlayersService {
     }
   }
 
-  async merge(input: unknown) {
+  async merge(input: unknown, actorId: number) {
     const parsed = z
       .object({
         sourceId: z.number().int().positive(),
@@ -371,6 +372,10 @@ export class PlayersService {
         .onConflict((oc) => oc.column('normalized_name').doUpdateSet({ player_id: targetId }))
         .execute();
 
+      await recordAudit(trx, {
+        actorId, action: 'player.merge', entity: 'player', entityId: targetId,
+        details: { sourceId, targetId, overlap },
+      });
       await this.membership.refresh(trx);
     });
     return this.wars.dashboard();
@@ -389,7 +394,7 @@ export class PlayersController {
 
   @UseGuards(AdminGuard)
   @Post('merge')
-  merge(@Body() body: unknown) {
-    return this.players.merge(body);
+  merge(@Body() body: unknown, @Req() request: AuthenticatedRequest) {
+    return this.players.merge(body, request.account!.id);
   }
 }

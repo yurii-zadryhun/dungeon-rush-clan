@@ -307,7 +307,7 @@ export class InsightsService {
         left: rosterIsCurrent
           ? rosterSnapshots.length >= 2 && !currentRoster.has(player.id) && olderRoster.has(player.id)
           : !!wars[1] && current === null && before !== null && !player.active,
-        dropping: player.active && change !== null && change <= -25,
+        dropping: player.active && !player.newcomer && change !== null && change <= -25,
         ...tags.get(player.id),
       };
     });

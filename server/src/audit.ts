@@ -26,6 +26,10 @@ export async function recordAudit(trx: Transaction<Tables>, entry: AuditEntry) {
 export class AuditService {
   constructor(private readonly db: Db) {}
 
+  async write(entry: AuditEntry) {
+    return this.db.query.transaction().execute((trx) => recordAudit(trx, entry));
+  }
+
   async recent() {
     return this.db.query.selectFrom('audit_log')
       .leftJoin('accounts', 'accounts.id', 'audit_log.actor_id')

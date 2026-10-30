@@ -22,3 +22,7 @@
 .war-detail-report-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; }
 .war-report-preview { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.6; background:rgba(0,0,0,.14); border-radius:9px; padding:16px; }
 @media(max-width:600px) { .war-detail-page { padding:14px 10px 86px; } .war-detail-hero,.war-detail-section { padding:14px; } .war-detail-day { grid-template-columns:55px 42px 1fr; gap:6px; font-size:13px; } .war-detail-day > span:last-child { grid-column:2 / -1; } .war-detail-row { grid-template-columns:48px minmax(80px,1fr) 75px; padding:9px 4px; } }
+
+.war-recognition { display:grid; gap:12px; }
+.war-recognition span { display:block; padding:12px; border-radius:8px; background:rgba(244,196,94,.08); }
+.war-recognition a { color:inherit; text-decoration:underline; text-underline-offset:3px; }

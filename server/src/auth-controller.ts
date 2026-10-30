@@ -6,10 +6,11 @@ import {
   AccountsService, AdminGuard, OwnerGuard, SessionGuard, type AuthenticatedRequest,
 } from './auth';
 import { clearSessionCookie } from './auth-utils';
+import { AuditService } from './audit';
 
 @Controller('api/auth')
 export class AuthController {
-  constructor(private readonly auth: AccountsService) {}
+  constructor(private readonly auth: AccountsService, private readonly audit: AuditService) {}
 
   @Get('setup-state')
   async setupState() {
@@ -121,14 +122,18 @@ export class AuthController {
 
   @UseGuards(SessionGuard, AdminGuard)
   @Post('shared-invite')
-  createShared(@Req() request: AuthenticatedRequest) {
-    return this.auth.createSharedInvite(request.account!.id);
+  async createShared(@Req() request: AuthenticatedRequest) {
+    const result = await this.auth.createSharedInvite(request.account!.id);
+    await this.audit.write({ actorId: request.account!.id, action: 'invite.shared.create', entity: 'invite' });
+    return result;
   }
 
   @UseGuards(SessionGuard, AdminGuard)
   @Delete('shared-invite')
-  revokeShared() {
-    return this.auth.revokeSharedInvite();
+  async revokeShared(@Req() request: AuthenticatedRequest) {
+    const result = await this.auth.revokeSharedInvite();
+    await this.audit.write({ actorId: request.account!.id, action: 'invite.shared.revoke', entity: 'invite' });
+    return result;
   }
 
   @UseGuards(SessionGuard, AdminGuard)
@@ -145,25 +150,33 @@ export class AuthController {
 
   @UseGuards(SessionGuard, AdminGuard)
   @Post('invites')
-  createInvite(@Body() body: unknown, @Req() request: AuthenticatedRequest) {
-    return this.auth.createInvite(body, request.account!);
+  async createInvite(@Body() body: unknown, @Req() request: AuthenticatedRequest) {
+    const result = await this.auth.createInvite(body, request.account!);
+    await this.audit.write({ actorId: request.account!.id, action: 'invite.create', entity: 'invite' });
+    return result;
   }
 
   @UseGuards(SessionGuard, AdminGuard)
   @Patch('accounts/:id')
-  updateAccount(@Param('id') id: string, @Req() request: AuthenticatedRequest, @Body() body: unknown) {
-    return this.auth.updateAccount(Number(id), request.account!, body);
+  async updateAccount(@Param('id') id: string, @Req() request: AuthenticatedRequest, @Body() body: unknown) {
+    const result = await this.auth.updateAccount(Number(id), request.account!, body);
+    await this.audit.write({ actorId: request.account!.id, action: 'account.update', entity: 'account', entityId: Number(id) });
+    return result;
   }
 
   @UseGuards(SessionGuard, AdminGuard)
   @Delete('accounts/:id')
-  deleteAccount(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
-    return this.auth.deleteAccount(Number(id), request.account!);
+  async deleteAccount(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
+    const result = await this.auth.deleteAccount(Number(id), request.account!);
+    await this.audit.write({ actorId: request.account!.id, action: 'account.delete', entity: 'account', entityId: Number(id) });
+    return result;
   }
 
   @UseGuards(SessionGuard, AdminGuard)
   @Delete('invites/:id')
-  revokeInvite(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
-    return this.auth.revokeInvite(Number(id), request.account!);
+  async revokeInvite(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
+    const result = await this.auth.revokeInvite(Number(id), request.account!);
+    await this.audit.write({ actorId: request.account!.id, action: 'invite.revoke', entity: 'invite', entityId: Number(id) });
+    return result;
   }
 }

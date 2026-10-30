@@ -23,6 +23,9 @@ function reportText(war: WarDetail, clanName: string, uk: boolean): string {
     `Top 10: ${war.summary.topTenShare}%`,
     '',
     ...top.map((player, index) => `${index + 1}. ${player.name} — ${shortNumber(player.points)}`),
+    '',
+    ...(war.resultImported ? war.days.map((day) =>
+      `${uk ? 'День' : 'Day'} ${day.day}: ${day.winner === 'ours' ? clanName : (war.opponent || '?')} · MVP ${day.mvp}`) : []),
   ].join('\n');
 }
 
@@ -109,6 +112,19 @@ export function WarDetailPage({ start, clanName }: { start: string; clanName: st
                       : day.mvp}</span>
                   </div>
                 ))}
+              </div>
+            </section>
+          )}
+          {war.rankingImported && war.players.length > 0 && (
+            <section className="panel war-detail-section">
+              <h2>{uk ? 'Відзнаки' : 'Recognition'}</h2>
+              <div className="war-recognition">
+                <span>🏅 {uk ? 'Найбільший внесок' : 'Top contributor'}: <a href={'#/players/' + [...war.players].sort((a,b) => b.points - a.points)[0].id}>
+                  {[...war.players].sort((a,b) => b.points - a.points)[0].name}
+                </a></span>
+                {war.days.some((day) => day.winner === 'ours') && <span>
+                  🏆 {uk ? 'MVP наших перемог' : 'Our winning MVPs'}: {war.days.filter((day) => day.winner === 'ours').map((day) => day.mvp).join(', ')}
+                </span>}
               </div>
             </section>
           )}

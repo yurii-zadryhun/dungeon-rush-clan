@@ -169,7 +169,8 @@ function PlayersPanel({
       </div>
       <div className="war-editor-players">
         {players.map((player, index) => {
-          const isNew = !player.playerId || !previousIds.has(player.playerId);
+          const isNew = !player.playerId;
+          const isReturning = !!player.playerId && !previousIds.has(player.playerId);
           const near = !player.playerId
             ? roster.all
                 .map((p) => ({ ...p, distance: similarity(player.name, p.name) }))
@@ -218,9 +219,11 @@ function PlayersPanel({
                 </button>
               </div>
               <div className="war-editor-player-meta">
-                <span className={'tag ' + (isNew ? 'warning' : 'success')}>
-                  {t(isNew ? 'new' : 'returning')}
-                </span>
+                {(isNew || isReturning) && (
+                  <span className={'tag ' + (isNew ? 'new-player' : 'success')}>
+                    {t(isNew ? 'new' : 'returning')}
+                  </span>
+                )}
                 <SearchSelect
                   ariaLabel={t('pickExisting')}
                   placeholder={t('pickExisting')}

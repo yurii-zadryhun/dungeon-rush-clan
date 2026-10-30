@@ -7,11 +7,13 @@ import {
   Patch,
   Param,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { Db } from './database';
+import { AuditService } from './audit';
 import { importPermission, shiftWar, warStart, weekLabel, weekState } from './calendar';
-import { AdminGuard, SessionGuard } from './auth';
+import { AdminGuard, SessionGuard, type AuthenticatedRequest } from './auth';
 import { RankingService } from './ranking';
 import { z } from 'zod';
 
@@ -214,7 +216,7 @@ export class WarsService {
 @Controller('api')
 @UseGuards(SessionGuard)
 export class WarsController {
-  constructor(private readonly wars: WarsService) {}
+  constructor(private readonly wars: WarsService, private readonly audit: AuditService) {}
 
   @Get('dashboard') dashboard(@Query('anchor') anchor?: string, @Query('count') count?: string) {
     return this.wars.dashboard(anchor, count ? Number(count) : 10);
@@ -228,7 +230,10 @@ export class WarsController {
     return this.wars.weeks(anchor, count ? Number(count) : 2);
   }
 
-  @UseGuards(AdminGuard) @Patch('settings') settings(@Body() body: unknown) {
-    return this.wars.settings(body);
+  @UseGuards(AdminGuard) @Patch('settings')
+  async settings(@Body() body: unknown, @Req() request: AuthenticatedRequest) {
+    const result = await this.wars.settings(body);
+    await this.audit.write({ actorId: request.account!.id, action: 'settings.update', entity: 'settings', entityId: 1 });
+    return result;
   }
 }

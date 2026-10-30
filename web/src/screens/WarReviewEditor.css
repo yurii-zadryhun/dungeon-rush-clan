@@ -285,3 +285,6 @@
     font-size: 9px;
   }
 }
+
+.war-editor-player-meta .tag.new-player { color:#95f4b3; background:#204f32; border:1px solid #3d9a5e; }
+.war-editor-player:has(.tag.new-player) { border-color:#4e9d68; }
