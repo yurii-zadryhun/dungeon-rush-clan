@@ -7,11 +7,12 @@ import {
   Post,
   Patch,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { z } from 'zod';
 import { DAY_POINTS, importPermission, warStart } from './calendar';
-import { AdminGuard, SessionGuard } from './auth';
+import { AdminGuard, SessionGuard, type AuthenticatedRequest } from './auth';
 import { Db, normalizeName } from './database';
 import { WarsService } from './wars';
 import { PlayersService } from './players';
@@ -44,6 +45,7 @@ const submission = z
     start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     players: z.array(rankingItem).min(1).max(100).optional(),
     result: result.optional(),
+    championship: z.boolean().optional(),
   })
   .refine((data) => !!data.players || !!data.result, { message: 'Nothing to import' });
 
@@ -85,15 +87,15 @@ export class ImportService {
     return { previousStart: last?.start_date || null, previous, all, aliases };
   }
 
-  async confirm(input: unknown) {
-    return this.save(input, 'create');
+  async confirm(input: unknown, actorId: number) {
+    return this.save(input, 'create', actorId);
   }
 
-  async revise(input: unknown) {
-    return this.save(input, 'update');
+  async revise(input: unknown, actorId: number) {
+    return this.save(input, 'update', actorId);
   }
 
-  private async save(input: unknown, mode: 'create' | 'update') {
+  private async save(input: unknown, mode: 'create' | 'update', actorId: number) {
     const parsed = submission.safeParse(input);
     if (!parsed.success)
       throw new BadRequestException(parsed.error.issues.map((x) => x.message).join('; '));
@@ -149,6 +151,7 @@ export class ImportService {
               ranking_imported_at: null,
               result_imported_at: null,
               created_at: Date.now(),
+              is_championship: Number(data.championship ?? false),
             })
             .returning('id')
             .executeTakeFirstOrThrow();
@@ -157,6 +160,13 @@ export class ImportService {
             .selectAll()
             .where('id', '=', id.id)
             .executeTakeFirstOrThrow();
+        }
+        if (data.championship !== undefined) {
+          await trx
+            .updateTable('wars')
+            .set({ is_championship: Number(data.championship) })
+            .where('id', '=', war.id)
+            .execute();
         }
         if (data.players) {
           if (mode === 'create' && war.ranking_imported_at !== null)
@@ -281,9 +291,20 @@ export class ImportService {
                 winner: day.winner,
                 points: day.points,
                 mvp: day.mvp,
+                mvp_player_id: day.winner === 'ours'
+                  ? await this.identities.resolve(trx, day.mvp) ?? null
+                  : null,
               })
               .execute();
         }
+        await trx.insertInto('audit_log').values({
+          actor_id: actorId,
+          action: mode === 'create' ? 'war.import' : 'war.update',
+          entity: 'war',
+          entity_id: war.id,
+          details_json: JSON.stringify({ start: data.start, sections: { players: !!data.players, result: !!data.result }, championship: data.championship }),
+          created_at: Date.now(),
+        }).execute();
       });
     } catch (e) {
       if (e instanceof BadRequestException) throw e;
@@ -304,11 +325,11 @@ export class ImportController {
     return this.importer.matchingPlayers(start);
   }
 
-  @Post('confirm') submit(@Body() body: unknown) {
-    return this.importer.confirm(body);
+  @Post('confirm') submit(@Body() body: unknown, @Req() request: AuthenticatedRequest) {
+    return this.importer.confirm(body, request.account!.id);
   }
 
-  @Patch('war') edit(@Body() body: unknown) {
-    return this.importer.revise(body);
+  @Patch('war') edit(@Body() body: unknown, @Req() request: AuthenticatedRequest) {
+    return this.importer.revise(body, request.account!.id);
   }
 }

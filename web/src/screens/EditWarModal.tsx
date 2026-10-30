@@ -99,6 +99,10 @@ export function EditWarModal({
           </button>
         </header>
         <div className="war-editor-scroll">
+          <label style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 16px' }}>
+            <input type="checkbox" checked={!!draft.championship} onChange={(event) => setDraft((current) => ({ ...current, championship: event.target.checked }))} />
+            Championship
+          </label>
           <WarReviewEditor
             draft={draft}
             onChange={setDraft}

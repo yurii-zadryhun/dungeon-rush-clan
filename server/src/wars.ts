@@ -5,6 +5,7 @@ import {
   Get,
   Injectable,
   Patch,
+  Param,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -35,7 +36,7 @@ export class WarsService {
     private readonly ranking: RankingService,
   ) {}
 
-  async dashboard(anchor?: string, count = 10) {
+  async weeks(anchor?: string, count = 10) {
     const now = new Date(),
       current = warStart(now);
     if (anchor && !/^\d{4}-\d{2}-\d{2}$/.test(anchor)) throw new BadRequestException('Invalid date');
@@ -54,6 +55,7 @@ export class WarsService {
         'wars.opponent_score',
         'wars.ranking_imported_at',
         'wars.result_imported_at',
+        'wars.is_championship',
         'clans.name as opponent',
       ])
       .where('wars.start_date', '>=', starts[0])
@@ -99,6 +101,7 @@ export class WarsService {
         opponentScore: found?.opponent_score ?? null,
         rankingImported: !!found?.ranking_imported_at,
         resultImported: !!found?.result_imported_at,
+        championship: !!found?.is_championship,
         days: found
           ? days
               .filter((d) => d.war_id === found.id)
@@ -107,6 +110,7 @@ export class WarsService {
                 points: d.points,
                 winner: d.winner,
                 mvp: d.mvp,
+                mvpPlayerId: d.winner === 'ours' ? d.mvp_player_id : null,
               }))
           : [],
         players: found
@@ -122,12 +126,44 @@ export class WarsService {
           : [],
       };
     });
-    const stats = await this.ranking.compute();
-    const outcomes = await this.db.query
-      .selectFrom('wars')
-      .select(['our_score', 'opponent_score'])
-      .where('result_imported_at', 'is not', null)
-      .execute();
+    return weeks;
+  }
+
+  async war(start: string) {
+    const weeks = await this.weeks(start, 1);
+    const week = weeks.find((item) => item.start === start && item.id !== null);
+    if (!week) throw new BadRequestException('War not found');
+    const values = week.players.map((player) => player.points).sort((a, b) => a - b);
+    const total = values.reduce((sum, value) => sum + value, 0);
+    const median = values.length
+      ? values.length % 2
+        ? values[(values.length - 1) / 2]!
+        : (values[values.length / 2 - 1]! + values[values.length / 2]!) / 2
+      : 0;
+    return {
+      ...week,
+      summary: {
+        total,
+        average: values.length ? Math.round(total / values.length) : 0,
+        median,
+        participantCount: values.length,
+        topFiveShare: total ? Math.round((100 * values.slice(-5).reduce((a, b) => a + b, 0)) / total) : 0,
+        topTenShare: total ? Math.round((100 * values.slice(-10).reduce((a, b) => a + b, 0)) / total) : 0,
+      },
+    };
+  }
+
+  async dashboard(anchor?: string, count = 10) {
+    const [weeks, stats, outcomes] = await Promise.all([
+      this.weeks(anchor, count),
+      this.ranking.compute(),
+      this.db.query
+        .selectFrom('wars')
+        .select(['our_score', 'opponent_score'])
+        .where('result_imported_at', 'is not', null)
+        .execute(),
+    ]);
+    const now = new Date();
     return {
       weeks,
       rankings: stats,
@@ -135,7 +171,7 @@ export class WarsService {
         wins: outcomes.filter((w) => w.our_score! > w.opponent_score!).length,
         losses: outcomes.filter((w) => w.our_score! < w.opponent_score!).length,
       },
-      currentStart: current,
+      currentStart: warStart(now),
       serverNow: now.toISOString(),
     };
   }
@@ -182,6 +218,14 @@ export class WarsController {
 
   @Get('dashboard') dashboard(@Query('anchor') anchor?: string, @Query('count') count?: string) {
     return this.wars.dashboard(anchor, count ? Number(count) : 10);
+  }
+
+  @Get('wars/:start') war(@Param('start') start: string) {
+    return this.wars.war(start);
+  }
+
+  @Get('war-weeks') weeks(@Query('anchor') anchor?: string, @Query('count') count?: string) {
+    return this.wars.weeks(anchor, count ? Number(count) : 2);
   }
 
   @UseGuards(AdminGuard) @Patch('settings') settings(@Body() body: unknown) {

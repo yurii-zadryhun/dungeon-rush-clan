@@ -60,6 +60,7 @@ export interface Tables {
     opponent_score: number | null;
     ranking_imported_at: number | null;
     result_imported_at: number | null;
+    is_championship: number;
     created_at: number;
   };
   players: {
@@ -103,6 +104,8 @@ export interface Tables {
     power: number;
     power_text: string;
   };
+  audit_log: { id: Generated<number>; actor_id: number | null; action: string; entity: string; entity_id: number | null; details_json: string; created_at: number };
+  player_events: { id: Generated<number>; player_id: number; kind: string; previous_value: string | null; next_value: string | null; occurred_at: number };
   player_scores: { war_id: number; player_id: number; position: number; points: number };
   war_days: {
     war_id: number;
@@ -110,6 +113,7 @@ export interface Tables {
     points: number;
     winner: 'ours' | 'opponent';
     mvp: string;
+    mvp_player_id: number | null;
   };
 }
 
@@ -173,8 +177,20 @@ export class Db implements OnModuleDestroy {
       );
       CREATE INDEX IF NOT EXISTS roster_entries_player ON clan_roster_entries(player_id, snapshot_id);
       CREATE TABLE IF NOT EXISTS war_days (war_id INTEGER NOT NULL REFERENCES wars(id) ON DELETE CASCADE, day_number INTEGER NOT NULL CHECK(day_number BETWEEN 1 AND 6), points INTEGER NOT NULL, winner TEXT NOT NULL, mvp TEXT NOT NULL, PRIMARY KEY(war_id, day_number));
+      CREATE TABLE IF NOT EXISTS audit_log (id INTEGER PRIMARY KEY, actor_id INTEGER REFERENCES accounts(id) ON DELETE SET NULL, action TEXT NOT NULL, entity TEXT NOT NULL, entity_id INTEGER, details_json TEXT NOT NULL DEFAULT '{}', created_at INTEGER NOT NULL);
+      CREATE INDEX IF NOT EXISTS audit_log_recent ON audit_log(created_at DESC, id DESC);
+      CREATE TABLE IF NOT EXISTS player_events (id INTEGER PRIMARY KEY, player_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE, kind TEXT NOT NULL, previous_value TEXT, next_value TEXT, occurred_at INTEGER NOT NULL);
+      CREATE INDEX IF NOT EXISTS player_events_history ON player_events(player_id, occurred_at DESC);
       INSERT OR IGNORE INTO settings(id,clan_name,minimum_points,weights_json) VALUES(1,'Ukrainians',100000,'[0.75,0.25]');
     `);
+    const warColumns = this.connection.pragma('table_info(wars)') as { name: string }[];
+    if (!warColumns.some((column) => column.name === 'is_championship')) {
+      this.connection.exec('ALTER TABLE wars ADD COLUMN is_championship INTEGER NOT NULL DEFAULT 0');
+    }
+    const dayColumns = this.connection.pragma('table_info(war_days)') as { name: string }[];
+    if (!dayColumns.some((column) => column.name === 'mvp_player_id')) {
+      this.connection.exec('ALTER TABLE war_days ADD COLUMN mvp_player_id INTEGER REFERENCES players(id)');
+    }
     // Older databases already have settings; add the optional public leader field in place.
     const settingsColumns = this.connection.pragma('table_info(settings)') as { name: string }[];
     if (!settingsColumns.some((column) => column.name === 'leader_name')) {

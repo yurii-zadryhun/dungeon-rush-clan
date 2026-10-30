@@ -20,6 +20,7 @@ export type EditableResult = {
   days: EditableDay[];
 };
 export interface WarDraft {
+  championship?: boolean;
   players: OcrPlayer[];
   result: EditableResult | null;
 }
@@ -47,6 +48,7 @@ export function makeResult(parsed: OcrResponse['result']): EditableResult | null
 
 export function draftFromWeek(week: Week): WarDraft {
   return {
+    championship: week.championship,
     players: week.players.map((player) => ({
       playerId: player.id,
       position: player.position,
@@ -71,6 +73,7 @@ export function draftFromWeek(week: Week): WarDraft {
 export function warSubmission(start: string, draft: WarDraft, sections: WarSections) {
   return {
     start,
+    ...(draft.championship !== undefined ? { championship: draft.championship } : {}),
     ...(sections.players
       ? {
           players: draft.players.map((player) => ({

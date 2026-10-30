@@ -36,6 +36,7 @@ export interface Day {
   points: number;
   winner: 'ours' | 'opponent';
   mvp: string;
+  mvpPlayerId?: number | null;
 }
 
 export interface Week {
@@ -49,8 +50,20 @@ export interface Week {
   opponentScore: number | null;
   rankingImported: boolean;
   resultImported: boolean;
+  championship: boolean;
   days: Day[];
   players: PlayerScore[];
+}
+
+export interface WarDetail extends Week {
+  summary: {
+    total: number;
+    average: number;
+    median: number;
+    participantCount: number;
+    topFiveShare: number;
+    topTenShare: number;
+  };
 }
 
 export interface Dashboard {

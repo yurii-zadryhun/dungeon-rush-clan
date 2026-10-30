@@ -134,6 +134,13 @@ export class PlayersService {
         .execute();
       await trx.deleteFrom('player_aliases').where('normalized_name', '=', normalized).execute();
     }
+    await trx.insertInto('player_events').values({
+      player_id: playerId,
+      kind: 'rename',
+      previous_value: previous.name,
+      next_value: name.trim(),
+      occurred_at: Date.now(),
+    }).execute();
     await trx
       .updateTable('players')
       .set({ name: name.trim(), normalized_name: normalized })
@@ -147,7 +154,7 @@ export class PlayersService {
       if (normalizeName(day.mvp) !== previous.normalized_name) continue;
       await trx
         .updateTable('war_days')
-        .set({ mvp: name.trim() })
+        .set({ mvp: name.trim(), mvp_player_id: playerId })
         .where('war_id', '=', day.war_id)
         .where('day_number', '=', day.day_number)
         .execute();
@@ -210,6 +217,16 @@ export class PlayersService {
         }
       }
       await trx
+        .updateTable('war_days')
+        .set({ mvp_player_id: targetId })
+        .where('mvp_player_id', '=', sourceId)
+        .execute();
+      await trx
+        .updateTable('player_events')
+        .set({ player_id: targetId })
+        .where('player_id', '=', sourceId)
+        .execute();
+      await trx
         .updateTable('player_scores')
         .set({ player_id: targetId })
         .where('player_id', '=', sourceId)
@@ -220,7 +237,7 @@ export class PlayersService {
         if (normalizeName(day.mvp) !== source.normalized_name) continue;
         await trx
           .updateTable('war_days')
-          .set({ mvp: target.name })
+          .set({ mvp: target.name, mvp_player_id: targetId })
           .where('war_id', '=', day.war_id)
           .where('day_number', '=', day.day_number)
           .execute();
