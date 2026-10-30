@@ -20,12 +20,13 @@ export interface PreparedScreenshots {
 }
 
 export const regions: Record<ScreenshotMode, { rows: CropRegion; header?: CropRegion }> = {
-  // Player names and power are near x≈0.15 of the full screenshot. The previous
-  // x=0.23 crop removed their beginning and captured partial "Member"/"Captain"
-  // labels; including the bottom tabs also fed non-player text to Vision.
+  // Calibrated against actual clan-roster previews. The left edge excludes
+  // player avatars but leaves complete nicknames; the right edge stops before
+  // Leader/Captain/Member labels. The bottom avoids the empty tab/button area.
+  // The first screenshot contributes only Power/Tier/Type/Members from its header.
   clan: {
-    rows: { x: 0.1, y: 0.47, width: 0.63, height: 0.342 },
-    header: { x: 0.13, y: 0.125, width: 0.75, height: 0.335 },
+    rows: { x: 0.26, y: 0.47, width: 0.35, height: 0.3 },
+    header: { x: 0.13, y: 0.375, width: 0.75, height: 0.085 },
   },
   // Existing ranking OCR looked for ranks between 39% and 80% screen height.
   ranking: {
@@ -33,7 +34,9 @@ export const regions: Record<ScreenshotMode, { rows: CropRegion; header?: CropRe
   },
 };
 
-const IMAGE_WIDTH = 600;
+// Narrow clan crops need fewer pixels to keep each five-screenshot mosaic
+// around the original height while slightly enlarging the OCR text.
+export const MOSAIC_WIDTH: Record<ScreenshotMode, number> = { clan: 420, ranking: 600 };
 const PAGE_SIZE = 5;
 const SEPARATOR = 24;
 
@@ -41,8 +44,8 @@ export function screenshotAspectSupported(width: number, height: number) {
   return width > 0 && height > 0 && width / height >= 0.435 && width / height <= 0.51;
 }
 
-function scaledHeight(bitmap: ImageBitmap, crop: CropRegion): number {
-  return Math.round((IMAGE_WIDTH * bitmap.height * crop.height) / (bitmap.width * crop.width));
+function scaledHeight(bitmap: ImageBitmap, crop: CropRegion, width: number): number {
+  return Math.round((width * bitmap.height * crop.height) / (bitmap.width * crop.width));
 }
 
 function drawRegion(
@@ -50,8 +53,9 @@ function drawRegion(
   image: ImageBitmap,
   crop: CropRegion,
   top: number,
+  width: number,
 ): number {
-  const height = scaledHeight(image, crop);
+  const height = scaledHeight(image, crop, width);
   ctx.drawImage(
     image,
     Math.round(crop.x * image.width),
@@ -60,7 +64,7 @@ function drawRegion(
     Math.round(crop.height * image.height),
     0,
     top,
-    IMAGE_WIDTH,
+    width,
     height,
   );
   return height;
@@ -97,20 +101,21 @@ export async function prepareScreenshots(
     }
 
     const profile = regions[mode];
+    const targetWidth = MOSAIC_WIDTH[mode];
     const parts: Blob[] = [];
     let firstHeaderHeight = 0;
 
     for (let start = 0; start < bitmaps.length; start += PAGE_SIZE) {
       const current = bitmaps.slice(start, start + PAGE_SIZE);
       const includeHeader = mode === 'clan' && start === 0 && profile.header;
-      const headerHeight = includeHeader ? scaledHeight(current[0], profile.header!) : 0;
+      const headerHeight = includeHeader ? scaledHeight(current[0], profile.header!, targetWidth) : 0;
       const headerGap = headerHeight ? SEPARATOR : 0;
       const height =
         headerHeight +
         headerGap +
-        current.reduce((sum, image) => sum + scaledHeight(image, profile.rows) + SEPARATOR, 0);
+        current.reduce((sum, image) => sum + scaledHeight(image, profile.rows, targetWidth) + SEPARATOR, 0);
       const canvas = document.createElement('canvas');
-      canvas.width = IMAGE_WIDTH;
+      canvas.width = targetWidth;
       canvas.height = height;
       const ctx = canvas.getContext('2d', { alpha: false });
       if (!ctx) throw new Error('Canvas is unavailable');
@@ -118,12 +123,12 @@ export async function prepareScreenshots(
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       let y = 0;
       if (includeHeader) {
-        y += drawRegion(ctx, current[0], profile.header!, y);
+        y += drawRegion(ctx, current[0], profile.header!, y, targetWidth);
         firstHeaderHeight = y;
         y += SEPARATOR;
       }
       for (const bitmap of current) {
-        y += drawRegion(ctx, bitmap, profile.rows, y);
+        y += drawRegion(ctx, bitmap, profile.rows, y, targetWidth);
         y += SEPARATOR;
       }
       parts.push(await toJpeg(canvas));
