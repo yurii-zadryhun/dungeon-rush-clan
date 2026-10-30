@@ -9,6 +9,9 @@ import { createRoot } from 'react-dom/client';
 import { LanguageProvider } from './i18n';
 import { initialLocale } from './locale';
 import './styles.css';
+import './styles-dashboard.css';
+import './styles-forms.css';
+import './styles-layout.css';
 
 // Public /clan pages are rendered by Nest as lightweight HTML without client JavaScript.
 const PrivateApp = React.lazy(() =>

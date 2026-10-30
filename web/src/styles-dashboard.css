@@ -1,0 +1,506 @@
+.site-header {
+  height: 77px;
+  border-bottom: 4px solid #060606;
+  background: #171719;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 clamp(12px, 3vw, 36px);
+  gap: 12px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-mark {
+  width: 47px;
+  height: 47px;
+  display: grid;
+  place-items: center;
+  border: 3px solid #060606;
+  background: linear-gradient(135deg, #70502a, #d4a63a);
+  color: #ffe79e;
+  border-radius: 13px;
+  box-shadow: 0 3px 0 #0a0a0a;
+}
+
+.brand strong {
+  font-size: 17px;
+  display: block;
+  line-height: 1.15;
+  text-shadow: 0 2px #050505;
+}
+
+.brand small {
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 1.2px;
+  color: #d2b971;
+  display: block;
+  margin-top: 4px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.current-user {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 900;
+  font-size: 12px;
+  margin-right: 6px;
+}
+
+.current-user small {
+  font-weight: 700;
+  color: #a49fa1;
+}
+
+.dashboard {
+  max-width: 1720px;
+  margin: 0 auto;
+  padding: 24px clamp(10px, 2.3vw, 32px) 40px;
+}
+
+.dashboard-top {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.03fr) repeat(2, minmax(265px, 1fr));
+  gap: 18px;
+  align-items: stretch;
+}
+
+.clan-widget {
+  padding: 22px;
+}
+
+.clan-widget h1 {
+  font-size: clamp(26px, 3vw, 38px);
+  margin: 15px 0 15px;
+}
+
+.record {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  border: 3px solid #080808;
+  border-radius: 13px;
+  background: #1e1d1e;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+}
+
+.record strong {
+  font-size: clamp(34px, 4.5vw, 55px);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-shadow: 0 4px #080808;
+}
+
+.record > span:not(.record-label) {
+  font-size: 30px;
+  color: #8c898a;
+  font-weight: 950;
+}
+
+.record-label {
+  font-size: 9px;
+  margin-left: auto;
+  color: #b6afb3;
+  font-weight: 900;
+}
+
+.requirement {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: #c3bdc0;
+}
+
+.requirement b {
+  color: #f9d17a;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.leaders-widget {
+  background: #252426;
+  padding: 16px;
+  min-width: 0;
+}
+
+.widget-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 13px;
+}
+
+.widget-head h2 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.leader-list {
+  display: grid;
+  gap: 7px;
+}
+
+.leader-row {
+  display: grid;
+  grid-template-columns: 27px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  background: #161617;
+  border: 2px solid #070708;
+  border-radius: 10px;
+  padding: 7px 10px;
+  min-height: 47px;
+}
+
+.leader-row:first-child {
+  background: #243241;
+  border-color: #185888;
+}
+
+.leader-row.below {
+  border-left-color: var(--red);
+  border-left-width: 4px;
+}
+
+.place {
+  text-align: center;
+  color: #bdb6b9;
+  font-weight: 950;
+  font-size: 15px;
+}
+
+.place-0 {
+  color: #ffcd54;
+}
+
+.place-1 {
+  color: #d3d8e1;
+}
+
+.place-2 {
+  color: #e9ac69;
+}
+
+.leader-name {
+  min-width: 0;
+}
+
+.leader-name strong {
+  display: block;
+  font-size: 13px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.leader-name small {
+  display: block;
+  margin-top: 2px;
+  color: #999496;
+  font-size: 10px;
+}
+
+.leader-row .score {
+  font-size: 13px;
+}
+
+.inactive {
+  opacity: 0.45;
+  filter: grayscale(0.3);
+}
+
+.empty {
+  padding: 17px 5px;
+  color: #a49fa1;
+  text-align: center;
+  font-size: 12px;
+}
+
+.history-widget {
+  margin-top: 24px;
+  background: #252426;
+  padding: 18px 0;
+}
+
+.timeline-heading {
+  padding: 0 18px 13px;
+  margin: 0;
+}
+
+.timeline-heading h2 {
+  font-size: 22px;
+}
+
+.timeline-heading p {
+  margin: 4px 0 0;
+}
+
+.timeline-scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  padding: 8px 16px 24px;
+  scrollbar-color: #484346 #19191a;
+  scrollbar-width: thin;
+}
+
+.timeline-track {
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+  width: max-content;
+}
+
+.war-column {
+  width: 290px;
+  flex: 0 0 290px;
+  scroll-snap-align: center;
+  background: #1b1a1c;
+  border: 3px solid #070708;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 0 #060606;
+  display: flex;
+  flex-direction: column;
+  min-height: 440px;
+}
+
+.war-column.future {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.war-column.not-imported:not(.active) {
+  opacity: 0.66;
+}
+
+.war-column.active {
+  border-color: #d9a449;
+  box-shadow:
+    0 0 0 2px #806222,
+    0 5px 0 #060606;
+}
+
+.war-heading {
+  text-align: center;
+  background: #3d393b;
+  padding: 11px 8px 10px;
+  border-bottom: 3px solid #080808;
+  min-height: 66px;
+}
+
+.war-column.won .war-heading {
+  background: #21652a;
+}
+
+.war-column.lost .war-heading {
+  background: #873137;
+}
+
+.war-column.active .war-heading {
+  background: #62502d;
+}
+
+.war-date {
+  font-size: 17px;
+  font-weight: 950;
+  color: #fff;
+  text-shadow: 0 2px #090909;
+}
+
+.war-status {
+  font-size: 10px;
+  margin-top: 4px;
+  font-weight: 950;
+  letter-spacing: 1px;
+  color: #dfdadc;
+}
+
+.won .war-status {
+  color: #baffb1;
+}
+
+.lost .war-status {
+  color: #ffc3c3;
+}
+
+.war-content {
+  padding: 13px 11px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 8px;
+}
+
+.opponent {
+  font-size: 15px;
+  font-weight: 950;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  margin: 1px 0;
+}
+
+.war-content > .tiny {
+  text-align: center;
+}
+
+.war-score {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  background: #100f10;
+  border: 2px solid #060606;
+  border-radius: 11px;
+  padding: 5px 9px;
+  font-size: 32px;
+  font-weight: 950;
+  line-height: 1.2;
+  text-shadow: 0 3px #000;
+}
+
+.war-score .colon {
+  color: #f7f7f7;
+}
+
+.war-score .placeholder {
+  color: #777;
+  font-size: 26px;
+}
+
+.war-content h3 {
+  margin: 9px 0 0;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #d1cdd0;
+}
+
+.day-table {
+  display: grid;
+  gap: 3px;
+}
+
+.day-row {
+  display: grid;
+  grid-template-columns: 54px 20px minmax(0, 1fr);
+  align-items: center;
+  padding: 5px 7px;
+  background: #352f32;
+  border: 2px solid #090909;
+  border-radius: 7px;
+  font-size: 10px;
+  min-height: 29px;
+}
+
+.day-row.ours {
+  border-left: 4px solid #3ba5ec;
+}
+
+.day-row.opponent {
+  border-left: 4px solid #ff5b64;
+}
+
+.day-row b {
+  color: #f6f2f4;
+}
+
+.daily-mvp {
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #e8c374;
+  font-weight: 900;
+}
+
+.war-roster-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.war-roster-head h3 {
+  margin: 7px 0 0;
+}
+
+.war-player-list {
+  display: grid;
+  gap: 3px;
+  max-height: 255px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #4c4949 #1d1b1d;
+}
+
+.war-player {
+  display: grid;
+  grid-template-columns: 21px minmax(0, 1fr) auto;
+  gap: 5px;
+  align-items: center;
+  background: #292728;
+  border: 1px solid #0b0b0b;
+  border-radius: 5px;
+  padding: 5px 6px;
+  font-size: 11px;
+}
+
+.war-player b {
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+}
+
+.rank-number {
+  color: #a6a0a3;
+  font-weight: 950;
+}
+
+.roster-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 900;
+}
+
+.war-placeholder {
+  text-align: center;
+  border: 2px dashed #393639;
+  border-radius: 10px;
+  padding: 14px;
+  color: #807b7f;
+  font-size: 11px;
+}
+
+.import-btn {
+  margin-top: auto;
+}
+
+.dashboard footer:not(.modal-actions) {
+  color: #777;
+  text-align: center;
+  font-size: 11px;
+  margin-top: 23px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+}

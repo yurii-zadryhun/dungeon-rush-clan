@@ -9,6 +9,7 @@ export function useModalHistory(onClose: () => void) {
     history.pushState({ ...history.state, modalKey: key }, '');
     let popped = false;
     function handleBack() {
+      if (history.state?.modalKey === key) return;
       popped = true;
       latest.current();
     }

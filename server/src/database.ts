@@ -190,6 +190,23 @@ export class Db implements OnModuleDestroy {
     const dayColumns = this.connection.pragma('table_info(war_days)') as { name: string }[];
     if (!dayColumns.some((column) => column.name === 'mvp_player_id')) {
       this.connection.exec('ALTER TABLE war_days ADD COLUMN mvp_player_id INTEGER REFERENCES players(id)');
+      const days = this.connection.prepare(
+        "SELECT war_id, day_number, mvp FROM war_days WHERE winner='ours'",
+      ).all() as { war_id: number; day_number: number; mvp: string }[];
+      const players = this.connection.prepare(
+        'SELECT id, normalized_name FROM players',
+      ).all() as { id: number; normalized_name: string }[];
+      const aliases = this.connection.prepare(
+        'SELECT player_id AS id, normalized_name FROM player_aliases',
+      ).all() as { id: number; normalized_name: string }[];
+      const lookup = new Map([...players, ...aliases].map((entry) => [entry.normalized_name, entry.id]));
+      const update = this.connection.prepare(
+        'UPDATE war_days SET mvp_player_id=? WHERE war_id=? AND day_number=?',
+      );
+      for (const day of days) {
+        const playerId = lookup.get(normalizeName(day.mvp));
+        if (playerId) update.run(playerId, day.war_id, day.day_number);
+      }
     }
     // Older databases already have settings; add the optional public leader field in place.
     const settingsColumns = this.connection.pragma('table_info(settings)') as { name: string }[];
