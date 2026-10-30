@@ -464,7 +464,7 @@ export function ClanRosterImportModal({
                             className="clan-thumbnail-remove"
                             type="button"
                             onClick={() => setFiles((current) => current.filter((_, i) => i !== index))}
-                            aria-label={t('remove') + ': ' + (sortedRows.indexOf(row) + 1)}
+                            aria-label={t('remove') + ': ' + (index + 1)}
                             title={t('remove')}
                           >
                             <X size={14} />
@@ -616,7 +616,7 @@ export function ClanRosterImportModal({
                         <span className="clan-new-label">New</span>
                       )}
                       <input
-                        aria-label={t('playerColumn') + ' ' + (index + 1)}
+                        aria-label={t('playerColumn') + ' ' + (sortedRows.indexOf(row) + 1)}
                         value={row.name}
                         onChange={(event) => updateName(row.key, event.target.value)}
                         onBlur={() => reconcileName(row.key, row.name)}
