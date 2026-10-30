@@ -1,49 +1,44 @@
-name: Temporary format preview
+name: Temporary PWA production route audit
 on:
   push:
     branches: [format-preview-20261030]
 permissions:
   contents: read
 jobs:
-  format:
+  inspect:
     runs-on: ubuntu-24.04
     timeout-minutes: 12
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-      - run: npm ci --no-audit --no-fund
-      - name: Format PWA sources for review
+      - name: Verify actual Hestia/Nginx public routes
         shell: bash
         run: |
-          set -euo pipefail
-          paths=(web/index.html web/src/main.tsx web/public/assets/manifest.json web/public/assets/sw.js server/src/site-pages.ts server/src/main.ts)
-          npx prettier --write "${paths[@]}"
-          node -e "const fs=require('fs'); for(const p of process.argv.slice(1)) console.log('FMT:'+p+':'+fs.readFileSync(p).toString('base64'))" "${paths[@]}"
-      - name: Verify compiled PWA routes and assets
-        shell: bash
-        run: |
-          set -euo pipefail
-          npm run check
-          npm run build
-          for path in assets/manifest.json assets/sw.js assets/icon-192.png assets/icon-512.png assets/icon-maskable-512.png assets/apple-touch-icon.png; do
-            test -s "web/dist/$path"
-            echo "Build OK: $path"
+          set -uo pipefail
+          host=https://clan.dungeon-rush.webestit.com
+          for attempt in $(seq 1 55); do
+            echo "Production check #$attempt"
+            passed=1
+            for route in assets/clan-emblem.png assets/manifest.json assets/icon-192.png assets/icon-512.png assets/icon-maskable-512.png assets/apple-touch-icon.png assets/sw.js api/pwa/worker; do
+              status=$(curl --silent --show-error --location --max-time 12 --dump-header "/tmp/pwa-headers" --output "/tmp/pwa-body" --write-out '%{http_code}' "$host/$route") || status=error
+              type=$(grep -i '^content-type:' /tmp/pwa-headers | tail -1 | tr -d '\r' || true)
+              scope=$(grep -i '^service-worker-allowed:' /tmp/pwa-headers | tail -1 | tr -d '\r' || true)
+              echo "  $route HTTP $status $type $scope"
+              if [ "$status" != 200 ]; then passed=0; continue; fi
+              if [ "$route" = "api/pwa/worker" ]; then
+                echo "$type" | grep -qi 'javascript' || passed=0
+                echo "$scope" | grep -q '/$' || passed=0
+                grep -q 'clan-static-' /tmp/pwa-body || passed=0
+              fi
+              if [ "$route" = "assets/manifest.json" ]; then
+                node -e "let fs=require('fs'),m=JSON.parse(fs.readFileSync('/tmp/pwa-body','utf8')); if(m.scope!=='/'||!m.icons.some(i=>i.sizes==='192x192')||!m.icons.some(i=>i.sizes==='512x512'))process.exit(1)" || passed=0
+              fi
+            done
+            root=$(curl --silent --show-error --max-time 12 "$host/" || true)
+            if ! grep -q '/assets/manifest.json' <<< "$root"; then
+              echo '  Root HTML still references the old manifest'
+              passed=0
+            fi
+            if [ "$passed" -eq 1 ]; then echo 'PWA public endpoints all reachable'; exit 0; fi
+            sleep 10
           done
-          data_dir=$(mktemp -d)
-          trap 'kill "$server_pid" 2>/dev/null || true; rm -rf "$data_dir"' EXIT
-          DATA_DIR="$data_dir" NODE_ENV=development HOST=127.0.0.1 PORT=3311 node server/dist/main.js > /tmp/pwa-server.log 2>&1 &
-          server_pid=$!
-          for n in $(seq 1 40); do
-            if curl -fsS http://127.0.0.1:3311/api/auth/setup-state > /dev/null; then break; fi
-            sleep .5
-          done
-          curl -fsS -D /tmp/worker-headers http://127.0.0.1:3311/api/pwa/sw.js -o /tmp/worker.js
-          grep -qi '^service-worker-allowed: /' /tmp/worker-headers
-          grep -qi '^content-type: application/javascript' /tmp/worker-headers
-          grep -q "clan-static-" /tmp/worker.js
-          echo 'Worker endpoint OK with correct MIME and root scope'
-          curl -fsS http://127.0.0.1:3311/assets/manifest.json | node -e "let s='';process.stdin.on('data',x=>s+=x).on('end',()=>{const x=JSON.parse(s);if(!x.icons.some(i=>i.sizes==='192x192')||!x.icons.some(i=>i.sizes==='512x512'))process.exit(1);console.log('Manifest HTTP OK')})"
-          curl -fsS http://127.0.0.1:3311/assets/icon-192.png -o /tmp/icon.png
-          file /tmp/icon.png
+          echo 'PWA endpoints did not become available' >&2
+          exit 1
