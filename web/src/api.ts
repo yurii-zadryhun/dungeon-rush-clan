@@ -218,10 +218,10 @@ export interface ClanOcrPlayer {
   power: number;
   powerText: string;
   source: number;
-  y?: number;
 }
 export interface ClanOcrResponse {
   players: ClanOcrPlayer[];
+  positions: Array<{ name: string; powerText: string; source: number; y: number }>;
   reportedMembers: number | null;
   capacity: number | null;
   reportedPower: number | null;

@@ -23,10 +23,10 @@ export interface RecognizedPower {
   power: number;
   powerText: string;
   source: number;
-  y: number;
 }
 export interface RosterRecognition {
   players: RecognizedPower[];
+  positions: Array<{ name: string; powerText: string; source: number; y: number }>;
   reportedMembers: number | null;
   capacity: number | null;
   reportedPower: number | null;
@@ -89,6 +89,7 @@ export function parseRosterScreenshot(
   );
   const reportedPowerText = headerPower ? headerPower[1] + headerPower[2] : null;
   const output: RecognizedPower[] = [];
+  const positions: RosterRecognition['positions'] = [];
   let candidate: { name: string; y: number } | null = null;
   const cleanCandidate = (value: string) =>
     value
@@ -126,7 +127,8 @@ export function parseRosterScreenshot(
       const tierOnly = /^(?:IM|M|E|D)$/i.test(inline);
       const name = preceding && tierOnly ? preceding : plausibleName(inline) ? inline : preceding;
       if (powerValue !== null && name) {
-        output.push({ name, power: powerValue, powerText, source, y: row.y });
+        output.push({ name, power: powerValue, powerText, source });
+        positions.push({ name, powerText, source, y: row.y });
         if (inferred) {
           warnings.push(
             'Verify ' +
@@ -163,6 +165,7 @@ export function parseRosterScreenshot(
     warnings.push('Conflicting power values for: ' + [...conflicts].slice(0, 8).join(', '));
   return {
     players: output,
+    positions,
     reportedMembers: members ? Number(members[1]) : null,
     capacity: members ? Number(members[2]) : null,
     reportedPower: reportedPowerText ? parsePower(reportedPowerText) : null,

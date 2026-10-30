@@ -11,7 +11,6 @@ export const usernameSchema = z.string().trim().min(2).max(50);
 export const passwordSchema = z.string().min(12).max(200);
 export const localeSchema = z.enum(['uk', 'en']);
 
-
 export function validate<T>(schema: z.ZodType<T>, value: unknown): T {
   const result = schema.safeParse(value);
   if (!result.success)

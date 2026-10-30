@@ -418,6 +418,7 @@ export class OcrController {
     }
     return {
       players: [...unique.values()],
+      positions: diagnostics.flatMap((item) => item.parsed.positions),
       reportedMembers,
       reportedPower,
       reportedPowerText,

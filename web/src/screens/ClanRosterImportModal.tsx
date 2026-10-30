@@ -318,6 +318,9 @@ export function ClanRosterImportModal({
           const match = matchRosterName(player.name, known);
           return {
             ...player,
+            y: result.positions.find((position) => position.source === player.source &&
+              normalizeName(position.name) === normalizeName(player.name) &&
+              position.powerText === player.powerText)?.y,
             key: nextKey++,
             name: match?.name ?? player.name,
             playerId: match?.playerId ?? null,
@@ -593,7 +596,7 @@ export function ClanRosterImportModal({
                   <span>{t('clanMatch')}</span>
                   <span />
                 </div>
-                {reviewRows.map((row, index) => (
+                {reviewRows.map((row) => (
                   <div
                     className={
                       'clan-roster-entry' +
@@ -603,7 +606,7 @@ export function ClanRosterImportModal({
                     key={row.key}
                   >
                     <label>
-                      <span className="clan-roster-row-number">{index + 1}</span>
+                      <span className="clan-roster-row-number">{sortedRows.indexOf(row) + 1}</span>
                       {(!previous?.entries.some((entry) => entry.id === row.playerId) || row.playerId === null) && (
                         <span className="clan-new-label">New</span>
                       )}
