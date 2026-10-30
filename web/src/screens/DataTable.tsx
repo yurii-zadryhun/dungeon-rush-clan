@@ -7,8 +7,18 @@ interface TableProps {
   columns: string;
   children: React.ReactNode;
   className?: string;
+  headerClassName?: string;
+  bodyClassName?: string;
 }
-export function DataTable({ label, headers, columns, children, className = '' }: TableProps) {
+export function DataTable({
+  label,
+  headers,
+  columns,
+  children,
+  className = '',
+  headerClassName = '',
+  bodyClassName = '',
+}: TableProps) {
   return (
     <div
       className={['data-table', className].filter(Boolean).join(' ')}
@@ -16,14 +26,14 @@ export function DataTable({ label, headers, columns, children, className = '' }:
       aria-label={label}
       style={{ '--data-columns': columns } as React.CSSProperties}
     >
-      <div className="data-table-header" role="row">
+      <div className={['data-table-header', headerClassName].filter(Boolean).join(' ')} role="row">
         {headers.map((header, i) => (
           <div role="columnheader" key={i}>
             {header}
           </div>
         ))}
       </div>
-      <div role="rowgroup" className="data-table-body">
+      <div role="rowgroup" className={['data-table-body', bodyClassName].filter(Boolean).join(' ')}>
         {children}
       </div>
     </div>
