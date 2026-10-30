@@ -366,6 +366,17 @@ export function PlayerInsightsPage({
             </div>
           </div>
 
+          <div className="player-recognition">
+            {player.weeks.some((week) => week.position === 1) && (
+              <span>🏅 {locale === 'uk' ? 'Перших місць' : 'First-place finishes'}: {
+                player.weeks.filter((week) => week.position === 1).length
+              }</span>
+            )}
+            {player.mvpCount > 0 && <span>🏆 MVP × {player.mvpCount}</span>}
+            {player.weeks.length >= 5 && (
+              <span>⭐ {locale === 'uk' ? 'Участь у війнах' : 'Wars participated'}: {player.weeks.length}</span>
+            )}
+          </div>
           <div className="player-profile-metrics">
             <Metric label={t('weeksParticipated')} value={player.appearances} />
             <Metric label={t('averagePerWar')} value={shortNumber(player.average)} />

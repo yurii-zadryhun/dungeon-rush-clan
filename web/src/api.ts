@@ -120,6 +120,15 @@ export interface WarPointsPoint {
   median: number;
   topTenShare: number;
 }
+export interface RecognitionOverview {
+  warCount: number;
+  leaderboard: Array<{ id: number; name: string; points: number; podiums: number;
+    firstPlaces: number; mvps: number; championshipPoints: number; longestStreak: number }>;
+  awards: Array<{ kind: 'points' | 'firstPlaces' | 'mvps' | 'streak' | 'championship';
+    playerId: number; name: string; value: number }>;
+  recent: Array<{ start: string; championship: boolean; id: number; name: string; points: number }>;
+}
+
 export interface ExtendedInsights {
   asOf: string | null;
   latestWar: string | null;
@@ -310,7 +319,7 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     headers.set('Content-Type', 'application/json');
   const method = options.method?.toUpperCase() ?? 'GET';
   if (method !== 'GET') invalidateReads();
-  return method === 'GET' && /^(players|clan-roster\/latest|auth\/accounts|insights\/|clan-roster\/timeline)/.test(path)
+  return method === 'GET' && /^(players|recognition|clan-roster\/latest|auth\/accounts|insights\/|clan-roster\/timeline)/.test(path)
     ? cachedRead(path, () => request<T>(path, options, headers))
     : request<T>(path, options, headers);
 }

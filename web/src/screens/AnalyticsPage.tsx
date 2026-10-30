@@ -1,6 +1,7 @@
 import React from 'react';
 import { Activity } from 'lucide-react';
 import { AdvancedInsights } from './AdvancedInsights';
+import { RecognitionWidget } from './RecognitionWidget';
 import { type Account } from '../api';
 import { useI18n } from '../i18n';
 import {
@@ -27,6 +28,7 @@ export function AnalyticsPage({ account }: { account: Account }) {
         <ClanGrowthWidget />
         <WarPointsWidget />
         <AdvancedInsights />
+        <RecognitionWidget />
       </div>
     </main>
   );

@@ -12,6 +12,7 @@ import { ImportController, ImportService } from './import';
 import { PlayersController, PlayersService } from './players';
 import { PlayerManagementController, PlayerManagementService } from './player-management';
 import { InsightsController, InsightsService } from './insights';
+import { RecognitionController, RecognitionService } from './recognition';
 import { WikiAiController, WikiAiService } from './ai/wiki-ai';
 import { PublicClanController, PublicClanService } from './public-clan';
 import { SitePagesController, SitePagesService } from './site-pages';
@@ -27,6 +28,7 @@ import { SitePagesController, SitePagesService } from './site-pages';
     ClanRosterController,
     PlayerManagementController,
     InsightsController,
+    RecognitionController,
     WikiAiController,
     PublicClanController,
     SitePagesController,
@@ -47,6 +49,7 @@ import { SitePagesController, SitePagesService } from './site-pages';
     PlayersService,
     PlayerManagementService,
     InsightsService,
+    RecognitionService,
     WikiAiService,
     PublicClanService,
     SitePagesService,
