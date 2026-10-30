@@ -12,6 +12,7 @@ import {
 import { useI18n } from '../i18n';
 import { prepareScreenshots, type PreparedScreenshots } from './image-prep';
 import { SearchSelect } from './SearchSelect';
+import { OcrLimitStatus } from './OcrLimitStatus';
 import { matchRosterName } from './roster-match';
 import './ClanRosterImportModal.css';
 
@@ -82,6 +83,7 @@ export function ClanRosterImportModal({
   const [previous, setPrevious] = React.useState<ClanRosterSnapshot | null>(null);
   const [acknowledge, setAcknowledge] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
+  const [quotaRefresh, setQuotaRefresh] = React.useState(0);
   const [error, setError] = React.useState('');
 
   // Only the original screenshots are shown as thumbnails. The optimized mosaics
@@ -255,6 +257,7 @@ export function ClanRosterImportModal({
     } catch (reason) {
       setError((reason as Error).message);
     } finally {
+      setQuotaRefresh((revision) => revision + 1);
       setBusy(false);
     }
   }
@@ -346,6 +349,7 @@ export function ClanRosterImportModal({
                   }}
                 />
               </label>
+              <OcrLimitStatus refreshKey={quotaRefresh} />
               {files.length > 0 && (
                 <div className="clan-image-selection">
                   <div

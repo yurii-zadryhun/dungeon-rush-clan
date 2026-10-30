@@ -12,6 +12,7 @@ import {
 import { formatWarRange } from '../date-format';
 import { prepareScreenshots } from './image-prep';
 import { useI18n } from '../i18n';
+import { OcrLimitStatus } from './OcrLimitStatus';
 import {
   WarReviewEditor,
   emptyRoster,
@@ -106,6 +107,7 @@ export function ImportModal({
   const [roster, setRoster] = React.useState<Roster>(emptyRoster);
   const [warnings, setWarnings] = React.useState<string[]>([]);
   const [busy, setBusy] = React.useState(false);
+  const [quotaRefresh, setQuotaRefresh] = React.useState(0);
   const [error, setError] = React.useState('');
 
   async function scan() {
@@ -171,6 +173,7 @@ export function ImportModal({
     } catch (failure) {
       setError((failure as Error).message);
     } finally {
+      setQuotaRefresh((revision) => revision + 1);
       setBusy(false);
     }
   }
@@ -238,6 +241,7 @@ export function ImportModal({
               onResult={setResultImage}
             />
           )}
+          {stage === 'upload' && <OcrLimitStatus refreshKey={quotaRefresh} />}
           {stage === 'review' && (
             <WarReviewEditor
               draft={draft}
