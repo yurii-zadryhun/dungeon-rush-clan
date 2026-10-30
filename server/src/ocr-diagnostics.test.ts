@@ -48,7 +48,7 @@ describe('clan OCR diagnostic response', () => {
       }),
     });
     const copied = JSON.stringify(result, null, 2);
-    expect(copied).toContain(recognized.raw);
+    expect(copied).toContain(JSON.stringify(recognized.raw));
     expect(copied).toContain('"x": 21');
     expect(copied).toContain('"headerHeight": 120');
     expect(copied).not.toContain('image/jpeg');
