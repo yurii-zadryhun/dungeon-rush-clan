@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowDown, ArrowUp, Camera, CheckCircle, Plus, Trash2, UploadCloud, X } from 'lucide-react';
+import { Camera, CheckCircle, Copy, Plus, Trash2, UploadCloud, X } from 'lucide-react';
 import {
   api,
   json,
@@ -10,7 +10,7 @@ import {
   type Dashboard,
 } from '../api';
 import { useI18n } from '../i18n';
-import { MOSAIC_WIDTH, prepareScreenshots, type PreparedScreenshots } from './image-prep';
+import { prepareScreenshots, type PreparedScreenshots } from './image-prep';
 import { SearchSelect } from './SearchSelect';
 import { matchRosterName } from './roster-match';
 import './ClanRosterImportModal.css';
@@ -66,9 +66,10 @@ export function ClanRosterImportModal({
   const [preparedPreview, setPreparedPreview] = React.useState<{
     files: File[];
     result: PreparedScreenshots;
-    urls: string[];
   } | null>(null);
   const [previewError, setPreviewError] = React.useState('');
+  const [ocrResponseJson, setOcrResponseJson] = React.useState<string | null>(null);
+  const [ocrCopied, setOcrCopied] = React.useState(false);
 
   const [stage, setStage] = React.useState<'upload' | 'review'>('upload');
   const [capturedLocal, setCapturedLocal] = React.useState(captureLocalTime);
@@ -83,26 +84,27 @@ export function ClanRosterImportModal({
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState('');
 
-  // Preview the actual encoded JPEG mosaics subsequently sent to the OCR API.
-  // A single preparation serves both the preview and the scan; no second crop path.
+  // Only the original screenshots are shown as thumbnails. The optimized mosaics
+  // still go to OCR, but are never rendered or retained as object URLs.
   React.useEffect(() => {
     if (!files.length) {
       setSourceUrls([]);
       setPreparedPreview(null);
       setPreviewError('');
+      setOcrResponseJson(null);
+      setOcrCopied(false);
       return;
     }
     let canceled = false;
-    let mosaicUrls: string[] = [];
     const originals = files.map((file) => URL.createObjectURL(file));
     setSourceUrls(originals);
     setPreparedPreview(null);
     setPreviewError('');
+    setOcrResponseJson(null);
+    setOcrCopied(false);
     void prepareScreenshots(files, 'clan')
       .then((result) => {
-        if (canceled) return;
-        mosaicUrls = result.parts.map((blob) => URL.createObjectURL(blob));
-        setPreparedPreview({ files, result, urls: mosaicUrls });
+        if (!canceled) setPreparedPreview({ files, result });
       })
       .catch((cause: unknown) => {
         if (!canceled) setPreviewError((cause as Error).message);
@@ -110,20 +112,19 @@ export function ClanRosterImportModal({
     return () => {
       canceled = true;
       originals.forEach((url) => URL.revokeObjectURL(url));
-      mosaicUrls.forEach((url) => URL.revokeObjectURL(url));
     };
   }, [files]);
 
   const visiblePreview = preparedPreview?.files === files ? preparedPreview : null;
 
-  function moveScreenshot(index: number, offset: -1 | 1) {
-    setFiles((current) => {
-      const target = index + offset;
-      if (target < 0 || target >= current.length) return current;
-      const reordered = [...current];
-      [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
-      return reordered;
-    });
+  async function copyOcrResponse() {
+    if (!ocrResponseJson) return;
+    try {
+      await navigator.clipboard.writeText(ocrResponseJson);
+      setOcrCopied(true);
+    } catch {
+      setError(t('clanOcrCopyFailed'));
+    }
   }
 
   const sum = rows.reduce((total, entry) => total + (magnitude(entry.powerText) ?? 0), 0);
@@ -225,6 +226,10 @@ export function ClanRosterImportModal({
       form.append('headerHeight', String(prepared.headerHeight));
       prepared.parts.forEach((blob, i) => form.append('mosaic', blob, 'members-' + (i + 1) + '.jpg'));
       const result = await api<ClanOcrResponse>('ocr/clan', { method: 'POST', body: form });
+      // Preserve the unchanged response, including raw Vision text and word positions,
+      // even if a player name or power is subsequently corrected in the editor.
+      setOcrResponseJson(JSON.stringify(result, null, 2));
+      setOcrCopied(false);
       setCandidates(known);
       setPrevious(latest);
       setRows(
@@ -361,33 +366,14 @@ export function ClanRosterImportModal({
                             />
                           )}
                           <span>{index + 1}</span>
-                        </div>
-                        <div className="clan-thumbnail-actions">
                           <button
-                            type="button"
-                            disabled={index === 0}
-                            onClick={() => moveScreenshot(index, -1)}
-                            aria-label={t('moveUp')}
-                            title={t('moveUp')}
-                          >
-                            <ArrowUp size={15} />
-                          </button>
-                          <button
-                            type="button"
-                            disabled={index === files.length - 1}
-                            onClick={() => moveScreenshot(index, 1)}
-                            aria-label={t('moveDown')}
-                            title={t('moveDown')}
-                          >
-                            <ArrowDown size={15} />
-                          </button>
-                          <button
+                            className="clan-thumbnail-remove"
                             type="button"
                             onClick={() => setFiles((current) => current.filter((_, i) => i !== index))}
                             aria-label={t('remove') + ': ' + (index + 1)}
                             title={t('remove')}
                           >
-                            <Trash2 size={15} />
+                            <X size={14} />
                           </button>
                         </div>
                       </div>
@@ -403,30 +389,7 @@ export function ClanRosterImportModal({
                       {t('clanPreparingImages')}
                     </p>
                   )}
-                  {visiblePreview && (
-                    <div className="clan-mosaic-preview">
-                      <h3>{t('clanImagePreview')}</h3>
-                      <div className="clan-mosaic-grid">
-                        {visiblePreview.urls.map((url, index) => (
-                          <div className="clan-mosaic-part" key={url}>
-                            <div className="clan-mosaic-part-head">
-                              <span>{t('clanPreviewPart', { number: index + 1 })}</span>
-                              <a href={url} target="_blank" rel="noopener noreferrer">
-                                {t('clanEnlargeImage')}
-                              </a>
-                            </div>
-                            <div className="clan-mosaic-viewport">
-                              <img
-                                src={url}
-                                alt={t('clanPreviewPart', { number: index + 1 })}
-                                width={MOSAIC_WIDTH.clan}
-                              />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+
                 </div>
               )}
             </div>
@@ -490,6 +453,25 @@ export function ClanRosterImportModal({
                       <li key={i}>{warning}</li>
                     ))}
                   </ul>
+                </details>
+              )}
+              {ocrResponseJson && (
+                <details className="clan-ocr-response">
+                  <summary>{t('clanOcrResponse')}</summary>
+                  <div className="clan-ocr-response-body">
+                    <div className="clan-ocr-response-toolbar">
+                      <p>{t('clanOcrResponseHelp')}</p>
+                      <button
+                        type="button"
+                        className="game-button secondary clan-ocr-copy"
+                        onClick={() => void copyOcrResponse()}
+                      >
+                        <Copy size={15} />
+                        {t(ocrCopied ? 'copied' : 'clanOcrCopy')}
+                      </button>
+                    </div>
+                    <pre>{ocrResponseJson}</pre>
+                  </div>
                 </details>
               )}
               {previous && (
