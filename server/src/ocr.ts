@@ -85,9 +85,10 @@ export function parsePlayers(
   text: VisionText,
   source = 0,
   prepared = false,
-): { players: OcrPlayer[]; warnings: string[] } {
+): { players: OcrPlayer[]; warnings: string[]; positions: Array<{ source: number; position: number; y: number }> } {
   const warnings: string[] = [];
   const players: OcrPlayer[] = [];
+  const positions: Array<{ source: number; position: number; y: number }> = [];
   const lines = groupLines(
     text.words.filter((w) => prepared || (w.y >= text.height * 0.39 && w.y <= text.height * 0.8)),
     prepared ? 12 : Math.max(10, text.height * 0.012),
@@ -127,6 +128,7 @@ export function parsePlayers(
       continue;
     }
     players.push({ position, name, points, source });
+    positions.push({ source, position, y: row[rankIndex].y });
   }
   if (!players.length) {
     warnings.push(
@@ -147,7 +149,7 @@ export function parsePlayers(
       }
     }
   }
-  return { players, warnings };
+  return { players, warnings, positions };
 }
 
 function cleanName(text: string) {
@@ -461,6 +463,7 @@ export class OcrController {
       .executeTakeFirstOrThrow();
     const warnings: string[] = [];
     const players: OcrPlayer[] = [];
+    const positions: Array<{ source: number; position: number; y: number }> = [];
     for (const [index, file] of rankingImages.entries()) {
       const result = parsePlayers(
         await this.vision.read(file.buffer),
@@ -469,6 +472,7 @@ export class OcrController {
       );
       warnings.push(...result.warnings.map((w) => 'Image ' + (index + 1) + ': ' + w));
       players.push(...result.players);
+      positions.push(...result.positions);
     }
     const unique = new Map<number, OcrPlayer>();
     const normalized = new Map<string, number>();
@@ -490,6 +494,6 @@ export class OcrController {
       ? parseWar(await this.vision.read(resultImages[0].buffer), settings.clan_name)
       : null;
     if (result) warnings.push(...result.warnings);
-    return { players: [...unique.values()].sort((a, b) => a.position - b.position), result, warnings };
+    return { players: [...unique.values()].sort((a, b) => a.position - b.position), positions, result, warnings };
   }
 }

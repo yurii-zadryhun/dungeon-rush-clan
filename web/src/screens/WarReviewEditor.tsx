@@ -122,12 +122,16 @@ function PlayersPanel({
   players,
   onChange,
   roster,
+  onShowCrop,
+  crop,
 }: {
   players: OcrPlayer[];
   onChange: (players: OcrPlayer[]) => void;
   roster: Roster;
+  onShowCrop?: (player: OcrPlayer) => Promise<void>;
+  crop?: { position: number; url: string } | null;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const previousIds = new Set(roster.previous.map((player) => player.id));
   const participants = new Set(players.map((player) => player.playerId).filter(Boolean));
   const departures = roster.previous.filter((player) => !participants.has(player.id));
@@ -241,7 +245,12 @@ function PlayersPanel({
                 {suggestion && (
                   <span className="warning-text tiny">{t('possibleMatch', { name: suggestion })}</span>
                 )}
+                {onShowCrop && player.y !== undefined && (
+                  <button type="button" className="war-crop-action"
+                    onClick={() => void onShowCrop(player)}>◉ {locale === 'uk' ? 'Скриншот' : 'Screenshot'}</button>
+                )}
               </div>
+              {crop?.position === player.position && <img className="war-player-crop" src={crop.url} alt={player.name} />}
             </div>
           );
         })}
@@ -347,6 +356,8 @@ export function WarReviewEditor({
   roster,
   clanName,
   warnings = [],
+  onShowCrop,
+  crop,
 }: {
   draft: WarDraft;
   onChange: (draft: WarDraft) => void;
@@ -354,6 +365,8 @@ export function WarReviewEditor({
   roster: Roster;
   clanName: string;
   warnings?: string[];
+  onShowCrop?: (player: OcrPlayer) => Promise<void>;
+  crop?: { position: number; url: string } | null;
 }) {
   const { locale, t } = useI18n();
   const [tab, setTab] = React.useState<'players' | 'result'>(sections.players ? 'players' : 'result');
@@ -393,6 +406,8 @@ export function WarReviewEditor({
           players={draft.players}
           onChange={(players) => onChange({ ...draft, players })}
           roster={roster}
+          onShowCrop={onShowCrop}
+          crop={crop}
         />
       )}
       {sections.result && tab === 'result' && draft.result && (

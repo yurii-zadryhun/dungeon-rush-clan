@@ -11,7 +11,7 @@ import {
   type Week,
 } from '../api';
 import { formatWarRange } from '../date-format';
-import { prepareScreenshots } from './image-prep';
+import { prepareScreenshots, regions, type CropSegment } from './image-prep';
 import { useI18n } from '../i18n';
 import { OcrLimitStatus } from './OcrLimitStatus';
 import {
@@ -111,6 +111,9 @@ export function ImportModal({
   const [busy, setBusy] = React.useState(false);
   const [quotaRefresh, setQuotaRefresh] = React.useState(0);
   const [error, setError] = React.useState('');
+  const [cropSegments, setCropSegments] = React.useState<CropSegment[]>([]);
+  const [optimizedCrop, setOptimizedCrop] = React.useState(false);
+  const [crop, setCrop] = React.useState<{ position: number; url: string } | null>(null);
   const storageKey = 'clan:war-review:' + week.start;
 
   React.useEffect(() => {
@@ -155,11 +158,13 @@ export function ImportModal({
     try {
       const form = new FormData();
       let optimized = false;
+      let preparedSegments: CropSegment[] = [];
       // Crop only the ranking bands and stitch compatible screenshots into
       // two compact OCR requests. Unsupported layouts retain the proven full-image path.
       if (rankingImages.length) {
         try {
           const prepared = await prepareScreenshots(rankingImages, 'ranking');
+          preparedSegments = prepared.segments;
           prepared.parts.forEach((blob, index) =>
             form.append('rankingMosaic', blob, 'rankings-' + index + '.jpg'),
           );
@@ -184,13 +189,19 @@ export function ImportModal({
         rankingImages.forEach((file) => original.append('ranking', file));
         if (resultImage) original.append('result', resultImage);
         recognized = await api<OcrResponse>('ocr', { method: 'POST', body: original });
+        optimized = false;
+        preparedSegments = [];
       }
+      setCropSegments(preparedSegments);
+      setOptimizedCrop(optimized);
+      setCrop(null);
       setRoster(available);
       setWarnings(recognized.warnings);
       setDraft({
         championship: week.championship,
         players: recognized.players.map((player) => ({
           ...player,
+          y: recognized.positions?.find((item) => item.position === player.position && item.source === player.source)?.y,
           playerId:
             available.all.find((existing) => normalizeName(existing.name) === normalizeName(player.name))
               ?.id ??
@@ -208,6 +219,32 @@ export function ImportModal({
       setQuotaRefresh((revision) => revision + 1);
       setBusy(false);
     }
+  }
+
+  async function showPlayerCrop(player: WarDraft['players'][number]) {
+    const location = player.y;
+    if (location === undefined || !rankingImages.length) return;
+    const segment = optimizedCrop ? cropSegments.find((item) => item.part === player.source &&
+      location >= item.top && location < item.top + item.height) : null;
+    const file = rankingImages[segment ? segment.fileIndex : player.source - 1];
+    if (!file) return;
+    const bitmap = await createImageBitmap(file);
+    try {
+      const relativeY = segment ? (location - segment.top) / segment.height : location / bitmap.height;
+      const fraction = segment ? regions.ranking.rows.y + relativeY * regions.ranking.rows.height : relativeY;
+      const x = Math.round(bitmap.width * 0.14);
+      const y = Math.max(0, Math.round(bitmap.height * (fraction - 0.035)));
+      const width = Math.round(bitmap.width * 0.82);
+      const height = Math.min(bitmap.height - y, Math.round(bitmap.height * 0.07));
+      if (height <= 0) return;
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext('2d');
+      if (!context) return;
+      context.drawImage(bitmap, x, y, width, height, 0, 0, width, height);
+      setCrop({ position: player.position, url: canvas.toDataURL('image/jpeg', 0.9) });
+    } finally { bitmap.close(); }
   }
 
   async function confirm() {
@@ -282,6 +319,13 @@ export function ImportModal({
               Championship
             </label>
           )}
+          {stage === 'review' && !rankingImages.length && sections.players && (
+            <label className="war-review-reattach">
+              {locale === 'uk' ? 'Додати оригінали для перегляду фрагментів' : 'Attach originals for screenshot crops'}
+              <input type="file" multiple accept="image/png,image/jpeg,image/webp"
+                onChange={(event) => setRankingImages(Array.from(event.target.files || []))} />
+            </label>
+          )}
           {stage === 'review' && (
             <WarReviewEditor
               draft={draft}
@@ -290,6 +334,8 @@ export function ImportModal({
               roster={roster}
               clanName={clanName}
               warnings={warnings}
+              onShowCrop={showPlayerCrop}
+              crop={crop}
             />
           )}
         </div>

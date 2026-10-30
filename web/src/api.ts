@@ -276,6 +276,7 @@ export interface OcrPlayer {
   name: string;
   points: number;
   source: number;
+  y?: number;
   playerId?: number | null;
 }
 
@@ -289,6 +290,7 @@ export interface OcrResult {
 
 export interface OcrResponse {
   players: OcrPlayer[];
+  positions: Array<{ source: number; position: number; y: number }>;
   result: OcrResult | null;
   warnings: string[];
 }
