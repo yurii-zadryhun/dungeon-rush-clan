@@ -1,16 +1,21 @@
-import {
-  Body, Controller, Delete, Get, Param, Patch, Post, Req, Res, UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req, Res, UseGuards } from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import {
-  AccountsService, AdminGuard, OwnerGuard, SessionGuard, type AuthenticatedRequest,
+  AccountsService,
+  AdminGuard,
+  OwnerGuard,
+  SessionGuard,
+  type AuthenticatedRequest,
 } from './auth';
 import { clearSessionCookie } from './auth-utils';
 import { AuditService } from './audit';
 
 @Controller('api/auth')
 export class AuthController {
-  constructor(private readonly auth: AccountsService, private readonly audit: AuditService) {}
+  constructor(
+    private readonly auth: AccountsService,
+    private readonly audit: AuditService,
+  ) {}
 
   @Get('setup-state')
   async setupState() {
@@ -124,7 +129,11 @@ export class AuthController {
   @Post('shared-invite')
   async createShared(@Req() request: AuthenticatedRequest) {
     const result = await this.auth.createSharedInvite(request.account!.id);
-    await this.audit.write({ actorId: request.account!.id, action: 'invite.shared.create', entity: 'invite' });
+    await this.audit.write({
+      actorId: request.account!.id,
+      action: 'invite.shared.create',
+      entity: 'invite',
+    });
     return result;
   }
 
@@ -132,7 +141,11 @@ export class AuthController {
   @Delete('shared-invite')
   async revokeShared(@Req() request: AuthenticatedRequest) {
     const result = await this.auth.revokeSharedInvite();
-    await this.audit.write({ actorId: request.account!.id, action: 'invite.shared.revoke', entity: 'invite' });
+    await this.audit.write({
+      actorId: request.account!.id,
+      action: 'invite.shared.revoke',
+      entity: 'invite',
+    });
     return result;
   }
 
@@ -158,9 +171,18 @@ export class AuthController {
 
   @UseGuards(SessionGuard, AdminGuard)
   @Patch('accounts/:id')
-  async updateAccount(@Param('id') id: string, @Req() request: AuthenticatedRequest, @Body() body: unknown) {
+  async updateAccount(
+    @Param('id') id: string,
+    @Req() request: AuthenticatedRequest,
+    @Body() body: unknown,
+  ) {
     const result = await this.auth.updateAccount(Number(id), request.account!, body);
-    await this.audit.write({ actorId: request.account!.id, action: 'account.update', entity: 'account', entityId: Number(id) });
+    await this.audit.write({
+      actorId: request.account!.id,
+      action: 'account.update',
+      entity: 'account',
+      entityId: Number(id),
+    });
     return result;
   }
 
@@ -168,7 +190,12 @@ export class AuthController {
   @Delete('accounts/:id')
   async deleteAccount(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
     const result = await this.auth.deleteAccount(Number(id), request.account!);
-    await this.audit.write({ actorId: request.account!.id, action: 'account.delete', entity: 'account', entityId: Number(id) });
+    await this.audit.write({
+      actorId: request.account!.id,
+      action: 'account.delete',
+      entity: 'account',
+      entityId: Number(id),
+    });
     return result;
   }
 
@@ -176,7 +203,12 @@ export class AuthController {
   @Delete('invites/:id')
   async revokeInvite(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
     const result = await this.auth.revokeInvite(Number(id), request.account!);
-    await this.audit.write({ actorId: request.account!.id, action: 'invite.revoke', entity: 'invite', entityId: Number(id) });
+    await this.audit.write({
+      actorId: request.account!.id,
+      action: 'invite.revoke',
+      entity: 'invite',
+      entityId: Number(id),
+    });
     return result;
   }
 }

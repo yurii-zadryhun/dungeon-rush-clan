@@ -360,8 +360,12 @@ export function WarPointsWidget() {
     : 0;
   const latest = data?.at(-1);
   const previous = data && series.length > 1 ? series[series.length - 2] : null;
-  const trend = series.map((_, i) => Math.round(series.slice(Math.max(0, i - 2), i + 1)
-    .reduce((sum, item) => sum + item.total, 0) / Math.min(3, i + 1)));
+  const trend = series.map((_, i) =>
+    Math.round(
+      series.slice(Math.max(0, i - 2), i + 1).reduce((sum, item) => sum + item.total, 0) /
+        Math.min(3, i + 1),
+    ),
+  );
 
   return (
     <section className="panel insight-widget war-points-widget">
@@ -409,11 +413,7 @@ export function WarPointsWidget() {
                 (value) => 190 - (value / max) * 150,
                 '#88c7f5',
               )}
-              {trendLine(
-                trend,
-                (value) => 190 - (value / max) * 150,
-                '#f2bd45',
-              )}
+              {trendLine(trend, (value) => 190 - (value / max) * 150, '#f2bd45')}
               {series
                 .filter((_, index) => series.length <= 6 || index === 0 || index === series.length - 1)
                 .map((entry) => {
@@ -434,11 +434,13 @@ export function WarPointsWidget() {
             </svg>
           </div>
           <p className="muted tiny">
-            {locale === 'uk' ? 'Медіана за останню війну' : 'Latest war median'}: {shortNumber(latest.median)}
+            {locale === 'uk' ? 'Медіана за останню війну' : 'Latest war median'}:{' '}
+            {shortNumber(latest.median)}
             {' · '}
-            Top 10: {latest.topTenShare}%
-            {' · '}
-            <span style={{ color: '#f2bd45' }}>— {locale === 'uk' ? 'Середнє за 3 війни' : '3-war trend'}</span>
+            Top 10: {latest.topTenShare}%{' · '}
+            <span style={{ color: '#f2bd45' }}>
+              — {locale === 'uk' ? 'Середнє за 3 війни' : '3-war trend'}
+            </span>
           </p>
           {previous && (
             <p className="muted tiny">

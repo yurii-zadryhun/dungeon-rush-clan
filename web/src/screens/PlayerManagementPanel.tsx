@@ -33,7 +33,6 @@ const initialLabels: PlayerLabels = {
   exceptionReason: '',
 };
 
-
 export function PlayerManagementPanel({ playerId }: { playerId: number }) {
   const { t, locale } = useI18n();
   const [data, setData] = React.useState<PlayerManagement | null>(null);
@@ -361,7 +360,6 @@ export function PlayerManagementPanel({ playerId }: { playerId: number }) {
           </div>
         </>
       )}
-
     </section>
   );
 }

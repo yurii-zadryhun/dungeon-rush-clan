@@ -367,55 +367,59 @@ export function UsersScreen({
       </div>
       <AuditHistory />
       {editing && (
-        <ModalDialog onClose={() => setEditing(null)} ariaLabel={t('editUser')} className="panel modal user-edit-modal">
-            <header className="modal-header">
-              <h2>
-                <Pencil size={19} /> {t('editUser')}
-              </h2>
-              <button
-                type="button"
-                className="close-button"
-                aria-label={t('close')}
-                onClick={() => setEditing(null)}
-              >
-                <X />
-              </button>
-            </header>
-            <form onSubmit={saveUser}>
-              <div className="modal-content">
-                <label>
-                  {t('username')}
-                  <input
-                    value={editName}
-                    minLength={2}
-                    maxLength={50}
-                    required
-                    onChange={(event) => setEditName(event.target.value)}
-                  />
-                </label>
-                <label>
-                  {t('role')}
-                  <select value={editRole} onChange={(event) => setEditRole(event.target.value as Role)}>
-                    <option value="member">{t('memberRole')}</option>
-                    {owner && <option value="admin">{t('adminRole')}</option>}
-                    {owner && <option value="owner">{t('ownerRole')}</option>}
-                  </select>
-                </label>
+        <ModalDialog
+          onClose={() => setEditing(null)}
+          ariaLabel={t('editUser')}
+          className="panel modal user-edit-modal"
+        >
+          <header className="modal-header">
+            <h2>
+              <Pencil size={19} /> {t('editUser')}
+            </h2>
+            <button
+              type="button"
+              className="close-button"
+              aria-label={t('close')}
+              onClick={() => setEditing(null)}
+            >
+              <X />
+            </button>
+          </header>
+          <form onSubmit={saveUser}>
+            <div className="modal-content">
+              <label>
+                {t('username')}
+                <input
+                  value={editName}
+                  minLength={2}
+                  maxLength={50}
+                  required
+                  onChange={(event) => setEditName(event.target.value)}
+                />
+              </label>
+              <label>
+                {t('role')}
+                <select value={editRole} onChange={(event) => setEditRole(event.target.value as Role)}>
+                  <option value="member">{t('memberRole')}</option>
+                  {owner && <option value="admin">{t('adminRole')}</option>}
+                  {owner && <option value="owner">{t('ownerRole')}</option>}
+                </select>
+              </label>
+            </div>
+            {error && (
+              <div className="error-strip" role="alert">
+                {error}
               </div>
-              {error && (
-                <div className="error-strip" role="alert">
-                  {error}
-                </div>
-              )}
-              <footer className="modal-actions">
-                <button type="button" className="game-button secondary" onClick={() => setEditing(null)}>
-                  {t('cancel')}
-                </button>
-                <button className="game-button blue" type="submit" disabled={busy}>
-                  {t('save')}
-                </button>
-              </footer>
-            </form>
+            )}
+            <footer className="modal-actions">
+              <button type="button" className="game-button secondary" onClick={() => setEditing(null)}>
+                {t('cancel')}
+              </button>
+              <button className="game-button blue" type="submit" disabled={busy}>
+                {t('save')}
+              </button>
+            </footer>
+          </form>
         </ModalDialog>
       )}
     </section>

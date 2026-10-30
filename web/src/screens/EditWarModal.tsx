@@ -49,7 +49,11 @@ export function EditWarModal({
 
   async function save() {
     if (invalidWarDraft(draft, sections)) {
-      setError(locale === 'uk' ? 'Виправ виділені помилки перед збереженням.' : 'Correct the highlighted fields before saving.');
+      setError(
+        locale === 'uk'
+          ? 'Виправ виділені помилки перед збереженням.'
+          : 'Correct the highlighted fields before saving.',
+      );
       return;
     }
     if (sections.players && !draft.players.length) {
@@ -86,41 +90,51 @@ export function EditWarModal({
   }
 
   return (
-    <ModalDialog onClose={onClose} ariaLabel={t('editWar')} className="panel modal import-modal war-editor-dialog">
-        <header className="modal-header">
-          <h2>
-            <Pencil size={20} /> {t('editWar')} · {formatWarRange(week.start, locale)}
-          </h2>
-          <button className="close-button" aria-label={t('close')} onClick={onClose}>
-            <X />
-          </button>
-        </header>
-        <div className="war-editor-scroll">
-          <label style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 16px' }}>
-            <input type="checkbox" checked={!!draft.championship} onChange={(event) => setDraft((current) => ({ ...current, championship: event.target.checked }))} />
-            Championship
-          </label>
-          <WarReviewEditor
-            draft={draft}
-            onChange={setDraft}
-            sections={sections}
-            roster={roster}
-            clanName={clanName}
+    <ModalDialog
+      onClose={onClose}
+      ariaLabel={t('editWar')}
+      className="panel modal import-modal war-editor-dialog"
+    >
+      <header className="modal-header">
+        <h2>
+          <Pencil size={20} /> {t('editWar')} · {formatWarRange(week.start, locale)}
+        </h2>
+        <button className="close-button" aria-label={t('close')} onClick={onClose}>
+          <X />
+        </button>
+      </header>
+      <div className="war-editor-scroll">
+        <label style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 16px' }}>
+          <input
+            type="checkbox"
+            checked={!!draft.championship}
+            onChange={(event) =>
+              setDraft((current) => ({ ...current, championship: event.target.checked }))
+            }
           />
+          Championship
+        </label>
+        <WarReviewEditor
+          draft={draft}
+          onChange={setDraft}
+          sections={sections}
+          roster={roster}
+          clanName={clanName}
+        />
+      </div>
+      {error && (
+        <div className="error-strip" role="alert">
+          {error}
         </div>
-        {error && (
-          <div className="error-strip" role="alert">
-            {error}
-          </div>
-        )}
-        <footer className="modal-actions">
-          <button className="game-button secondary" onClick={onClose}>
-            {t('cancel')}
-          </button>
-          <button className="game-button blue" disabled={busy} onClick={() => void save()}>
-            <Save size={16} /> {busy ? t('pleaseWait') : t('save')}
-          </button>
-        </footer>
+      )}
+      <footer className="modal-actions">
+        <button className="game-button secondary" onClick={onClose}>
+          {t('cancel')}
+        </button>
+        <button className="game-button blue" disabled={busy} onClick={() => void save()}>
+          <Save size={16} /> {busy ? t('pleaseWait') : t('save')}
+        </button>
+      </footer>
     </ModalDialog>
   );
 }

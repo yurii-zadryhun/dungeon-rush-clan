@@ -53,4 +53,3 @@ export function clearSessionCookie(reply: FastifyReply): void {
     secure: process.env.NODE_ENV === 'production',
   });
 }
-

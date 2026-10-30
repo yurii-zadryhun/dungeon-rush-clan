@@ -128,10 +128,17 @@ export function parseRosterScreenshot(
       const name = preceding && tierOnly ? preceding : plausibleName(inline) ? inline : preceding;
       if (powerValue !== null && name) {
         output.push({ name, power: powerValue, powerText, source });
-        const confident = text.words.filter((word) => word.confidence !== undefined &&
-          Math.abs(word.y - row.y) <= 18);
-        positions.push({ name, powerText, source, y: row.y,
-          ...(confident.length ? { confidence: Math.min(...confident.map((word) => word.confidence!)) } : {}),
+        const confident = text.words.filter(
+          (word) => word.confidence !== undefined && Math.abs(word.y - row.y) <= 18,
+        );
+        positions.push({
+          name,
+          powerText,
+          source,
+          y: row.y,
+          ...(confident.length
+            ? { confidence: Math.min(...confident.map((word) => word.confidence!)) }
+            : {}),
         });
         if (inferred) {
           warnings.push(

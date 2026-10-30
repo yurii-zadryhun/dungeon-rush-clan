@@ -89,18 +89,25 @@ export class InsightsService {
       appearances: weeks.length,
       average: points.length ? Math.round(sum / points.length) : 0,
       best: points.length ? Math.max(...points) : 0,
-      mvpCount: mvpDays.filter((day) =>
-        day.winner === 'ours' && (day.mvp_player_id === id ||
-          (day.mvp_player_id === null && names.has(normalizeName(day.mvp)))),
+      mvpCount: mvpDays.filter(
+        (day) =>
+          day.winner === 'ours' &&
+          (day.mvp_player_id === id ||
+            (day.mvp_player_id === null && names.has(normalizeName(day.mvp)))),
       ).length,
       calculatedScore: stats?.score ?? 0,
       requirement: ranking.settings.minimumPoints,
       belowRequirement: stats?.belowRequirement ?? false,
       weeks,
       powerHistory,
-      nameHistory: await this.db.query.selectFrom('player_events')
-        .select(['kind', 'previous_value as previousValue', 'next_value as nextValue',
-          'occurred_at as occurredAt'])
+      nameHistory: await this.db.query
+        .selectFrom('player_events')
+        .select([
+          'kind',
+          'previous_value as previousValue',
+          'next_value as nextValue',
+          'occurred_at as occurredAt',
+        ])
         .where('player_id', '=', id)
         .orderBy('occurred_at', 'desc')
         .execute(),
@@ -127,44 +134,71 @@ export class InsightsService {
       const middle = Math.floor(values.length / 2);
       const median = values.length % 2 ? values[middle] : (values[middle - 1] + values[middle]) / 2;
       return {
-        start, total, playerCount: values.length,
+        start,
+        total,
+        playerCount: values.length,
         average: values.length ? Math.round(total / values.length) : 0,
         median: Math.round(median ?? 0),
-        topTenShare: total ? Math.round(100 * values.slice(-10).reduce((a, b) => a + b, 0) / total) : 0,
+        topTenShare: total
+          ? Math.round((100 * values.slice(-10).reduce((a, b) => a + b, 0)) / total)
+          : 0,
       };
     });
   }
 
-
   async extended() {
     const [wars, scores, rosters, rosterEntries, rankings] = await Promise.all([
-      this.db.query.selectFrom('wars').select(['id', 'start_date'])
-        .where('ranking_imported_at', 'is not', null).orderBy('start_date', 'asc').execute(),
+      this.db.query
+        .selectFrom('wars')
+        .select(['id', 'start_date'])
+        .where('ranking_imported_at', 'is not', null)
+        .orderBy('start_date', 'asc')
+        .execute(),
       this.db.query.selectFrom('player_scores').select(['war_id', 'player_id', 'points']).execute(),
-      this.db.query.selectFrom('clan_roster_snapshots')
-        .select(['id', 'captured_at']).orderBy('captured_at', 'desc').limit(2).execute(),
-      this.db.query.selectFrom('clan_roster_entries').select(['snapshot_id', 'player_id', 'power']).execute(),
+      this.db.query
+        .selectFrom('clan_roster_snapshots')
+        .select(['id', 'captured_at'])
+        .orderBy('captured_at', 'desc')
+        .limit(2)
+        .execute(),
+      this.db.query
+        .selectFrom('clan_roster_entries')
+        .select(['snapshot_id', 'player_id', 'power'])
+        .execute(),
       this.ranking.compute(),
     ]);
     const latest = wars.at(-1);
-    const latestScores = new Map(scores.filter((score) => score.war_id === latest?.id)
-      .map((score) => [score.player_id, score.points]));
+    const latestScores = new Map(
+      scores
+        .filter((score) => score.war_id === latest?.id)
+        .map((score) => [score.player_id, score.points]),
+    );
     const names = new Map(rankings.calculated.map((player) => [player.id, player.name]));
-    const now = new Map(rosterEntries.filter((item) => item.snapshot_id === rosters[0]?.id)
-      .map((item) => [item.player_id, item.power]));
-    const before = new Map(rosterEntries.filter((item) => item.snapshot_id === rosters[1]?.id)
-      .map((item) => [item.player_id, item.power]));
+    const now = new Map(
+      rosterEntries
+        .filter((item) => item.snapshot_id === rosters[0]?.id)
+        .map((item) => [item.player_id, item.power]),
+    );
+    const before = new Map(
+      rosterEntries
+        .filter((item) => item.snapshot_id === rosters[1]?.id)
+        .map((item) => [item.player_id, item.power]),
+    );
     const powerContribution = [...now]
       .filter(([id]) => latestScores.has(id))
       .map(([id, power]) => ({ id, name: names.get(id) ?? '', power, points: latestScores.get(id)! }));
     const powerGrowth = [...now]
       .filter(([id]) => before.has(id))
       .map(([id, power]) => ({
-        id, name: names.get(id) ?? '', power,
-        delta: power - before.get(id)!, percentage: before.get(id)! > 0
-          ? Math.round(100 * (power - before.get(id)!) / before.get(id)!) : null,
+        id,
+        name: names.get(id) ?? '',
+        power,
+        delta: power - before.get(id)!,
+        percentage:
+          before.get(id)! > 0 ? Math.round((100 * (power - before.get(id)!)) / before.get(id)!) : null,
       }))
-      .sort((a, b) => b.delta - a.delta).slice(0, 10);
+      .sort((a, b) => b.delta - a.delta)
+      .slice(0, 10);
     const first = new Map<number, number>();
     const participation = new Map<number, Set<number>>();
     for (const [index, war] of wars.entries()) {
@@ -177,34 +211,53 @@ export class InsightsService {
     }
     const retention = [2, 4, 8].map((offset) => {
       const eligible = [...first].filter(([, start]) => start + offset < wars.length);
-      const retained = eligible.filter(([id, start]) => participation.get(id)?.has(start + offset)).length;
-      return { wars: offset, eligible: eligible.length, retained,
-        rate: eligible.length ? Math.round(100 * retained / eligible.length) : null };
+      const retained = eligible.filter(([id, start]) =>
+        participation.get(id)?.has(start + offset),
+      ).length;
+      return {
+        wars: offset,
+        eligible: eligible.length,
+        retained,
+        rate: eligible.length ? Math.round((100 * retained) / eligible.length) : null,
+      };
     });
-    const consistency = rankings.calculated.map((player) => {
-      const lastFive = wars.slice(-5);
-      const values = lastFive.map((war) =>
-        scores.find((row) => row.war_id === war.id && row.player_id === player.id)?.points ?? 0);
-      const avg = values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
-      const variance = values.length
-        ? values.reduce((sum, value) => sum + (value - avg) ** 2, 0) / values.length : 0;
-      return { id: player.id, name: player.name, average: Math.round(avg),
-        consistency: avg > 0 ? Math.round(100 * (1 - Math.min(1, Math.sqrt(variance) / avg))) : 0 };
-    }).filter((player) => player.average >= rankings.settings.minimumPoints)
-      .sort((a, b) => b.consistency - a.consistency).slice(0, 8);
+    const consistency = rankings.calculated
+      .map((player) => {
+        const lastFive = wars.slice(-5);
+        const values = lastFive.map(
+          (war) =>
+            scores.find((row) => row.war_id === war.id && row.player_id === player.id)?.points ?? 0,
+        );
+        const avg = values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+        const variance = values.length
+          ? values.reduce((sum, value) => sum + (value - avg) ** 2, 0) / values.length
+          : 0;
+        return {
+          id: player.id,
+          name: player.name,
+          average: Math.round(avg),
+          consistency: avg > 0 ? Math.round(100 * (1 - Math.min(1, Math.sqrt(variance) / avg))) : 0,
+        };
+      })
+      .filter((player) => player.average >= rankings.settings.minimumPoints)
+      .sort((a, b) => b.consistency - a.consistency)
+      .slice(0, 8);
     const active = rankings.calculated.filter((player) => player.active);
     const requirement = rankings.settings.minimumPoints;
     return {
       asOf: rosters[0] ? new Date(rosters[0].captured_at).toISOString() : null,
       latestWar: latest?.start_date ?? null,
-      powerContribution, powerGrowth, retention, consistency,
+      powerContribution,
+      powerGrowth,
+      retention,
+      consistency,
       activityGroups: {
         newcomer: active.filter((player) => player.newcomer).length,
         below: active.filter((player) => !player.newcomer && player.score < requirement).length,
-        meeting: active.filter((player) => !player.newcomer &&
-          player.score >= requirement && player.score < 2 * requirement).length,
-        exceeding: active.filter((player) => !player.newcomer &&
-          player.score >= 2 * requirement).length,
+        meeting: active.filter(
+          (player) => !player.newcomer && player.score >= requirement && player.score < 2 * requirement,
+        ).length,
+        exceeding: active.filter((player) => !player.newcomer && player.score >= 2 * requirement).length,
       },
     };
   }

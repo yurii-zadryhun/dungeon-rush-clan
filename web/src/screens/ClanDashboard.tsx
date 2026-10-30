@@ -429,9 +429,7 @@ export function ClanDashboard({
       if (container) restore.current = { left: container.scrollLeft, width: container.scrollWidth };
       const anchor = previousTuesday(weeks[0].start);
       const next = await api<Week[]>('war-weeks?anchor=' + encodeURIComponent(anchor) + '&count=2');
-      const older = next.filter(
-        (week) => !weeks.some((existing) => existing.start === week.start),
-      );
+      const older = next.filter((week) => !weeks.some((existing) => existing.start === week.start));
       setWeeks((previous) => [...older, ...previous]);
     } catch (failure) {
       restore.current = null;
@@ -484,7 +482,9 @@ export function ClanDashboard({
             </button>
           </div>
         ) : (
-          <><span className="spinner" /> {t('loadingRecords')}</>
+          <>
+            <span className="spinner" /> {t('loadingRecords')}
+          </>
         )}
       </main>
     );
@@ -565,7 +565,11 @@ export function ClanDashboard({
                   <History size={20} /> {t('warHistory')}
                 </h2>
               </header>
-              {historyError && <div className="error-strip" role="alert">{historyError} <button onClick={() => void loadOlder()}>Retry</button></div>}
+              {historyError && (
+                <div className="error-strip" role="alert">
+                  {historyError} <button onClick={() => void loadOlder()}>Retry</button>
+                </div>
+              )}
               <div
                 className="timeline-scroll"
                 ref={track}

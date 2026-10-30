@@ -135,13 +135,16 @@ export class PlayersService {
         .execute();
       await trx.deleteFrom('player_aliases').where('normalized_name', '=', normalized).execute();
     }
-    await trx.insertInto('player_events').values({
-      player_id: playerId,
-      kind: 'rename',
-      previous_value: previous.name,
-      next_value: name.trim(),
-      occurred_at: Date.now(),
-    }).execute();
+    await trx
+      .insertInto('player_events')
+      .values({
+        player_id: playerId,
+        kind: 'rename',
+        previous_value: previous.name,
+        next_value: name.trim(),
+        occurred_at: Date.now(),
+      })
+      .execute();
     await trx
       .updateTable('players')
       .set({ name: name.trim(), normalized_name: normalized })
@@ -373,7 +376,10 @@ export class PlayersService {
         .execute();
 
       await recordAudit(trx, {
-        actorId, action: 'player.merge', entity: 'player', entityId: targetId,
+        actorId,
+        action: 'player.merge',
+        entity: 'player',
+        entityId: targetId,
         details: { sourceId, targetId, overlap },
       });
       await this.membership.refresh(trx);

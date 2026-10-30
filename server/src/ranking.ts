@@ -34,9 +34,12 @@ export class RankingService {
       .execute();
     const [players, importedWars] = await Promise.all([
       this.db.query.selectFrom('players').selectAll().execute(),
-      this.db.query.selectFrom('wars').select('id')
+      this.db.query
+        .selectFrom('wars')
+        .select('id')
         .where('ranking_imported_at', 'is not', null)
-        .orderBy('start_date', 'asc').execute(),
+        .orderBy('start_date', 'asc')
+        .execute(),
     ]);
     const warIndexes = new Map(importedWars.map((war, index) => [war.id, index]));
     const scores = await this.db.query
@@ -62,7 +65,8 @@ export class RankingService {
         ? Math.round(entries.reduce((sum, e) => sum + e.points, 0) / entries.length)
         : 0;
       const earliest = entries.length
-        ? Math.min(...entries.map((entry) => warIndexes.get(entry.war_id) ?? 0)) : -1;
+        ? Math.min(...entries.map((entry) => warIndexes.get(entry.war_id) ?? 0))
+        : -1;
       const lastIndex = importedWars.length - 1;
       const newcomer = !!p.active && earliest >= 0 && lastIndex - earliest < 2;
       return {
@@ -74,7 +78,8 @@ export class RankingService {
         average,
         appearances: entries.length,
         lastPoints: latestId ? (lookup.get(latestId) ?? null) : null,
-        belowRequirement: !newcomer && entries.length > 0 && !!p.active && score < settings.minimum_points,
+        belowRequirement:
+          !newcomer && entries.length > 0 && !!p.active && score < settings.minimum_points,
       };
     });
     return {

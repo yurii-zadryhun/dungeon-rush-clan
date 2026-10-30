@@ -718,8 +718,17 @@
 }
 
 /* Shared keyboard-accessible modal shell. */
-.modal[role='dialog']:focus { outline: none; }
-.modal-backdrop { overscroll-behavior: contain; }
+.modal[role='dialog']:focus {
+  outline: none;
+}
+.modal-backdrop {
+  overscroll-behavior: contain;
+}
 
-.confirm-dialog { width:min(100%, 440px); }
-.confirm-dialog .modal-content p { margin:0; line-height:1.5; }
+.confirm-dialog {
+  width: min(100%, 440px);
+}
+.confirm-dialog .modal-content p {
+  margin: 0;
+  line-height: 1.5;
+}

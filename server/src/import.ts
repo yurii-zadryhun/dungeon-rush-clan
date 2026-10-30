@@ -250,15 +250,22 @@ export class ImportService {
             .set({ ranking_imported_at: war.ranking_imported_at ?? Date.now() })
             .where('id', '=', war.id)
             .execute();
-          const daysMissingPlayer = await trx.selectFrom('war_days')
+          const daysMissingPlayer = await trx
+            .selectFrom('war_days')
             .select(['day_number', 'mvp'])
-            .where('war_id', '=', war.id).where('winner', '=', 'ours')
-            .where('mvp_player_id', 'is', null).execute();
+            .where('war_id', '=', war.id)
+            .where('winner', '=', 'ours')
+            .where('mvp_player_id', 'is', null)
+            .execute();
           for (const day of daysMissingPlayer) {
             const playerId = await this.identities.resolve(trx, day.mvp);
-            if (playerId) await trx.updateTable('war_days')
-              .set({ mvp_player_id: playerId })
-              .where('war_id', '=', war.id).where('day_number', '=', day.day_number).execute();
+            if (playerId)
+              await trx
+                .updateTable('war_days')
+                .set({ mvp_player_id: playerId })
+                .where('war_id', '=', war.id)
+                .where('day_number', '=', day.day_number)
+                .execute();
           }
           await this.membership.refresh(trx);
         }
@@ -302,16 +309,22 @@ export class ImportService {
                 winner: day.winner,
                 points: day.points,
                 mvp: day.mvp,
-                mvp_player_id: day.winner === 'ours'
-                  ? await this.identities.resolve(trx, day.mvp) ?? null
-                  : null,
+                mvp_player_id:
+                  day.winner === 'ours' ? ((await this.identities.resolve(trx, day.mvp)) ?? null) : null,
               })
               .execute();
         }
         await recordAudit(trx, {
-          actorId, action: mode === 'create' ? 'war.import' : 'war.update',
-          entity: 'war', entityId: war.id,
-          details: { start: data.start, players: !!data.players, result: !!data.result, championship: data.championship },
+          actorId,
+          action: mode === 'create' ? 'war.import' : 'war.update',
+          entity: 'war',
+          entityId: war.id,
+          details: {
+            start: data.start,
+            players: !!data.players,
+            result: !!data.result,
+            championship: data.championship,
+          },
         });
       });
     } catch (e) {

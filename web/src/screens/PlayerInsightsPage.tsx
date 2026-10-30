@@ -368,13 +368,16 @@ export function PlayerInsightsPage({
 
           <div className="player-recognition">
             {player.weeks.some((week) => week.position === 1) && (
-              <span>🏅 {locale === 'uk' ? 'Перших місць' : 'First-place finishes'}: {
-                player.weeks.filter((week) => week.position === 1).length
-              }</span>
+              <span>
+                🏅 {locale === 'uk' ? 'Перших місць' : 'First-place finishes'}:{' '}
+                {player.weeks.filter((week) => week.position === 1).length}
+              </span>
             )}
             {player.mvpCount > 0 && <span>🏆 MVP × {player.mvpCount}</span>}
             {player.weeks.length >= 5 && (
-              <span>⭐ {locale === 'uk' ? 'Участь у війнах' : 'Wars participated'}: {player.weeks.length}</span>
+              <span>
+                ⭐ {locale === 'uk' ? 'Участь у війнах' : 'Wars participated'}: {player.weeks.length}
+              </span>
             )}
           </div>
           <div className="player-profile-metrics">
@@ -468,11 +471,17 @@ export function PlayerInsightsPage({
               <div className="profile-history-list">
                 {player.nameHistory.map((event, index) => (
                   <div className="profile-history-row" key={index}>
-                    <span>{event.kind === 'rename'
-                      ? `${event.previousValue} → ${event.nextValue}`
-                      : event.kind === 'joined'
-                        ? (locale === 'uk' ? 'Приєднався до клану' : 'Joined the clan')
-                        : (locale === 'uk' ? 'Вийшов з клану' : 'Left the clan')}</span>
+                    <span>
+                      {event.kind === 'rename'
+                        ? `${event.previousValue} → ${event.nextValue}`
+                        : event.kind === 'joined'
+                          ? locale === 'uk'
+                            ? 'Приєднався до клану'
+                            : 'Joined the clan'
+                          : locale === 'uk'
+                            ? 'Вийшов з клану'
+                            : 'Left the clan'}
+                    </span>
                     <small>{new Date(event.occurredAt).toLocaleDateString(locale)}</small>
                   </div>
                 ))}

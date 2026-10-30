@@ -149,8 +149,12 @@ export class WarsService {
         average: values.length ? Math.round(total / values.length) : 0,
         median,
         participantCount: values.length,
-        topFiveShare: total ? Math.round((100 * values.slice(-5).reduce((a, b) => a + b, 0)) / total) : 0,
-        topTenShare: total ? Math.round((100 * values.slice(-10).reduce((a, b) => a + b, 0)) / total) : 0,
+        topFiveShare: total
+          ? Math.round((100 * values.slice(-5).reduce((a, b) => a + b, 0)) / total)
+          : 0,
+        topTenShare: total
+          ? Math.round((100 * values.slice(-10).reduce((a, b) => a + b, 0)) / total)
+          : 0,
       },
     };
   }
@@ -216,7 +220,10 @@ export class WarsService {
 @Controller('api')
 @UseGuards(SessionGuard)
 export class WarsController {
-  constructor(private readonly wars: WarsService, private readonly audit: AuditService) {}
+  constructor(
+    private readonly wars: WarsService,
+    private readonly audit: AuditService,
+  ) {}
 
   @Get('dashboard') dashboard(@Query('anchor') anchor?: string, @Query('count') count?: string) {
     return this.wars.dashboard(anchor, count ? Number(count) : 10);
@@ -230,10 +237,16 @@ export class WarsController {
     return this.wars.weeks(anchor, count ? Number(count) : 2);
   }
 
-  @UseGuards(AdminGuard) @Patch('settings')
+  @UseGuards(AdminGuard)
+  @Patch('settings')
   async settings(@Body() body: unknown, @Req() request: AuthenticatedRequest) {
     const result = await this.wars.settings(body);
-    await this.audit.write({ actorId: request.account!.id, action: 'settings.update', entity: 'settings', entityId: 1 });
+    await this.audit.write({
+      actorId: request.account!.id,
+      action: 'settings.update',
+      entity: 'settings',
+      entityId: 1,
+    });
     return result;
   }
 }

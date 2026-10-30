@@ -96,13 +96,20 @@ export class ClanRosterService {
 
     let snapshotId = 0;
     await this.db.query.transaction().execute(async (trx) => {
-      const latest = await trx.selectFrom('clan_roster_snapshots')
-        .select(['id', 'captured_at']).orderBy('captured_at', 'desc')
-        .orderBy('id', 'desc').executeTakeFirst();
-      const previousIds = latest && capturedAt > latest.captured_at
-        ? await trx.selectFrom('clan_roster_entries').select('player_id')
-          .where('snapshot_id', '=', latest.id).execute()
-        : null;
+      const latest = await trx
+        .selectFrom('clan_roster_snapshots')
+        .select(['id', 'captured_at'])
+        .orderBy('captured_at', 'desc')
+        .orderBy('id', 'desc')
+        .executeTakeFirst();
+      const previousIds =
+        latest && capturedAt > latest.captured_at
+          ? await trx
+              .selectFrom('clan_roster_entries')
+              .select('player_id')
+              .where('snapshot_id', '=', latest.id)
+              .execute()
+          : null;
       const existing = await trx.selectFrom('players').select(['id', 'account_id']).execute();
       const ids = new Set(existing.map((player) => player.id));
       const selected = new Set<number>();
@@ -181,19 +188,36 @@ export class ClanRosterService {
         const before = new Set(previousIds.map((entry) => entry.player_id));
         const now = new Set(entryIds);
         for (const id of entryIds.filter((value) => !before.has(value))) {
-          await trx.insertInto('player_events').values({
-            player_id: id, kind: 'joined', previous_value: null, next_value: null, occurred_at: capturedAt,
-          }).execute();
+          await trx
+            .insertInto('player_events')
+            .values({
+              player_id: id,
+              kind: 'joined',
+              previous_value: null,
+              next_value: null,
+              occurred_at: capturedAt,
+            })
+            .execute();
         }
         for (const id of before) {
           if (now.has(id)) continue;
-          await trx.insertInto('player_events').values({
-            player_id: id, kind: 'left', previous_value: null, next_value: null, occurred_at: capturedAt,
-          }).execute();
+          await trx
+            .insertInto('player_events')
+            .values({
+              player_id: id,
+              kind: 'left',
+              previous_value: null,
+              next_value: null,
+              occurred_at: capturedAt,
+            })
+            .execute();
         }
       }
       await recordAudit(trx, {
-        actorId, action: 'roster.import', entity: 'roster', entityId: snapshot.id,
+        actorId,
+        action: 'roster.import',
+        entity: 'roster',
+        entityId: snapshot.id,
         details: { capturedAt: data.capturedAt, count: data.reportedMembers },
       });
       await this.membership.refresh(trx);

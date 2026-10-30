@@ -38,30 +38,47 @@ export function AuditHistory() {
     if (!expanded) return;
     let active = true;
     api<AuditEvent[]>('audit')
-      .then((data) => { if (active) setEntries(data); })
-      .catch((cause) => { if (active) setError((cause as Error).message); });
-    return () => { active = false; };
+      .then((data) => {
+        if (active) setEntries(data);
+      })
+      .catch((cause) => {
+        if (active) setError((cause as Error).message);
+      });
+    return () => {
+      active = false;
+    };
   }, [expanded]);
 
   return (
     <section className="panel">
-      <button type="button" className="game-button secondary" aria-expanded={expanded}
-        onClick={() => setExpanded((value) => !value)}>
+      <button
+        type="button"
+        className="game-button secondary"
+        aria-expanded={expanded}
+        onClick={() => setExpanded((value) => !value)}
+      >
         {locale === 'uk' ? 'Історія дій' : 'Activity log'} {expanded ? '−' : '+'}
       </button>
       {expanded && (
         <>
-          {error && <p role="alert" className="error-strip">{error}</p>}
+          {error && (
+            <p role="alert" className="error-strip">
+              {error}
+            </p>
+          )}
           <div className="accounts-list">
             {entries.map((event) => (
               <div className="account-row" key={event.id}>
                 <div>
                   <strong>{actions[event.action]?.[locale] ?? event.action}</strong>
-                  <small>{event.actor ?? (locale === 'uk' ? 'Система' : 'System')} · {event.entity}
+                  <small>
+                    {event.actor ?? (locale === 'uk' ? 'Система' : 'System')} · {event.entity}
                     {event.entityId ? ' #' + event.entityId : ''}
                   </small>
                 </div>
-                <small>{new Date(event.createdAt).toLocaleString(locale === 'uk' ? 'uk-UA' : 'en-US')}</small>
+                <small>
+                  {new Date(event.createdAt).toLocaleString(locale === 'uk' ? 'uk-UA' : 'en-US')}
+                </small>
               </div>
             ))}
           </div>

@@ -5,23 +5,34 @@ import { ModalDialog } from './ModalDialog';
 import { useI18n } from '../i18n';
 
 type Tone = 'success' | 'error';
-interface Notice { id: number; message: string; kind: Tone }
-interface Confirmation { message: string; resolve: (accepted: boolean) => void }
+interface Notice {
+  id: number;
+  message: string;
+  kind: Tone;
+}
+interface Confirmation {
+  message: string;
+  resolve: (accepted: boolean) => void;
+}
 const NOTICE = 'clan:notification';
 const CONFIRM = 'clan:confirm';
 let nextId = 0;
 
 export function notify(message: string, kind: Tone = 'success') {
-  window.dispatchEvent(new CustomEvent<Notice>(NOTICE, {
-    detail: { id: ++nextId, message, kind },
-  }));
+  window.dispatchEvent(
+    new CustomEvent<Notice>(NOTICE, {
+      detail: { id: ++nextId, message, kind },
+    }),
+  );
 }
 
 export function confirmAction(message: string): Promise<boolean> {
   return new Promise((resolve) => {
-    window.dispatchEvent(new CustomEvent<Confirmation>(CONFIRM, {
-      detail: { message, resolve },
-    }));
+    window.dispatchEvent(
+      new CustomEvent<Confirmation>(CONFIRM, {
+        detail: { message, resolve },
+      }),
+    );
   });
 }
 
@@ -39,18 +50,26 @@ export function ToastHost() {
   }, []);
   React.useEffect(() => {
     if (!current) return;
-    const timer = window.setTimeout(() => {
-      setQueue((items) => items.filter((item) => item.id !== current.id));
-    }, current.kind === 'error' ? 5500 : 3200);
+    const timer = window.setTimeout(
+      () => {
+        setQueue((items) => items.filter((item) => item.id !== current.id));
+      },
+      current.kind === 'error' ? 5500 : 3200,
+    );
     return () => window.clearTimeout(timer);
   }, [current?.id]);
   return current ? (
-    <div className={'management-toast ' + current.kind}
-      role={current.kind === 'error' ? 'alert' : 'status'}>
+    <div
+      className={'management-toast ' + current.kind}
+      role={current.kind === 'error' ? 'alert' : 'status'}
+    >
       {current.kind === 'error' ? <AlertCircle size={18} /> : <CheckCircle2 size={18} />}
       <span>{current.message}</span>
-      <button type="button" aria-label="Dismiss"
-        onClick={() => setQueue((items) => items.filter((item) => item.id !== current.id))}>
+      <button
+        type="button"
+        aria-label="Dismiss"
+        onClick={() => setQueue((items) => items.filter((item) => item.id !== current.id))}
+      >
         <X size={16} />
       </button>
     </div>
@@ -86,20 +105,32 @@ export function ConfirmationHost() {
   }
 
   return pending ? (
-    <ModalDialog className="panel modal confirm-dialog"
+    <ModalDialog
+      className="panel modal confirm-dialog"
       ariaLabel={locale === 'uk' ? 'Підтвердження дії' : 'Confirm action'}
-      onClose={() => finish(false)}>
+      onClose={() => finish(false)}
+    >
       <header className="modal-header">
         <h2>{locale === 'uk' ? 'Підтвердження дії' : 'Confirm action'}</h2>
-        <button type="button" className="close-button" onClick={() => finish(false)}
-          aria-label={t('close')}><X size={18} /></button>
+        <button
+          type="button"
+          className="close-button"
+          onClick={() => finish(false)}
+          aria-label={t('close')}
+        >
+          <X size={18} />
+        </button>
       </header>
-      <div className="modal-content"><p>{pending.message}</p></div>
+      <div className="modal-content">
+        <p>{pending.message}</p>
+      </div>
       <footer className="modal-actions">
-        <button type="button" className="game-button secondary"
-          onClick={() => finish(false)}>{t('cancel')}</button>
-        <button type="button" className="game-button danger"
-          onClick={() => finish(true)}>{locale === 'uk' ? 'Підтвердити' : 'Confirm'}</button>
+        <button type="button" className="game-button secondary" onClick={() => finish(false)}>
+          {t('cancel')}
+        </button>
+        <button type="button" className="game-button danger" onClick={() => finish(true)}>
+          {locale === 'uk' ? 'Підтвердити' : 'Confirm'}
+        </button>
       </footer>
     </ModalDialog>
   ) : null;

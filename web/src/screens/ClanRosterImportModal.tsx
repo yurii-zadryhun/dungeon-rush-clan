@@ -100,8 +100,12 @@ export function ClanRosterImportModal({
       const saved = sessionStorage.getItem('clan:roster-review:v1');
       if (!saved) return;
       const state = JSON.parse(saved) as {
-        at: number; rows: DraftEntry[]; expected: string; reportedPower: string;
-        capturedLocal: string; count: number;
+        at: number;
+        rows: DraftEntry[];
+        expected: string;
+        reportedPower: string;
+        capturedLocal: string;
+        count: number;
       };
       if (Date.now() - state.at > 86_400_000 || !Array.isArray(state.rows) || !state.rows.length) {
         sessionStorage.removeItem('clan:roster-review:v1');
@@ -114,7 +118,9 @@ export function ClanRosterImportModal({
       setScreenshotCount(state.count);
       setStage('review');
       setRestored(true);
-    } catch { /* Corrupt browser draft is ignored. */ }
+    } catch {
+      /* Corrupt browser draft is ignored. */
+    }
   }, []);
 
   React.useEffect(() => {
@@ -123,24 +129,37 @@ export function ClanRosterImportModal({
     Promise.all([
       api<ClanRosterCandidates>('clan-roster/candidates'),
       api<ClanRosterSnapshot | null>('clan-roster/latest'),
-    ]).then(([known, latest]) => {
-      if (!active) return;
-      setCandidates(known);
-      setPrevious(latest);
-    }).catch((failure) => {
-      if (active) setError((failure as Error).message);
-    });
-    return () => { active = false; };
+    ])
+      .then(([known, latest]) => {
+        if (!active) return;
+        setCandidates(known);
+        setPrevious(latest);
+      })
+      .catch((failure) => {
+        if (active) setError((failure as Error).message);
+      });
+    return () => {
+      active = false;
+    };
   }, [restored]);
 
   React.useEffect(() => {
     if (stage !== 'review' || !rows.length) return;
     try {
-      sessionStorage.setItem('clan:roster-review:v1', JSON.stringify({
-        at: Date.now(), rows, expected, reportedPower, capturedLocal,
-        count: screenshotCount || files.length,
-      }));
-    } catch { /* Storage is optional. */ }
+      sessionStorage.setItem(
+        'clan:roster-review:v1',
+        JSON.stringify({
+          at: Date.now(),
+          rows,
+          expected,
+          reportedPower,
+          capturedLocal,
+          count: screenshotCount || files.length,
+        }),
+      );
+    } catch {
+      /* Storage is optional. */
+    }
   }, [stage, rows, expected, reportedPower, capturedLocal, screenshotCount, files.length]);
 
   // Only the original screenshots are shown as thumbnails. The optimized mosaics
@@ -221,12 +240,21 @@ export function ClanRosterImportModal({
     [rows, compareNames],
   );
   const suspicious = (row: DraftEntry) => {
-    if (row.ocrName || row.playerId === null || magnitude(row.powerText) === null ||
-      (row.confidence !== undefined && row.confidence < 0.85)) return true;
+    if (
+      row.ocrName ||
+      row.playerId === null ||
+      magnitude(row.powerText) === null ||
+      (row.confidence !== undefined && row.confidence < 0.85)
+    )
+      return true;
     const older = previous?.entries.find((entry) => entry.id === row.playerId);
     const current = magnitude(row.powerText);
-    return !!(older && current !== null && older.power > 0 &&
-      (current / older.power > 20 || current / older.power < 0.05));
+    return !!(
+      older &&
+      current !== null &&
+      older.power > 0 &&
+      (current / older.power > 20 || current / older.power < 0.05)
+    );
   };
   const reviewCount = rows.filter(suspicious).length;
   const reviewRows = reviewOnly ? sortedRows.filter(suspicious) : sortedRows;
@@ -234,9 +262,12 @@ export function ClanRosterImportModal({
   async function showCrop(row: DraftEntry) {
     setCropKey(row.key);
     setCropUrl(null);
-    const segment = visiblePreview?.result.segments.find((entry) =>
-      entry.part === row.source && typeof row.y === 'number' &&
-      row.y >= entry.top && row.y < entry.top + entry.height,
+    const segment = visiblePreview?.result.segments.find(
+      (entry) =>
+        entry.part === row.source &&
+        typeof row.y === 'number' &&
+        row.y >= entry.top &&
+        row.y < entry.top + entry.height,
     );
     const file = segment && files[segment.fileIndex];
     if (!segment || !file) return;
@@ -336,12 +367,18 @@ export function ClanRosterImportModal({
           const match = matchRosterName(player.name, known);
           return {
             ...player,
-            confidence: result.positions.find((position) => position.source === player.source &&
-              normalizeName(position.name) === normalizeName(player.name) &&
-              position.powerText === player.powerText)?.confidence,
-            y: result.positions.find((position) => position.source === player.source &&
-              normalizeName(position.name) === normalizeName(player.name) &&
-              position.powerText === player.powerText)?.y,
+            confidence: result.positions.find(
+              (position) =>
+                position.source === player.source &&
+                normalizeName(position.name) === normalizeName(player.name) &&
+                position.powerText === player.powerText,
+            )?.confidence,
+            y: result.positions.find(
+              (position) =>
+                position.source === player.source &&
+                normalizeName(position.name) === normalizeName(player.name) &&
+                position.powerText === player.powerText,
+            )?.y,
             key: nextKey++,
             name: match?.name ?? player.name,
             playerId: match?.playerId ?? null,
@@ -413,327 +450,338 @@ export function ClanRosterImportModal({
 
   return (
     <ModalDialog onClose={onClose} ariaLabel={t('clanRoster')} className="panel modal clan-roster-modal">
-        <header className="modal-header">
-          <h2>
-            <UploadCloud size={20} /> {t('clanImportTitle')}
-          </h2>
-          <button className="close-button" aria-label={t('close')} onClick={onClose}>
-            <X />
-          </button>
-        </header>
-        <div className="clan-roster-scroll">
-          {stage === 'upload' ? (
-            <div className="clan-roster-upload">
-              <label className="clan-roster-file">
-                <Camera size={21} />
-                <span>
-                  <strong>{t('clanSelectScreens')}</strong>
-                  <small>{t('clanScreensChosen', { count: files.length })}</small>
-                </span>
+      <header className="modal-header">
+        <h2>
+          <UploadCloud size={20} /> {t('clanImportTitle')}
+        </h2>
+        <button className="close-button" aria-label={t('close')} onClick={onClose}>
+          <X />
+        </button>
+      </header>
+      <div className="clan-roster-scroll">
+        {stage === 'upload' ? (
+          <div className="clan-roster-upload">
+            <label className="clan-roster-file">
+              <Camera size={21} />
+              <span>
+                <strong>{t('clanSelectScreens')}</strong>
+                <small>{t('clanScreensChosen', { count: files.length })}</small>
+              </span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                onChange={(event) => {
+                  const chosen = Array.from(event.target.files || []);
+                  event.currentTarget.value = '';
+                  if (chosen.length > 10) setError(t('clanChooseScreens'));
+                  else {
+                    setError('');
+                    setFiles(chosen);
+                  }
+                }}
+              />
+            </label>
+            <OcrLimitStatus refreshKey={quotaRefresh} />
+            {files.length > 0 && (
+              <div className="clan-image-selection">
+                <div
+                  className="clan-thumbnail-strip"
+                  aria-label={t('clanScreensChosen', { count: files.length })}
+                >
+                  {files.map((file, index) => (
+                    <div
+                      className="clan-thumbnail"
+                      key={file.name + ':' + file.lastModified + ':' + index}
+                    >
+                      <div className="clan-thumbnail-image">
+                        {sourceUrls[index] && (
+                          <img
+                            src={sourceUrls[index]}
+                            alt={t('clanScreenshotNumber', { number: index + 1 })}
+                            loading="lazy"
+                          />
+                        )}
+                        <span>{index + 1}</span>
+                        <button
+                          className="clan-thumbnail-remove"
+                          type="button"
+                          onClick={() => setFiles((current) => current.filter((_, i) => i !== index))}
+                          aria-label={t('remove') + ': ' + (index + 1)}
+                          title={t('remove')}
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {previewError && (
+                  <p className="error-strip" role="alert">
+                    {previewError}
+                  </p>
+                )}
+                {!visiblePreview && !previewError && (
+                  <p className="muted" role="status">
+                    {t('clanPreparingImages')}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="clan-roster-review">
+            <div className="clan-roster-summary">
+              <label>
+                {t('clanCapturedAt')}
                 <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  multiple
+                  type="datetime-local"
+                  value={capturedLocal}
+                  onChange={(event) => setCapturedLocal(event.target.value)}
+                />
+              </label>
+              <label>
+                {t('clanExpectedCount')}
+                <input
+                  inputMode="numeric"
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={expected}
+                  onChange={(event) => setExpected(event.target.value)}
+                />
+              </label>
+              <label>
+                {t('clanHeaderPower')}
+                <input
+                  value={reportedPower}
+                  placeholder="77.80q"
                   onChange={(event) => {
-                    const chosen = Array.from(event.target.files || []);
-                    event.currentTarget.value = '';
-                    if (chosen.length > 10) setError(t('clanChooseScreens'));
-                    else {
-                      setError('');
-                      setFiles(chosen);
-                    }
+                    setReportedPower(event.target.value);
+                    setAcknowledge(false);
                   }}
                 />
               </label>
-              <OcrLimitStatus refreshKey={quotaRefresh} />
-              {files.length > 0 && (
-                <div className="clan-image-selection">
-                  <div
-                    className="clan-thumbnail-strip"
-                    aria-label={t('clanScreensChosen', { count: files.length })}
-                  >
-                    {files.map((file, index) => (
-                      <div
-                        className="clan-thumbnail"
-                        key={file.name + ':' + file.lastModified + ':' + index}
-                      >
-                        <div className="clan-thumbnail-image">
-                          {sourceUrls[index] && (
-                            <img
-                              src={sourceUrls[index]}
-                              alt={t('clanScreenshotNumber', { number: index + 1 })}
-                              loading="lazy"
-                            />
-                          )}
-                          <span>{index + 1}</span>
-                          <button
-                            className="clan-thumbnail-remove"
-                            type="button"
-                            onClick={() => setFiles((current) => current.filter((_, i) => i !== index))}
-                            aria-label={t('remove') + ': ' + (index + 1)}
-                            title={t('remove')}
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  {previewError && (
-                    <p className="error-strip" role="alert">
-                      {previewError}
-                    </p>
-                  )}
-                  {!visiblePreview && !previewError && (
-                    <p className="muted" role="status">
-                      {t('clanPreparingImages')}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="clan-roster-review">
-              <div className="clan-roster-summary">
-                <label>
-                  {t('clanCapturedAt')}
-                  <input
-                    type="datetime-local"
-                    value={capturedLocal}
-                    onChange={(event) => setCapturedLocal(event.target.value)}
-                  />
-                </label>
-                <label>
-                  {t('clanExpectedCount')}
-                  <input
-                    inputMode="numeric"
-                    type="number"
-                    min={1}
-                    max={100}
-                    value={expected}
-                    onChange={(event) => setExpected(event.target.value)}
-                  />
-                </label>
-                <label>
-                  {t('clanHeaderPower')}
-                  <input
-                    value={reportedPower}
-                    placeholder="77.80q"
-                    onChange={(event) => {
-                      setReportedPower(event.target.value);
-                      setAcknowledge(false);
-                    }}
-                  />
-                </label>
-                <div className="clan-summary-figure">
-                  <strong>
-                    {rows.length}
-                    {capacity ? ' / ' + capacity : ''}
-                  </strong>
-                  <small>{t('clanRecognized')}</small>
-                </div>
-                <div className="clan-summary-figure">
-                  <strong>{powerLabel(sum)}</strong>
-                  <small>{t('clanSumPower')}</small>
-                </div>
+              <div className="clan-summary-figure">
+                <strong>
+                  {rows.length}
+                  {capacity ? ' / ' + capacity : ''}
+                </strong>
+                <small>{t('clanRecognized')}</small>
               </div>
-              {percentDifference !== null && (
-                <p className={'clan-roster-compare' + (differenceHigh ? ' warning' : '')}>
-                  {t('clanPowerDifference', { percent: percentDifference.toFixed(1) })}
-                </p>
-              )}
-              {warnings.length > 0 && (
-                <details className="clan-roster-warnings">
-                  <summary>
-                    {t('clanWarnings')} ({warnings.length})
-                  </summary>
-                  <ul>
-                    {warnings.map((warning, i) => (
-                      <li key={i}>{warning}</li>
-                    ))}
-                  </ul>
-                </details>
-              )}
-              {ocrResponseJson && (
-                <details className="clan-ocr-response">
-                  <summary>{t('clanOcrResponse')}</summary>
-                  <div className="clan-ocr-response-body">
-                    <div className="clan-ocr-response-toolbar">
-                      <p>{t('clanOcrResponseHelp')}</p>
+              <div className="clan-summary-figure">
+                <strong>{powerLabel(sum)}</strong>
+                <small>{t('clanSumPower')}</small>
+              </div>
+            </div>
+            {percentDifference !== null && (
+              <p className={'clan-roster-compare' + (differenceHigh ? ' warning' : '')}>
+                {t('clanPowerDifference', { percent: percentDifference.toFixed(1) })}
+              </p>
+            )}
+            {warnings.length > 0 && (
+              <details className="clan-roster-warnings">
+                <summary>
+                  {t('clanWarnings')} ({warnings.length})
+                </summary>
+                <ul>
+                  {warnings.map((warning, i) => (
+                    <li key={i}>{warning}</li>
+                  ))}
+                </ul>
+              </details>
+            )}
+            {ocrResponseJson && (
+              <details className="clan-ocr-response">
+                <summary>{t('clanOcrResponse')}</summary>
+                <div className="clan-ocr-response-body">
+                  <div className="clan-ocr-response-toolbar">
+                    <p>{t('clanOcrResponseHelp')}</p>
+                    <button
+                      type="button"
+                      className="game-button secondary clan-ocr-copy"
+                      onClick={() => void copyOcrResponse()}
+                    >
+                      <Copy size={15} />
+                      {t(ocrCopied ? 'copied' : 'clanOcrCopy')}
+                    </button>
+                  </div>
+                  <pre>{ocrResponseJson}</pre>
+                </div>
+              </details>
+            )}
+            {previous && (
+              <div className="clan-roster-changes">
+                <span className="joined">
+                  +{joined.length} {t('clanJoined')}
+                </span>
+                <span className="left">
+                  −{left.length} {t('clanLeft')}
+                </span>
+                {(joined.length > 0 || left.length > 0) && (
+                  <small>
+                    {[
+                      ...joined.map((row) => '+ ' + row.name),
+                      ...left.map((row) => '− ' + row.name),
+                    ].join(' · ')}
+                  </small>
+                )}
+              </div>
+            )}
+            {restored && !files.length && (
+              <label className="clan-review-reattach">
+                {locale === 'uk'
+                  ? 'Додайте оригінали скриншотів у тому самому порядку для перегляду фрагментів'
+                  : 'Attach original screenshots in the same order to inspect crops'}
+                <input
+                  type="file"
+                  multiple
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={(event) => setFiles(Array.from(event.target.files ?? []))}
+                />
+              </label>
+            )}
+            <div className="clan-review-tools">
+              {restored && <span>{locale === 'uk' ? 'Чернетку відновлено' : 'Draft restored'}</span>}
+              <button className={!reviewOnly ? 'selected' : ''} onClick={() => setReviewOnly(false)}>
+                {locale === 'uk' ? 'Усі' : 'All'} ({rows.length})
+              </button>
+              <button className={reviewOnly ? 'selected' : ''} onClick={() => setReviewOnly(true)}>
+                {locale === 'uk' ? 'Перевірити' : 'Review'} ({reviewCount})
+              </button>
+            </div>
+            <div className="clan-roster-table">
+              <div className="clan-roster-columns">
+                <span>{t('playerColumn')}</span>
+                <span>{t('clanPower')}</span>
+                <span>{t('clanMatch')}</span>
+                <span />
+              </div>
+              {reviewRows.map((row) => (
+                <div
+                  className={
+                    'clan-roster-entry' +
+                    (magnitude(row.powerText) === null || !row.name.trim() ? ' invalid' : '') +
+                    (suspicious(row) ? ' suspicious' : '')
+                  }
+                  key={row.key}
+                >
+                  <label>
+                    <span className="clan-roster-row-number">{sortedRows.indexOf(row) + 1}</span>
+                    {row.playerId === null ? (
+                      <span className="clan-new-label">New</span>
+                    ) : previous && !previous.entries.some((entry) => entry.id === row.playerId) ? (
+                      <span className="clan-return-label">
+                        {locale === 'uk' ? 'Повернувся' : 'Returned'}
+                      </span>
+                    ) : null}
+                    <input
+                      aria-label={t('playerColumn') + ' ' + (sortedRows.indexOf(row) + 1)}
+                      value={row.name}
+                      onChange={(event) => updateName(row.key, event.target.value)}
+                      onBlur={() => reconcileName(row.key, row.name)}
+                      title={row.ocrName ? t('clanOcrCorrected', { name: row.ocrName }) : undefined}
+                    />
+                  </label>
+                  <input
+                    aria-invalid={magnitude(row.powerText) === null}
+                    aria-label={t('clanPower') + ' ' + row.name}
+                    value={row.powerText}
+                    onChange={(event) => update(row.key, { powerText: event.target.value })}
+                  />
+                  <SearchSelect
+                    value={row.playerId}
+                    ariaLabel={t('clanMatch') + ': ' + row.name}
+                    placeholder={t('clanNewPlayer')}
+                    choices={candidateChoices}
+                    onChange={(value) => choosePlayer(row.key, value)}
+                  />
+                  <div className="clan-roster-row-actions">
+                    {row.confidence !== undefined && row.confidence < 0.85 && (
+                      <small className="warning-text" title="Low OCR confidence">
+                        {Math.round(row.confidence * 100)}%
+                      </small>
+                    )}
+                    {suspicious(row) && (
                       <button
                         type="button"
-                        className="game-button secondary clan-ocr-copy"
-                        onClick={() => void copyOcrResponse()}
+                        className="clan-crop-button"
+                        title={locale === 'uk' ? 'Показати фрагмент скриншота' : 'Show screenshot crop'}
+                        onClick={() => void showCrop(row)}
                       >
-                        <Copy size={15} />
-                        {t(ocrCopied ? 'copied' : 'clanOcrCopy')}
+                        ◉
                       </button>
-                    </div>
-                    <pre>{ocrResponseJson}</pre>
-                  </div>
-                </details>
-              )}
-              {previous && (
-                <div className="clan-roster-changes">
-                  <span className="joined">
-                    +{joined.length} {t('clanJoined')}
-                  </span>
-                  <span className="left">
-                    −{left.length} {t('clanLeft')}
-                  </span>
-                  {(joined.length > 0 || left.length > 0) && (
-                    <small>
-                      {[
-                        ...joined.map((row) => '+ ' + row.name),
-                        ...left.map((row) => '− ' + row.name),
-                      ].join(' · ')}
-                    </small>
-                  )}
-                </div>
-              )}
-              {restored && !files.length && (
-                <label className="clan-review-reattach">
-                  {locale === 'uk'
-                    ? 'Додайте оригінали скриншотів у тому самому порядку для перегляду фрагментів'
-                    : 'Attach original screenshots in the same order to inspect crops'}
-                  <input type="file" multiple accept="image/png,image/jpeg,image/webp"
-                    onChange={(event) => setFiles(Array.from(event.target.files ?? []))} />
-                </label>
-              )}
-              <div className="clan-review-tools">
-                {restored && <span>{locale === 'uk' ? 'Чернетку відновлено' : 'Draft restored'}</span>}
-                <button className={!reviewOnly ? 'selected' : ''} onClick={() => setReviewOnly(false)}>
-                  {locale === 'uk' ? 'Усі' : 'All'} ({rows.length})
-                </button>
-                <button className={reviewOnly ? 'selected' : ''} onClick={() => setReviewOnly(true)}>
-                  {locale === 'uk' ? 'Перевірити' : 'Review'} ({reviewCount})
-                </button>
-              </div>
-              <div className="clan-roster-table">
-                <div className="clan-roster-columns">
-                  <span>{t('playerColumn')}</span>
-                  <span>{t('clanPower')}</span>
-                  <span>{t('clanMatch')}</span>
-                  <span />
-                </div>
-                {reviewRows.map((row) => (
-                  <div
-                    className={
-                      'clan-roster-entry' +
-                      (magnitude(row.powerText) === null || !row.name.trim() ? ' invalid' : '') +
-                      (suspicious(row) ? ' suspicious' : '')
-                    }
-                    key={row.key}
-                  >
-                    <label>
-                      <span className="clan-roster-row-number">{sortedRows.indexOf(row) + 1}</span>
-                      {row.playerId === null ? (
-                        <span className="clan-new-label">New</span>
-                      ) : previous && !previous.entries.some((entry) => entry.id === row.playerId) ? (
-                        <span className="clan-return-label">{locale === 'uk' ? 'Повернувся' : 'Returned'}</span>
-                      ) : null}
-                      <input
-                        aria-label={t('playerColumn') + ' ' + (sortedRows.indexOf(row) + 1)}
-                        value={row.name}
-                        onChange={(event) => updateName(row.key, event.target.value)}
-                        onBlur={() => reconcileName(row.key, row.name)}
-                        title={row.ocrName ? t('clanOcrCorrected', { name: row.ocrName }) : undefined}
-                      />
-                    </label>
-                    <input
-                      aria-invalid={magnitude(row.powerText) === null}
-                      aria-label={t('clanPower') + ' ' + row.name}
-                      value={row.powerText}
-                      onChange={(event) => update(row.key, { powerText: event.target.value })}
-                    />
-                    <SearchSelect
-                      value={row.playerId}
-                      ariaLabel={t('clanMatch') + ': ' + row.name}
-                      placeholder={t('clanNewPlayer')}
-                      choices={candidateChoices}
-                      onChange={(value) => choosePlayer(row.key, value)}
-                    />
-                    <div className="clan-roster-row-actions">
-                      {row.confidence !== undefined && row.confidence < 0.85 && (
-                        <small className="warning-text" title="Low OCR confidence">
-                          {Math.round(row.confidence * 100)}%
-                        </small>
-                      )}
-                      {suspicious(row) && (
-                        <button type="button" className="clan-crop-button"
-                          title={locale === 'uk' ? 'Показати фрагмент скриншота' : 'Show screenshot crop'}
-                          onClick={() => void showCrop(row)}>◉</button>
-                      )}
-                      <button
+                    )}
+                    <button
                       type="button"
                       aria-label={t('remove') + ': ' + row.name}
                       onClick={() => setRows((all) => all.filter((entry) => entry.key !== row.key))}
                     >
                       <Trash2 size={15} />
                     </button>
-                    </div>
-                    {cropKey === row.key && cropUrl && (
-                      <img className="clan-player-crop" src={cropUrl} alt={row.name} />
-                    )}
                   </div>
-                ))}
-              </div>
-              <button
-                type="button"
-                className="game-button secondary clan-add-row"
-                onClick={() =>
-                  setRows((current) => [
-                    ...current,
-                    { key: nextKey++, name: '', powerText: '', playerId: null, source: 0 },
-                  ])
-                }
-              >
-                <Plus size={15} /> {t('clanAddPlayer')}
-              </button>
-              {differenceHigh && (
-                <label className="clan-roster-ack">
-                  <input
-                    type="checkbox"
-                    checked={acknowledge}
-                    onChange={(event) => setAcknowledge(event.target.checked)}
-                  />
-                  {t('clanAcknowledgePower')}
-                </label>
-              )}
-              {invalid.length > 0 && (
-                <p className="error-strip">
-                  {t('clanFixRows')} ({invalid.length})
-                </p>
-              )}
-              {duplicated && <p className="error-strip">{t('clanDuplicateNames')}</p>}
-              {expected && Number(expected) !== rows.length && (
-                <p className="error-strip">{t('clanCountMismatch')}</p>
-              )}
+                  {cropKey === row.key && cropUrl && (
+                    <img className="clan-player-crop" src={cropUrl} alt={row.name} />
+                  )}
+                </div>
+              ))}
             </div>
-          )}
-        </div>
-        {error && (
-          <div className="error-strip" role="alert">
-            {error}
+            <button
+              type="button"
+              className="game-button secondary clan-add-row"
+              onClick={() =>
+                setRows((current) => [
+                  ...current,
+                  { key: nextKey++, name: '', powerText: '', playerId: null, source: 0 },
+                ])
+              }
+            >
+              <Plus size={15} /> {t('clanAddPlayer')}
+            </button>
+            {differenceHigh && (
+              <label className="clan-roster-ack">
+                <input
+                  type="checkbox"
+                  checked={acknowledge}
+                  onChange={(event) => setAcknowledge(event.target.checked)}
+                />
+                {t('clanAcknowledgePower')}
+              </label>
+            )}
+            {invalid.length > 0 && (
+              <p className="error-strip">
+                {t('clanFixRows')} ({invalid.length})
+              </p>
+            )}
+            {duplicated && <p className="error-strip">{t('clanDuplicateNames')}</p>}
+            {expected && Number(expected) !== rows.length && (
+              <p className="error-strip">{t('clanCountMismatch')}</p>
+            )}
           </div>
         )}
-        <footer className="modal-actions">
-          <button
-            className="game-button secondary"
-            disabled={busy}
-            onClick={() => (stage === 'upload' ? onClose() : setStage('upload'))}
-          >
-            {t(stage === 'upload' ? 'cancel' : 'back')}
-          </button>
-          <button
-            className="game-button blue"
-            disabled={busy || (stage === 'upload' && (!files.length || !visiblePreview))}
-            onClick={() => void (stage === 'upload' ? scan() : confirm())}
-          >
-            <CheckCircle size={16} />{' '}
-            {busy ? t('pleaseWait') : t(stage === 'upload' ? 'scan' : 'confirmImport')}
-          </button>
-        </footer>
+      </div>
+      {error && (
+        <div className="error-strip" role="alert">
+          {error}
+        </div>
+      )}
+      <footer className="modal-actions">
+        <button
+          className="game-button secondary"
+          disabled={busy}
+          onClick={() => (stage === 'upload' ? onClose() : setStage('upload'))}
+        >
+          {t(stage === 'upload' ? 'cancel' : 'back')}
+        </button>
+        <button
+          className="game-button blue"
+          disabled={busy || (stage === 'upload' && (!files.length || !visiblePreview))}
+          onClick={() => void (stage === 'upload' ? scan() : confirm())}
+        >
+          <CheckCircle size={16} />{' '}
+          {busy ? t('pleaseWait') : t(stage === 'upload' ? 'scan' : 'confirmImport')}
+        </button>
+      </footer>
     </ModalDialog>
   );
 }

@@ -86,7 +86,11 @@ export function parsePlayers(
   text: VisionText,
   source = 0,
   prepared = false,
-): { players: OcrPlayer[]; warnings: string[]; positions: Array<{ source: number; position: number; y: number; confidence?: number }> } {
+): {
+  players: OcrPlayer[];
+  warnings: string[];
+  positions: Array<{ source: number; position: number; y: number; confidence?: number }>;
+} {
   const warnings: string[] = [];
   const players: OcrPlayer[] = [];
   const positions: Array<{ source: number; position: number; y: number; confidence?: number }> = [];
@@ -129,10 +133,13 @@ export function parsePlayers(
       continue;
     }
     players.push({ position, name, points, source });
-    const confidenceValues = row.map((word) => word.confidence)
+    const confidenceValues = row
+      .map((word) => word.confidence)
       .filter((value): value is number => value !== undefined);
     positions.push({
-      source, position, y: row[rankIndex].y,
+      source,
+      position,
+      y: row[rankIndex].y,
       ...(confidenceValues.length ? { confidence: Math.min(...confidenceValues) } : {}),
     });
   }
@@ -501,6 +508,11 @@ export class OcrController {
       ? parseWar(await this.vision.read(resultImages[0].buffer), settings.clan_name)
       : null;
     if (result) warnings.push(...result.warnings);
-    return { players: [...unique.values()].sort((a, b) => a.position - b.position), positions, result, warnings };
+    return {
+      players: [...unique.values()].sort((a, b) => a.position - b.position),
+      positions,
+      result,
+      warnings,
+    };
   }
 }

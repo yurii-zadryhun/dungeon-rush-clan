@@ -97,20 +97,29 @@ export function PlayersPage({
   const [savedViews, setSavedViews] = React.useState<SavedView[]>(() => {
     try {
       const parsed: unknown = JSON.parse(localStorage.getItem(viewsKey) || '[]');
-      return Array.isArray(parsed) ? parsed.filter((item) => item && typeof item.name === 'string').slice(0, 10) : [];
-    } catch { return []; }
+      return Array.isArray(parsed)
+        ? parsed.filter((item) => item && typeof item.name === 'string').slice(0, 10)
+        : [];
+    } catch {
+      return [];
+    }
   });
 
   function sortBy(field: Order) {
     if (order === field) setDescending((current) => !current);
-    else { setOrder(field); setDescending(field !== 'name'); }
+    else {
+      setOrder(field);
+      setDescending(field !== 'name');
+    }
   }
 
   function saveView() {
     const name = viewName.trim().slice(0, 35);
     if (!name) return;
-    const next = [...savedViews.filter((item) => item.name !== name),
-      { name, membership, registration, order, search, focus, descending }].slice(-10);
+    const next = [
+      ...savedViews.filter((item) => item.name !== name),
+      { name, membership, registration, order, search, focus, descending },
+    ].slice(-10);
     setSavedViews(next);
     localStorage.setItem(viewsKey, JSON.stringify(next));
     setViewName('');
@@ -182,13 +191,14 @@ export function PlayersPage({
     .sort((a, b) => {
       const aScore = stats.get(a.id);
       const bScore = stats.get(b.id);
-      const difference = order === 'name'
-        ? a.name.localeCompare(b.name)
-        : order === 'latest'
-          ? (aScore?.lastPoints ?? -1) - (bScore?.lastPoints ?? -1)
-          : order === 'weeks'
-            ? a.weeks.length - b.weeks.length
-            : (aScore?.score ?? 0) - (bScore?.score ?? 0);
+      const difference =
+        order === 'name'
+          ? a.name.localeCompare(b.name)
+          : order === 'latest'
+            ? (aScore?.lastPoints ?? -1) - (bScore?.lastPoints ?? -1)
+            : order === 'weeks'
+              ? a.weeks.length - b.weeks.length
+              : (aScore?.score ?? 0) - (bScore?.score ?? 0);
       return (descending ? -difference : difference) || a.name.localeCompare(b.name);
     });
   const activeCount = members.filter((player) => player.active).length;
@@ -307,35 +317,80 @@ export function PlayersPage({
                 </select>
               </label>
             </div>
-            <div className="player-focus-filters" role="group" aria-label={locale === 'uk' ? 'Швидкі фільтри' : 'Quick filters'}>
-              {(['all', 'newcomer', 'below', ...(isStaff ? ['attention'] : [])] as Focus[]).map((value) => (
-                <button key={value} type="button" className={focus === value ? 'selected' : ''}
-                  aria-pressed={focus === value} onClick={() => { setFocus(value); setActiveView(''); }}>
-                  {value === 'all' ? (locale === 'uk' ? 'Усі' : 'All') :
-                    value === 'newcomer' ? (locale === 'uk' ? 'Новачки' : 'Newcomers') :
-                    value === 'below' ? (locale === 'uk' ? 'Нижче мінімуму' : 'Below minimum') :
-                    (locale === 'uk' ? 'Увага' : 'Attention')}
-                </button>
-              ))}
+            <div
+              className="player-focus-filters"
+              role="group"
+              aria-label={locale === 'uk' ? 'Швидкі фільтри' : 'Quick filters'}
+            >
+              {(['all', 'newcomer', 'below', ...(isStaff ? ['attention'] : [])] as Focus[]).map(
+                (value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={focus === value ? 'selected' : ''}
+                    aria-pressed={focus === value}
+                    onClick={() => {
+                      setFocus(value);
+                      setActiveView('');
+                    }}
+                  >
+                    {value === 'all'
+                      ? locale === 'uk'
+                        ? 'Усі'
+                        : 'All'
+                      : value === 'newcomer'
+                        ? locale === 'uk'
+                          ? 'Новачки'
+                          : 'Newcomers'
+                        : value === 'below'
+                          ? locale === 'uk'
+                            ? 'Нижче мінімуму'
+                            : 'Below minimum'
+                          : locale === 'uk'
+                            ? 'Увага'
+                            : 'Attention'}
+                  </button>
+                ),
+              )}
             </div>
             <div className="player-saved-views">
               {savedViews.length > 0 && (
                 <div className="player-view-chips">
                   {savedViews.map((view) => (
-                    <span className={'player-view-chip' + (activeView === view.name ? ' active' : '')} key={view.name}>
-                      <button type="button" onClick={() => selectView(view.name)}>{view.name}</button>
-                      <button type="button" aria-label={(locale === 'uk' ? 'Видалити' : 'Delete') + ': ' + view.name}
-                        onClick={() => deleteView(view.name)}>×</button>
+                    <span
+                      className={'player-view-chip' + (activeView === view.name ? ' active' : '')}
+                      key={view.name}
+                    >
+                      <button type="button" onClick={() => selectView(view.name)}>
+                        {view.name}
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={(locale === 'uk' ? 'Видалити' : 'Delete') + ': ' + view.name}
+                        onClick={() => deleteView(view.name)}
+                      >
+                        ×
+                      </button>
                     </span>
                   ))}
                 </div>
               )}
               <div className="player-view-create">
-                <input value={viewName} onChange={(event) => setViewName(event.target.value)}
-                  maxLength={35} placeholder={locale === 'uk' ? 'Назва фільтра' : 'View name'}
-                  aria-label={locale === 'uk' ? 'Назва фільтра' : 'View name'}/>
-                <button type="button" className="game-button secondary" disabled={!viewName.trim()}
-                  onClick={saveView}>{locale === 'uk' ? 'Зберегти фільтр' : 'Save view'}</button>
+                <input
+                  value={viewName}
+                  onChange={(event) => setViewName(event.target.value)}
+                  maxLength={35}
+                  placeholder={locale === 'uk' ? 'Назва фільтра' : 'View name'}
+                  aria-label={locale === 'uk' ? 'Назва фільтра' : 'View name'}
+                />
+                <button
+                  type="button"
+                  className="game-button secondary"
+                  disabled={!viewName.trim()}
+                  onClick={saveView}
+                >
+                  {locale === 'uk' ? 'Зберегти фільтр' : 'Save view'}
+                </button>
               </div>
             </div>
           </div>
@@ -356,10 +411,18 @@ export function PlayersPage({
               {visible.length > 0 && (
                 <div className="players-table" role="table" aria-label={t('clanRoster')}>
                   <div className="players-column-head" role="row">
-                    <button role="columnheader" onClick={() => sortBy('name')}>{t('playerColumn')} {order === 'name' ? (descending ? '↓' : '↑') : ''}</button>
-                    <button role="columnheader" onClick={() => sortBy('score')}>{t('scoreColumn')} {order === 'score' ? (descending ? '↓' : '↑') : ''}</button>
-                    <button role="columnheader" onClick={() => sortBy('latest')}>{t('lastWarColumn')} {order === 'latest' ? (descending ? '↓' : '↑') : ''}</button>
-                    <button role="columnheader" onClick={() => sortBy('weeks')}>{t('warsColumn')} {order === 'weeks' ? (descending ? '↓' : '↑') : ''}</button>
+                    <button role="columnheader" onClick={() => sortBy('name')}>
+                      {t('playerColumn')} {order === 'name' ? (descending ? '↓' : '↑') : ''}
+                    </button>
+                    <button role="columnheader" onClick={() => sortBy('score')}>
+                      {t('scoreColumn')} {order === 'score' ? (descending ? '↓' : '↑') : ''}
+                    </button>
+                    <button role="columnheader" onClick={() => sortBy('latest')}>
+                      {t('lastWarColumn')} {order === 'latest' ? (descending ? '↓' : '↑') : ''}
+                    </button>
+                    <button role="columnheader" onClick={() => sortBy('weeks')}>
+                      {t('warsColumn')} {order === 'weeks' ? (descending ? '↓' : '↑') : ''}
+                    </button>
                   </div>
                   <div className="players-directory-list" role="rowgroup">
                     {visible.map((player) => (

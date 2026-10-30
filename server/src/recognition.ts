@@ -48,8 +48,14 @@ export function buildRecognition(
   const byWar = new Map<number, RecognitionScore[]>();
   for (const row of rows) {
     const current = byPlayer.get(row.playerId) ?? {
-      id: row.playerId, name: row.name, points: 0, podiums: 0,
-      firstPlaces: 0, mvps: 0, championshipPoints: 0, longestStreak: 0,
+      id: row.playerId,
+      name: row.name,
+      points: 0,
+      podiums: 0,
+      firstPlaces: 0,
+      mvps: 0,
+      championshipPoints: 0,
+      longestStreak: 0,
     };
     current.name = row.name;
     current.points += row.points;
@@ -91,18 +97,32 @@ export function buildRecognition(
       (a, b) => Number(b[criterion.field]) - Number(a[criterion.field]) || a.id - b.id,
     )[0];
     const value = winner ? Number(winner[criterion.field]) : 0;
-    if (winner && value > 0) awards.push({
-      kind: criterion.kind, playerId: winner.id, name: winner.name, value,
-    });
+    if (winner && value > 0)
+      awards.push({
+        kind: criterion.kind,
+        playerId: winner.id,
+        name: winner.name,
+        value,
+      });
   }
-  const recent = [...importedWarIds].reverse().slice(0, 4)
+  const recent = [...importedWarIds]
+    .reverse()
+    .slice(0, 4)
     .flatMap((warId) => {
-      const top = [...(byWar.get(warId) ?? [])]
-        .sort((a, b) => a.position - b.position || b.points - a.points)[0];
-      return top ? [{
-        start: top.start, championship: top.championship,
-        id: top.playerId, name: top.name, points: top.points,
-      }] : [];
+      const top = [...(byWar.get(warId) ?? [])].sort(
+        (a, b) => a.position - b.position || b.points - a.points,
+      )[0];
+      return top
+        ? [
+            {
+              start: top.start,
+              championship: top.championship,
+              id: top.playerId,
+              name: top.name,
+              points: top.points,
+            },
+          ]
+        : [];
     });
   return { warCount: importedWarIds.length, leaderboard: leaderboard.slice(0, 15), awards, recent };
 }
@@ -113,23 +133,33 @@ export class RecognitionService {
 
   async overview() {
     const [wars, scores, mvpDays] = await Promise.all([
-      this.db.query.selectFrom('wars')
+      this.db.query
+        .selectFrom('wars')
         .select(['id', 'start_date', 'is_championship'])
         .where('ranking_imported_at', 'is not', null)
-        .orderBy('start_date', 'asc').execute(),
-      this.db.query.selectFrom('player_scores')
+        .orderBy('start_date', 'asc')
+        .execute(),
+      this.db.query
+        .selectFrom('player_scores')
         .innerJoin('wars', 'wars.id', 'player_scores.war_id')
         .innerJoin('players', 'players.id', 'player_scores.player_id')
-        .select(['player_scores.war_id as warId', 'wars.start_date as start',
-          'wars.is_championship as championship', 'player_scores.player_id as playerId',
-          'players.name', 'player_scores.points', 'player_scores.position'])
-        .where('wars.ranking_imported_at', 'is not', null).execute(),
-      this.db.query.selectFrom('war_days')
-        .select(['winner', 'mvp_player_id as playerId']).execute(),
+        .select([
+          'player_scores.war_id as warId',
+          'wars.start_date as start',
+          'wars.is_championship as championship',
+          'player_scores.player_id as playerId',
+          'players.name',
+          'player_scores.points',
+          'player_scores.position',
+        ])
+        .where('wars.ranking_imported_at', 'is not', null)
+        .execute(),
+      this.db.query.selectFrom('war_days').select(['winner', 'mvp_player_id as playerId']).execute(),
     ]);
     return buildRecognition(
       scores.map((score) => ({ ...score, championship: !!score.championship })),
-      mvpDays, wars.map((war) => war.id),
+      mvpDays,
+      wars.map((war) => war.id),
     );
   }
 }
@@ -139,5 +169,7 @@ export class RecognitionService {
 export class RecognitionController {
   constructor(private readonly recognition: RecognitionService) {}
   @Get()
-  overview() { return this.recognition.overview(); }
+  overview() {
+    return this.recognition.overview();
+  }
 }

@@ -403,18 +403,84 @@
   }
 }
 
-.clan-review-tools { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:12px 0; }
-.clan-review-tools button { border:1px solid #69657a; border-radius:7px; padding:6px 10px; background:transparent; color:inherit; cursor:pointer; }
-.clan-review-tools button.selected { background:#394b68; border-color:#8cbbec; }
-.clan-roster-entry.suspicious { border-left:3px solid #d9a663; }
-.clan-new-label { display:inline-block; border:1px solid #3e8d59; color:#87e1a6; border-radius:5px; padding:2px 5px; font-size:11px; font-weight:700; }
-.clan-crop-button { color:#9ad4f5; cursor:pointer; }
-.clan-player-crop { display:block; grid-column:1 / -1; max-width:100%; max-height:220px; object-fit:contain; border-radius:8px; margin:4px auto; }
+.clan-review-tools {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+.clan-review-tools button {
+  border: 1px solid #69657a;
+  border-radius: 7px;
+  padding: 6px 10px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.clan-review-tools button.selected {
+  background: #394b68;
+  border-color: #8cbbec;
+}
+.clan-roster-entry.suspicious {
+  border-left: 3px solid #d9a663;
+}
+.clan-new-label {
+  display: inline-block;
+  border: 1px solid #3e8d59;
+  color: #87e1a6;
+  border-radius: 5px;
+  padding: 2px 5px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.clan-crop-button {
+  color: #9ad4f5;
+  cursor: pointer;
+}
+.clan-player-crop {
+  display: block;
+  grid-column: 1 / -1;
+  max-width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+  border-radius: 8px;
+  margin: 4px auto;
+}
 
-.clan-roster-row-actions { display:flex; gap:5px; justify-content:flex-end; }
-.clan-roster-row-actions > button { width:29px; height:29px; border:1px solid var(--stroke-control); border-radius:6px; background:var(--surface-control); color:#f1eef3; cursor:pointer; }
-.clan-roster-entry label .clan-new-label { flex:0 0 auto; }
+.clan-roster-row-actions {
+  display: flex;
+  gap: 5px;
+  justify-content: flex-end;
+}
+.clan-roster-row-actions > button {
+  width: 29px;
+  height: 29px;
+  border: 1px solid var(--stroke-control);
+  border-radius: 6px;
+  background: var(--surface-control);
+  color: #f1eef3;
+  cursor: pointer;
+}
+.clan-roster-entry label .clan-new-label {
+  flex: 0 0 auto;
+}
 
-.clan-review-reattach { display:grid; gap:7px; font-size:12px; padding:10px; border:1px dashed #675d70; border-radius:8px; }
-.clan-review-reattach input { max-width:100%; }
-.clan-return-label { border:1px solid #998364; color:#e7c788; border-radius:5px; padding:2px 5px; font-size:10px; }
+.clan-review-reattach {
+  display: grid;
+  gap: 7px;
+  font-size: 12px;
+  padding: 10px;
+  border: 1px dashed #675d70;
+  border-radius: 8px;
+}
+.clan-review-reattach input {
+  max-width: 100%;
+}
+.clan-return-label {
+  border: 1px solid #998364;
+  color: #e7c788;
+  border-radius: 5px;
+  padding: 2px 5px;
+  font-size: 10px;
+}

@@ -39,10 +39,19 @@ export function invalidWarDraft(draft: WarDraft, sections: WarSections): boolean
     const identities = new Set<string>();
     for (const player of draft.players) {
       const identity = player.playerId ? 'id:' + player.playerId : 'name:' + normalizeName(player.name);
-      if (!Number.isInteger(player.position) || player.position < 1 || player.position > 100 ||
-        !player.name.trim() || player.name.trim().length > 80 ||
-        !Number.isInteger(player.points) || player.points < 0 || player.points > 1_000_000_000 ||
-        positions.has(player.position) || identities.has(identity)) return true;
+      if (
+        !Number.isInteger(player.position) ||
+        player.position < 1 ||
+        player.position > 100 ||
+        !player.name.trim() ||
+        player.name.trim().length > 80 ||
+        !Number.isInteger(player.points) ||
+        player.points < 0 ||
+        player.points > 1_000_000_000 ||
+        positions.has(player.position) ||
+        identities.has(identity)
+      )
+        return true;
       positions.add(player.position);
       identities.add(identity);
     }
@@ -50,11 +59,21 @@ export function invalidWarDraft(draft: WarDraft, sections: WarSections): boolean
   if (sections.result) {
     if (!draft.result || !draft.result.opponent.trim() || draft.result.opponent.length > 80) return true;
     const result = draft.result;
-    const our = result.days.filter((day) => day.winner === 'ours').reduce((total, day) => total + day.points, 0);
-    const opponent = result.days.filter((day) => day.winner === 'opponent').reduce((total, day) => total + day.points, 0);
-    if (result.days.length !== 6 || result.days.some((day) => !day.winner || !day.mvp.trim()) ||
-      !result.ourScore.trim() || !result.opponentScore.trim() ||
-      Number(result.ourScore) !== our || Number(result.opponentScore) !== opponent) return true;
+    const our = result.days
+      .filter((day) => day.winner === 'ours')
+      .reduce((total, day) => total + day.points, 0);
+    const opponent = result.days
+      .filter((day) => day.winner === 'opponent')
+      .reduce((total, day) => total + day.points, 0);
+    if (
+      result.days.length !== 6 ||
+      result.days.some((day) => !day.winner || !day.mvp.trim()) ||
+      !result.ourScore.trim() ||
+      !result.opponentScore.trim() ||
+      Number(result.ourScore) !== our ||
+      Number(result.opponentScore) !== opponent
+    )
+      return true;
   }
   return false;
 }
@@ -160,8 +179,8 @@ function PlayersPanel({
 }) {
   const { t, locale } = useI18n();
   const [suspiciousOnly, setSuspiciousOnly] = React.useState(false);
-  const isSuspicious = (player: OcrPlayer) => !player.playerId ||
-    (player.confidence !== undefined && player.confidence < 0.85);
+  const isSuspicious = (player: OcrPlayer) =>
+    !player.playerId || (player.confidence !== undefined && player.confidence < 0.85);
   const suspiciousCount = players.filter(isSuspicious).length;
   const positionCount = new Map<number, number>();
   const nameCount = new Map<string, number>();
@@ -206,25 +225,43 @@ function PlayersPanel({
           {t('players')} · {players.length}
         </strong>
         <div className="war-review-controls">
-          <button type="button" className="game-button secondary compact-add"
-            aria-pressed={suspiciousOnly} onClick={() => setSuspiciousOnly((value) => !value)}>
-            {suspiciousOnly ? (locale === 'uk' ? 'Усі' : 'All') :
-              (locale === 'uk' ? 'Перевірити' : 'Review')} ({suspiciousCount})
+          <button
+            type="button"
+            className="game-button secondary compact-add"
+            aria-pressed={suspiciousOnly}
+            onClick={() => setSuspiciousOnly((value) => !value)}
+          >
+            {suspiciousOnly
+              ? locale === 'uk'
+                ? 'Усі'
+                : 'All'
+              : locale === 'uk'
+                ? 'Перевірити'
+                : 'Review'}{' '}
+            ({suspiciousCount})
           </button>
           <button type="button" className="game-button secondary compact-add" onClick={add}>
-          <Plus size={15} /> {t('addRow')}
+            <Plus size={15} /> {t('addRow')}
           </button>
         </div>
       </div>
       <div className="war-editor-players">
         {players.map((player, index) => {
           if (suspiciousOnly && !isSuspicious(player)) return null;
-          const invalidPosition = !Number.isInteger(player.position) || player.position < 1 ||
-            player.position > 100 || (positionCount.get(player.position) ?? 0) > 1;
-          const identityKey = player.playerId ? 'id:' + player.playerId : 'name:' + normalizeName(player.name);
-          const invalidName = !player.name.trim() || player.name.trim().length > 80 ||
+          const invalidPosition =
+            !Number.isInteger(player.position) ||
+            player.position < 1 ||
+            player.position > 100 ||
+            (positionCount.get(player.position) ?? 0) > 1;
+          const identityKey = player.playerId
+            ? 'id:' + player.playerId
+            : 'name:' + normalizeName(player.name);
+          const invalidName =
+            !player.name.trim() ||
+            player.name.trim().length > 80 ||
             (nameCount.get(identityKey) ?? 0) > 1;
-          const invalidPoints = !Number.isInteger(player.points) || player.points < 0 || player.points > 1_000_000_000;
+          const invalidPoints =
+            !Number.isInteger(player.points) || player.points < 0 || player.points > 1_000_000_000;
           const isNew = !player.playerId;
           const isReturning = !!player.playerId && !previousIds.has(player.playerId);
           const near = !player.playerId
@@ -279,8 +316,9 @@ function PlayersPanel({
               </div>
               {(invalidPosition || invalidName || invalidPoints) && (
                 <small className="war-row-validation" role="alert">
-                  {locale === 'uk' ? 'Перевір ранг, ім’я та очки — значення мають бути коректними й унікальними.' :
-                    'Check rank, name and points. Values must be valid and unique.'}
+                  {locale === 'uk'
+                    ? 'Перевір ранг, ім’я та очки — значення мають бути коректними й унікальними.'
+                    : 'Check rank, name and points. Values must be valid and unique.'}
                 </small>
               )}
               <div className="war-editor-player-meta">
@@ -310,11 +348,18 @@ function PlayersPanel({
                   <span className="warning-text tiny">OCR {Math.round(player.confidence * 100)}%</span>
                 )}
                 {onShowCrop && player.y !== undefined && (
-                  <button type="button" className="war-crop-action"
-                    onClick={() => void onShowCrop(player)}>◉ {locale === 'uk' ? 'Скриншот' : 'Screenshot'}</button>
+                  <button
+                    type="button"
+                    className="war-crop-action"
+                    onClick={() => void onShowCrop(player)}
+                  >
+                    ◉ {locale === 'uk' ? 'Скриншот' : 'Screenshot'}
+                  </button>
                 )}
               </div>
-              {crop?.position === player.position && <img className="war-player-crop" src={crop.url} alt={player.name} />}
+              {crop?.position === player.position && (
+                <img className="war-player-crop" src={crop.url} alt={player.name} />
+              )}
             </div>
           );
         })}
@@ -376,7 +421,9 @@ function ResultPanel({
             min="0"
             max="13"
             value={result.opponentScore}
-            aria-invalid={!result.opponentScore.trim() || Number(result.opponentScore) !== score('opponent')}
+            aria-invalid={
+              !result.opponentScore.trim() || Number(result.opponentScore) !== score('opponent')
+            }
             onChange={(e) => onChange({ ...result, opponentScore: e.target.value })}
           />
         </label>

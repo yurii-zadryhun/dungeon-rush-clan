@@ -71,129 +71,129 @@ export function SettingsModal({
   const sum = weights.reduce((total, weight) => total + (Number(weight) || 0), 0);
   return (
     <ModalDialog onClose={onClose} ariaLabel={t('clanSettings')} className="panel modal settings-modal">
-        <header className="modal-header">
-          <h2>
-            <Settings /> {t('clanSettings')}
-          </h2>
-          <button aria-label={t('close')} className="close-button" onClick={onClose}>
-            <X />
-          </button>
-        </header>
-        <div className="modal-content">
+      <header className="modal-header">
+        <h2>
+          <Settings /> {t('clanSettings')}
+        </h2>
+        <button aria-label={t('close')} className="close-button" onClick={onClose}>
+          <X />
+        </button>
+      </header>
+      <div className="modal-content">
+        <label>
+          {t('clanName')}
+          <input value={clanName} onChange={(event) => setClanName(event.target.value)} />
+        </label>
+        <label>
+          {t('publicLeader')}
+          <input
+            value={leaderName}
+            maxLength={80}
+            placeholder={t('publicLeaderFallback')}
+            onChange={(event) => setLeaderName(event.target.value)}
+          />
+          <small className="muted">{t('publicLeaderHelp')}</small>
+        </label>
+        <fieldset className="clan-links-fields">
+          <legend>{t('clanLinksTitle')}</legend>
           <label>
-            {t('clanName')}
-            <input value={clanName} onChange={(event) => setClanName(event.target.value)} />
-          </label>
-          <label>
-            {t('publicLeader')}
+            {t('clanTelegram')}
             <input
-              value={leaderName}
-              maxLength={80}
-              placeholder={t('publicLeaderFallback')}
-              onChange={(event) => setLeaderName(event.target.value)}
+              type="url"
+              autoComplete="url"
+              placeholder="https://t.me/..."
+              value={telegramUrl}
+              maxLength={500}
+              onChange={(event) => setTelegramUrl(event.target.value)}
             />
-            <small className="muted">{t('publicLeaderHelp')}</small>
           </label>
-          <fieldset className="clan-links-fields">
-            <legend>{t('clanLinksTitle')}</legend>
-            <label>
-              {t('clanTelegram')}
-              <input
-                type="url"
-                autoComplete="url"
-                placeholder="https://t.me/..."
-                value={telegramUrl}
-                maxLength={500}
-                onChange={(event) => setTelegramUrl(event.target.value)}
-              />
-            </label>
-            <label>
-              {t('clanDiscord')}
-              <input
-                type="url"
-                autoComplete="url"
-                placeholder="https://discord.gg/..."
-                value={discordUrl}
-                maxLength={500}
-                onChange={(event) => setDiscordUrl(event.target.value)}
-              />
-            </label>
-            <label>
-              {t('clanContactLink')}
-              <input
-                type="url"
-                autoComplete="url"
-                placeholder="https://discord.gg/..."
-                value={contactUrl}
-                maxLength={500}
-                onChange={(event) => setContactUrl(event.target.value)}
-              />
-              <small className="muted">{t('clanContactHint')}</small>
-            </label>
-          </fieldset>
           <label>
-            {t('minimumScore')}
-            <div className="input-suffix">
-              <input
-                type="number"
-                step="1"
-                min="0"
-                value={minimum}
-                onChange={(event) => setMinimum(event.target.value)}
-              />
-              <span>k</span>
-            </div>
+            {t('clanDiscord')}
+            <input
+              type="url"
+              autoComplete="url"
+              placeholder="https://discord.gg/..."
+              value={discordUrl}
+              maxLength={500}
+              onChange={(event) => setDiscordUrl(event.target.value)}
+            />
           </label>
-          <h3>{t('weights')}</h3>
-          <p className="tiny muted">{t('weightsHelp')}</p>
-          {weights.map((weight, index) => (
-            <div className="weight-row" key={index}>
-              <span>{index === 0 ? t('newestWar') : t('previousWar', { offset: index })}</span>
-              <input
-                type="number"
-                step=".01"
-                min="0"
-                max="100"
-                value={weight}
-                onChange={(event) => updateWeight(index, event.target.value)}
-              />
-              <span>%</span>
-              <button
-                aria-label={t('removeRow')}
-                className="icon-button danger"
-                disabled={weights.length <= 1}
-                onClick={() =>
-                  setWeights((existing) => existing.filter((_, position) => position !== index))
-                }
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
-          ))}
-          <button
-            className="game-button secondary weight-add"
-            disabled={weights.length >= 12}
-            onClick={() => setWeights((existing) => [...existing, '0'])}
-          >
-            <Plus size={14} /> {t('add')}
-          </button>
-          <div className="sum-row">
-            {t('total')}: <b>{sum.toFixed(2)}%</b>
+          <label>
+            {t('clanContactLink')}
+            <input
+              type="url"
+              autoComplete="url"
+              placeholder="https://discord.gg/..."
+              value={contactUrl}
+              maxLength={500}
+              onChange={(event) => setContactUrl(event.target.value)}
+            />
+            <small className="muted">{t('clanContactHint')}</small>
+          </label>
+        </fieldset>
+        <label>
+          {t('minimumScore')}
+          <div className="input-suffix">
+            <input
+              type="number"
+              step="1"
+              min="0"
+              value={minimum}
+              onChange={(event) => setMinimum(event.target.value)}
+            />
+            <span>k</span>
           </div>
+        </label>
+        <h3>{t('weights')}</h3>
+        <p className="tiny muted">{t('weightsHelp')}</p>
+        {weights.map((weight, index) => (
+          <div className="weight-row" key={index}>
+            <span>{index === 0 ? t('newestWar') : t('previousWar', { offset: index })}</span>
+            <input
+              type="number"
+              step=".01"
+              min="0"
+              max="100"
+              value={weight}
+              onChange={(event) => updateWeight(index, event.target.value)}
+            />
+            <span>%</span>
+            <button
+              aria-label={t('removeRow')}
+              className="icon-button danger"
+              disabled={weights.length <= 1}
+              onClick={() =>
+                setWeights((existing) => existing.filter((_, position) => position !== index))
+              }
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        ))}
+        <button
+          className="game-button secondary weight-add"
+          disabled={weights.length >= 12}
+          onClick={() => setWeights((existing) => [...existing, '0'])}
+        >
+          <Plus size={14} /> {t('add')}
+        </button>
+        <div className="sum-row">
+          {t('total')}: <b>{sum.toFixed(2)}%</b>
         </div>
-        {error && (
-          <div className="error-strip" role="alert">
-            {error}
-          </div>
-        )}
-        <footer className="modal-actions">
-          <button className="game-button secondary" onClick={onClose}>
-            {t('cancel')}
-          </button>
-          <button className="game-button blue" disabled={busy} onClick={save}>
-            <Save size={17} /> {t('save')}
-          </button>
-        </footer>
+      </div>
+      {error && (
+        <div className="error-strip" role="alert">
+          {error}
+        </div>
+      )}
+      <footer className="modal-actions">
+        <button className="game-button secondary" onClick={onClose}>
+          {t('cancel')}
+        </button>
+        <button className="game-button blue" disabled={busy} onClick={save}>
+          <Save size={17} /> {t('save')}
+        </button>
+      </footer>
     </ModalDialog>
   );
 }

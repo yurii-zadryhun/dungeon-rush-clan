@@ -1,28 +1,174 @@
-.war-detail-page { display: grid; gap: 16px; max-width: 1200px; margin: 0 auto; padding: 24px 18px 90px; }
-.war-detail-hero, .war-detail-section { padding: 22px; }
-.war-detail-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
-.war-detail-heading h1 { font-size:clamp(20px, 2.6vw, 30px); margin:6px 0; }
-.war-detail-score { font-size:clamp(24px, 4vw, 38px); white-space:nowrap; }
-.war-championship { color:#f4c45e; display:inline-flex; align-items:center; gap:4px; margin-left:8px; }
-.war-summary-metrics { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; margin-top:22px; }
-.war-summary-metrics > div { display:flex; flex-direction:column; gap:5px; padding:12px; background:rgba(255,255,255,.035); border-radius:9px; }
-.war-summary-metrics strong { font-size:22px; } .war-summary-metrics small { opacity:.75; }
-.war-detail-section h2 { margin:0 0 14px; font-size:19px; }
-.war-detail-days { display:grid; gap:6px; }
-.war-detail-day { display:grid; grid-template-columns:80px 65px minmax(110px,1fr) minmax(120px,1fr); gap:12px; align-items:center; border-bottom:1px solid rgba(255,255,255,.09); padding:9px 2px; }
-.war-detail-day a, .war-detail-row a { color:inherit; text-decoration:underline; text-underline-offset:3px; }
-.war-distribution { display:flex; width:100%; height:15px; border-radius:9px; overflow:hidden; background:#3c3946; }
-.war-distribution span:first-child { background:#79badb; } .war-distribution span:nth-child(2) { background:#ab91cf; } .war-distribution span:nth-child(3) { background:#625f71; }
-.war-detail-table { margin-top:16px; }
-.war-detail-row { display:grid; grid-template-columns:75px minmax(130px,1fr) 115px; gap:12px; align-items:center; padding:9px 10px; border-bottom:1px solid rgba(255,255,255,.09); }
-.war-detail-row strong { text-align:right; }
-.war-detail-columns { background:rgba(255,255,255,.045); border-radius:7px 7px 0 0; }
-.war-detail-columns button { background:none; border:0; color:inherit; cursor:pointer; text-align:left; font:inherit; font-weight:700; padding:5px 0; }
-.war-detail-columns button:last-child { text-align:right; }
-.war-detail-report-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; }
-.war-report-preview { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.6; background:rgba(0,0,0,.14); border-radius:9px; padding:16px; }
-@media(max-width:600px) { .war-detail-page { padding:14px 10px 86px; } .war-detail-hero,.war-detail-section { padding:14px; } .war-detail-day { grid-template-columns:55px 42px 1fr; gap:6px; font-size:13px; } .war-detail-day > span:last-child { grid-column:2 / -1; } .war-detail-row { grid-template-columns:48px minmax(80px,1fr) 75px; padding:9px 4px; } }
+.war-detail-page {
+  display: grid;
+  gap: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 18px 90px;
+}
+.war-detail-hero,
+.war-detail-section {
+  padding: 22px;
+}
+.war-detail-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.war-detail-heading h1 {
+  font-size: clamp(20px, 2.6vw, 30px);
+  margin: 6px 0;
+}
+.war-detail-score {
+  font-size: clamp(24px, 4vw, 38px);
+  white-space: nowrap;
+}
+.war-championship {
+  color: #f4c45e;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+}
+.war-summary-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  margin-top: 22px;
+}
+.war-summary-metrics > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.035);
+  border-radius: 9px;
+}
+.war-summary-metrics strong {
+  font-size: 22px;
+}
+.war-summary-metrics small {
+  opacity: 0.75;
+}
+.war-detail-section h2 {
+  margin: 0 0 14px;
+  font-size: 19px;
+}
+.war-detail-days {
+  display: grid;
+  gap: 6px;
+}
+.war-detail-day {
+  display: grid;
+  grid-template-columns: 80px 65px minmax(110px, 1fr) minmax(120px, 1fr);
+  gap: 12px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  padding: 9px 2px;
+}
+.war-detail-day a,
+.war-detail-row a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.war-distribution {
+  display: flex;
+  width: 100%;
+  height: 15px;
+  border-radius: 9px;
+  overflow: hidden;
+  background: #3c3946;
+}
+.war-distribution span:first-child {
+  background: #79badb;
+}
+.war-distribution span:nth-child(2) {
+  background: #ab91cf;
+}
+.war-distribution span:nth-child(3) {
+  background: #625f71;
+}
+.war-detail-table {
+  margin-top: 16px;
+}
+.war-detail-row {
+  display: grid;
+  grid-template-columns: 75px minmax(130px, 1fr) 115px;
+  gap: 12px;
+  align-items: center;
+  padding: 9px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+.war-detail-row strong {
+  text-align: right;
+}
+.war-detail-columns {
+  background: rgba(255, 255, 255, 0.045);
+  border-radius: 7px 7px 0 0;
+}
+.war-detail-columns button {
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  font-weight: 700;
+  padding: 5px 0;
+}
+.war-detail-columns button:last-child {
+  text-align: right;
+}
+.war-detail-report-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.war-report-preview {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+  background: rgba(0, 0, 0, 0.14);
+  border-radius: 9px;
+  padding: 16px;
+}
+@media (max-width: 600px) {
+  .war-detail-page {
+    padding: 14px 10px 86px;
+  }
+  .war-detail-hero,
+  .war-detail-section {
+    padding: 14px;
+  }
+  .war-detail-day {
+    grid-template-columns: 55px 42px 1fr;
+    gap: 6px;
+    font-size: 13px;
+  }
+  .war-detail-day > span:last-child {
+    grid-column: 2 / -1;
+  }
+  .war-detail-row {
+    grid-template-columns: 48px minmax(80px, 1fr) 75px;
+    padding: 9px 4px;
+  }
+}
 
-.war-recognition { display:grid; gap:12px; }
-.war-recognition span { display:block; padding:12px; border-radius:8px; background:rgba(244,196,94,.08); }
-.war-recognition a { color:inherit; text-decoration:underline; text-underline-offset:3px; }
+.war-recognition {
+  display: grid;
+  gap: 12px;
+}
+.war-recognition span {
+  display: block;
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(244, 196, 94, 0.08);
+}
+.war-recognition a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
