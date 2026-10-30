@@ -395,44 +395,6 @@
   color: #d1cdd0;
 }
 
-.day-table {
-  display: grid;
-  gap: 3px;
-}
-
-.day-row {
-  display: grid;
-  grid-template-columns: 54px 20px minmax(0, 1fr);
-  align-items: center;
-  padding: 5px 7px;
-  background: #352f32;
-  border: 2px solid #090909;
-  border-radius: 7px;
-  font-size: 10px;
-  min-height: 29px;
-}
-
-.day-row.ours {
-  border-left: 4px solid #3ba5ec;
-}
-
-.day-row.opponent {
-  border-left: 4px solid #ff5b64;
-}
-
-.day-row b {
-  color: #f6f2f4;
-}
-
-.daily-mvp {
-  text-align: right;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: #e8c374;
-  font-weight: 900;
-}
-
 .war-roster-head {
   display: flex;
   justify-content: space-between;

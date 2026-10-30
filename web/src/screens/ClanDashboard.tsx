@@ -19,6 +19,7 @@ import { ToastHost, notify } from './Toast';
 import { ClanSocialLinks } from './ClanSocialLinks';
 import { PersonalDashboard } from './PersonalDashboard';
 import './PersonalDashboard.css';
+import './WarDetailPage.css';
 
 // Route-only screens and heavy editors should not be bundled into the archive's first paint.
 const WikiScreen = React.lazy(() =>
@@ -31,7 +32,6 @@ const AnalyticsPage = React.lazy(() =>
 const PlayerInsightsPage = React.lazy(() =>
   import('./PlayerInsightsPage').then((m) => ({ default: m.PlayerInsightsPage })),
 );
-import './WarDetailPage.css';
 const WarDetailPage = React.lazy(() =>
   import('./WarDetailPage').then((module) => ({ default: module.WarDetailPage })),
 );
@@ -166,7 +166,6 @@ function WarColumn({
   onImport,
   onEdit,
   calculated,
-  clanName,
   canEdit,
   account,
 }: {
@@ -174,7 +173,6 @@ function WarColumn({
   onImport: (week: Week) => void;
   onEdit: (week: Week) => void;
   calculated: Map<number, Player>;
-  clanName: string;
   canEdit: boolean;
   account: Account;
 }) {
@@ -593,7 +591,6 @@ export function ClanDashboard({
                       calculated={calculated}
                       canEdit={canEdit}
                       account={user}
-                      clanName={data.rankings.settings.clanName}
                     />
                   ))}
                 </div>
