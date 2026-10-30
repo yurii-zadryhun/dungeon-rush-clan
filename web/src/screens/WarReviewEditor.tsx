@@ -238,7 +238,7 @@ function PlayersPanel({
               : locale === 'uk'
                 ? 'Перевірити'
                 : 'Review'}{' '}
-            ({suspiciousCount})
+            ({suspiciousOnly ? players.length : suspiciousCount})
           </button>
           <button type="button" className="game-button secondary compact-add" onClick={add}>
             <Plus size={15} /> {t('addRow')}

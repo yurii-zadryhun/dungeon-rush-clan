@@ -150,6 +150,7 @@ export interface ExtendedInsights {
   asOf: string | null;
   latestWar: string | null;
   powerContribution: Array<{ id: number; name: string; power: number; points: number }>;
+  rosterHistoryCount: number;
   powerGrowth: Array<{
     id: number;
     name: string;

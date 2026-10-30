@@ -209,7 +209,7 @@ export class InsightsService {
         participation.set(row.player_id, seen);
       }
     }
-    const retention = [2, 4, 8].map((offset) => {
+    const retention = [1, 2, 4].map((offset) => {
       const eligible = [...first].filter(([, start]) => start + offset < wars.length);
       const retained = eligible.filter(([id, start]) =>
         participation.get(id)?.has(start + offset),
@@ -249,15 +249,17 @@ export class InsightsService {
       latestWar: latest?.start_date ?? null,
       powerContribution,
       powerGrowth,
+      rosterHistoryCount: rosters.length,
       retention,
       consistency,
       activityGroups: {
+        // Newcomer is an overlapping label, not a mutually exclusive score tier.
         newcomer: active.filter((player) => player.newcomer).length,
-        below: active.filter((player) => !player.newcomer && player.score < requirement).length,
+        below: active.filter((player) => player.score < requirement).length,
         meeting: active.filter(
-          (player) => !player.newcomer && player.score >= requirement && player.score < 2 * requirement,
+          (player) => player.score >= requirement && player.score < 2 * requirement,
         ).length,
-        exceeding: active.filter((player) => !player.newcomer && player.score >= 2 * requirement).length,
+        exceeding: active.filter((player) => player.score >= 2 * requirement).length,
       },
     };
   }
