@@ -98,9 +98,13 @@ async function bootstrap() {
     if (!pathname.startsWith('/api/')) {
       if (/^\/assets\/.+-[a-zA-Z0-9_-]{8,}\.(?:js|css|png|svg|woff2?)$/.test(pathname)) {
         reply.header('Cache-Control', 'public, max-age=31536000, immutable');
-      } else if (pathname === '/manifest.webmanifest' || pathname === '/sw.js' || pathname === '/') {
+      } else if (
+        pathname === '/assets/manifest.json' ||
+        pathname === '/assets/sw.js' ||
+        pathname === '/'
+      ) {
         reply.header('Cache-Control', 'no-cache');
-      } else if (/^\/icons\/.+\.png$/.test(pathname)) {
+      } else if (/^\/assets\/(?:icon-(?:192|512|maskable-512)|apple-touch-icon)\.png$/.test(pathname)) {
         reply.header('Cache-Control', 'public, max-age=86400');
       }
     }

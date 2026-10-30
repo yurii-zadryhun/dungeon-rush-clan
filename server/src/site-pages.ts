@@ -1,6 +1,6 @@
 import { Controller, Get, Injectable, NotFoundException, Param, Req, Res } from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Db } from './database';
 import { legalContent, type LegalPage, type Locale } from './legal-content';
@@ -128,6 +128,20 @@ export class SitePagesController {
       .header('Cache-Control', 'no-cache')
       .type('text/html; charset=utf-8')
       .send(readFileSync(resolve(__dirname, '../../web/dist/index.html'), 'utf8'));
+  }
+
+  // PWA assets live alongside the working logo under web/public/assets.
+  // Hestia routes /api/ reliably to this application, while /sw.js can be
+  // intercepted by Nginx. Serve the worker here with explicit root scope.
+  @Get('api/pwa/sw.js')
+  serviceWorker(@Res() reply: FastifyReply) {
+    const bundle = resolve(__dirname, '../../web/dist/assets/sw.js');
+    const source = existsSync(bundle) ? bundle : resolve(__dirname, '../../web/public/assets/sw.js');
+    return reply
+      .header('Service-Worker-Allowed', '/')
+      .header('Cache-Control', 'no-cache')
+      .type('application/javascript; charset=utf-8')
+      .send(readFileSync(source, 'utf8'));
   }
 
   @Get('login')
