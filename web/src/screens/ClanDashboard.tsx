@@ -241,7 +241,11 @@ function WarColumn({
                     .join(' ')}
                 >
                   <span className="rank-number">{player.position}</span>
-                  <PlayerLink id={player.id} name={player.name} className="roster-name player-profile-link" />
+                  <PlayerLink
+                    id={player.id}
+                    name={player.name}
+                    className="roster-name player-profile-link"
+                  />
                   <b>{shortNumber(player.points)}</b>
                 </div>
               );
@@ -483,169 +487,169 @@ export function ClanDashboard({
     );
   return (
     <PlayerIdentityProvider account={user}>
-    <div className="page">
-      <ToastHost />
-      <ConfirmationHost />
-      <SiteHeader
-        user={user}
-        isWiki={isWiki}
-        isPlayers={isPlayers}
-        isAnalytics={isAnalytics}
-        onSettings={() => setDialog('settings')}
-        onProfile={() => setDialog('profile')}
-        onLogout={onLogout}
-        onLocaleChange={onLocaleChange}
-      />
+      <div className="page">
+        <ToastHost />
+        <ConfirmationHost />
+        <SiteHeader
+          user={user}
+          isWiki={isWiki}
+          isPlayers={isPlayers}
+          isAnalytics={isAnalytics}
+          onSettings={() => setDialog('settings')}
+          onProfile={() => setDialog('profile')}
+          onLogout={onLogout}
+          onLocaleChange={onLocaleChange}
+        />
 
-      {user.impersonating && (
-        <aside className="impersonation-banner" role="status">
-          <span>
-            <strong>{t('impersonationActive')}</strong> {user.displayName} ·{' '}
-            {t('impersonationOwner', { name: user.impersonating.ownerName })}
-          </span>
-          <button
-            type="button"
-            className="impersonation-return"
-            onClick={() => void onStopImpersonation()}
-          >
-            {t('returnToOwner')}
-          </button>
-        </aside>
-      )}
+        {user.impersonating && (
+          <aside className="impersonation-banner" role="status">
+            <span>
+              <strong>{t('impersonationActive')}</strong> {user.displayName} ·{' '}
+              {t('impersonationOwner', { name: user.impersonating.ownerName })}
+            </span>
+            <button
+              type="button"
+              className="impersonation-return"
+              onClick={() => void onStopImpersonation()}
+            >
+              {t('returnToOwner')}
+            </button>
+          </aside>
+        )}
 
-      <React.Suspense
-        fallback={
-          <main className="loading-page">
-            <span className="spinner" /> {t('loading')}
-          </main>
-        }
-      >
-        {isWiki ? (
-          <WikiScreen articleId={wikiArticleId} />
-        ) : playerId !== null ? (
-          <PlayerInsightsPage
-            key={playerId}
-            playerId={playerId}
-            account={user}
-            candidates={data.rankings.calculated}
-          />
-        ) : isAnalytics ? (
-          <AnalyticsPage account={user} />
-        ) : warDetailStart ? (
-          <WarDetailPage start={warDetailStart} clanName={data.rankings.settings.clanName} />
-        ) : isPlayers ? (
-          <PlayersPage
-            key={legacyAccessRoute ? 'access' : 'roster'}
-            initialAccess={legacyAccessRoute}
-            account={user}
-            dashboard={data}
-            onImpersonate={onImpersonate}
-            onMerged={(next) => {
-              setWeeks([]);
-              onChange(next);
-            }}
-          />
-        ) : (
-          <main className="dashboard">
-            {error && <div className="error-strip">{error}</div>}
-            {user.playerId !== null && <PersonalDashboard account={user} data={data} />}
-            <div className="dashboard-top dashboard-top-compact">
-              <ClanOverview data={data} />
-              <Leaders allTime={data.rankings.allTime} latest={data.rankings.latest} account={user} />
-            </div>
-            <section className="panel history-widget">
-              <header className="widget-head timeline-heading">
-                <h2>
-                  <History size={20} /> {t('warHistory')}
-                </h2>
-              </header>
-              {historyError && (
-                <div className="error-strip" role="alert">
-                  {historyError} <button onClick={() => void loadOlder()}>Retry</button>
-                </div>
-              )}
-              <div
-                className="timeline-scroll"
-                ref={track}
-                onTouchStart={touchStart}
-                onTouchEnd={touchEnd}
-                onWheel={wheelScroll}
-              >
-                <div className="timeline-track">
-                  <button
-                    className="war-load-control"
-                    disabled={loadingOlder}
-                    title={t('pullOlder')}
-                    aria-label={t('pullOlder')}
-                    onClick={loadOlder}
-                  >
-                    <ChevronsLeft size={32} />
-                  </button>
-                  {visibleWeeks.map((week) => (
-                    <WarColumn
-                      key={week.start}
-                      week={week}
-                      onImport={setImportWeek}
-                      onEdit={setEditWeek}
-                      calculated={calculated}
-                      canEdit={canEdit}
-                      account={user}
-                    />
-                  ))}
-                </div>
+        <React.Suspense
+          fallback={
+            <main className="loading-page">
+              <span className="spinner" /> {t('loading')}
+            </main>
+          }
+        >
+          {isWiki ? (
+            <WikiScreen articleId={wikiArticleId} />
+          ) : playerId !== null ? (
+            <PlayerInsightsPage
+              key={playerId}
+              playerId={playerId}
+              account={user}
+              candidates={data.rankings.calculated}
+            />
+          ) : isAnalytics ? (
+            <AnalyticsPage account={user} />
+          ) : warDetailStart ? (
+            <WarDetailPage start={warDetailStart} clanName={data.rankings.settings.clanName} />
+          ) : isPlayers ? (
+            <PlayersPage
+              key={legacyAccessRoute ? 'access' : 'roster'}
+              initialAccess={legacyAccessRoute}
+              account={user}
+              dashboard={data}
+              onImpersonate={onImpersonate}
+              onMerged={(next) => {
+                setWeeks([]);
+                onChange(next);
+              }}
+            />
+          ) : (
+            <main className="dashboard">
+              {error && <div className="error-strip">{error}</div>}
+              {user.playerId !== null && <PersonalDashboard account={user} data={data} />}
+              <div className="dashboard-top dashboard-top-compact">
+                <ClanOverview data={data} />
+                <Leaders allTime={data.rankings.allTime} latest={data.rankings.latest} account={user} />
               </div>
-            </section>
-          </main>
-        )}
-      </React.Suspense>
-      <React.Suspense fallback={null}>
-        {editWeek && canEdit && (
-          <EditWarModal
-            key={editWeek.start}
-            week={editWeek}
-            clanName={data.rankings.settings.clanName}
-            onClose={() => setEditWeek(null)}
-            onDone={(next, updatedWeek) => {
-              onChange(next);
-              setWeeks((previous) =>
-                previous.map((week) => (week.start === updatedWeek.start ? updatedWeek : week)),
-              );
-              setEditWeek(null);
-            }}
-          />
-        )}
-        {importWeek && canEdit && (
-          <ImportModal
-            key={importWeek.start}
-            week={importWeek}
-            clanName={data.rankings.settings.clanName}
-            onClose={() => setImportWeek(null)}
-            onDone={(next) => {
-              onChange(next);
-              setImportWeek(null);
-            }}
-          />
-        )}
-        {dialog === 'settings' && canEdit && (
-          <SettingsModal
-            current={data.rankings.settings}
-            onClose={() => setDialog(null)}
-            onDone={(next) => {
-              onChange(next);
-              setDialog(null);
-            }}
-          />
-        )}
-        {dialog === 'profile' && (
-          <ProfileModal
-            account={user}
-            onClose={() => setDialog(null)}
-            onSaved={onProfileChange}
-            onDeleted={onAccountDeleted}
-          />
-        )}
-      </React.Suspense>
-    </div>
+              <section className="panel history-widget">
+                <header className="widget-head timeline-heading">
+                  <h2>
+                    <History size={20} /> {t('warHistory')}
+                  </h2>
+                </header>
+                {historyError && (
+                  <div className="error-strip" role="alert">
+                    {historyError} <button onClick={() => void loadOlder()}>Retry</button>
+                  </div>
+                )}
+                <div
+                  className="timeline-scroll"
+                  ref={track}
+                  onTouchStart={touchStart}
+                  onTouchEnd={touchEnd}
+                  onWheel={wheelScroll}
+                >
+                  <div className="timeline-track">
+                    <button
+                      className="war-load-control"
+                      disabled={loadingOlder}
+                      title={t('pullOlder')}
+                      aria-label={t('pullOlder')}
+                      onClick={loadOlder}
+                    >
+                      <ChevronsLeft size={32} />
+                    </button>
+                    {visibleWeeks.map((week) => (
+                      <WarColumn
+                        key={week.start}
+                        week={week}
+                        onImport={setImportWeek}
+                        onEdit={setEditWeek}
+                        calculated={calculated}
+                        canEdit={canEdit}
+                        account={user}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </section>
+            </main>
+          )}
+        </React.Suspense>
+        <React.Suspense fallback={null}>
+          {editWeek && canEdit && (
+            <EditWarModal
+              key={editWeek.start}
+              week={editWeek}
+              clanName={data.rankings.settings.clanName}
+              onClose={() => setEditWeek(null)}
+              onDone={(next, updatedWeek) => {
+                onChange(next);
+                setWeeks((previous) =>
+                  previous.map((week) => (week.start === updatedWeek.start ? updatedWeek : week)),
+                );
+                setEditWeek(null);
+              }}
+            />
+          )}
+          {importWeek && canEdit && (
+            <ImportModal
+              key={importWeek.start}
+              week={importWeek}
+              clanName={data.rankings.settings.clanName}
+              onClose={() => setImportWeek(null)}
+              onDone={(next) => {
+                onChange(next);
+                setImportWeek(null);
+              }}
+            />
+          )}
+          {dialog === 'settings' && canEdit && (
+            <SettingsModal
+              current={data.rankings.settings}
+              onClose={() => setDialog(null)}
+              onDone={(next) => {
+                onChange(next);
+                setDialog(null);
+              }}
+            />
+          )}
+          {dialog === 'profile' && (
+            <ProfileModal
+              account={user}
+              onClose={() => setDialog(null)}
+              onSaved={onProfileChange}
+              onDeleted={onAccountDeleted}
+            />
+          )}
+        </React.Suspense>
+      </div>
     </PlayerIdentityProvider>
   );
 }

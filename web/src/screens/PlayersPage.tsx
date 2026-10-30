@@ -492,7 +492,9 @@ function DirectoryRow({
   return (
     <div className={'directory-player' + (!player.active ? ' inactive' : '')} role="row">
       <div className="directory-player-main" role="cell">
-        <span className="directory-player-name"><PlayerLink id={player.id} name={player.name} /> <ArrowUpRight size={15} /></span>
+        <span className="directory-player-name">
+          <PlayerLink id={player.id} name={player.name} /> <ArrowUpRight size={15} />
+        </span>
         {power && <small className="directory-player-power">⚔ {power}</small>}
         <div className="directory-player-flags">
           <span

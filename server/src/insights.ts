@@ -256,9 +256,8 @@ export class InsightsService {
         // Newcomer is an overlapping label, not a mutually exclusive score tier.
         newcomer: active.filter((player) => player.newcomer).length,
         below: active.filter((player) => player.score < requirement).length,
-        meeting: active.filter(
-          (player) => player.score >= requirement && player.score < 2 * requirement,
-        ).length,
+        meeting: active.filter((player) => player.score >= requirement && player.score < 2 * requirement)
+          .length,
         exceeding: active.filter((player) => player.score >= 2 * requirement).length,
       },
     };

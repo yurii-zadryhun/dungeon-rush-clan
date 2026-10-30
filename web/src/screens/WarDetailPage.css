@@ -2,14 +2,37 @@
   width: 100%;
   min-width: 0;
 }
-.war-detail-back { display:inline-flex; align-items:center; gap:7px; width:fit-content;
-  color:var(--color-blue); text-decoration:none; font-size:13px; font-weight:850; }
-.war-detail-back:hover { text-decoration:underline; }
-.war-detail-page .panel { min-width:0; border:3px solid var(--stroke-heavy);
-  background:var(--surface-panel); border-radius:var(--radius-xl); }
-.war-detail-page h1,.war-detail-page h2 { color:var(--text-primary); text-shadow:none; }
-.war-detail-page .data-table { margin-top:16px; }
-.war-report-preview { overflow-x:auto; tab-size:4; }
+.war-detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  width: fit-content;
+  color: var(--color-blue);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 850;
+}
+.war-detail-back:hover {
+  text-decoration: underline;
+}
+.war-detail-page .panel {
+  min-width: 0;
+  border: 3px solid var(--stroke-heavy);
+  background: var(--surface-panel);
+  border-radius: var(--radius-xl);
+}
+.war-detail-page h1,
+.war-detail-page h2 {
+  color: var(--text-primary);
+  text-shadow: none;
+}
+.war-detail-page .data-table {
+  margin-top: 16px;
+}
+.war-report-preview {
+  overflow-x: auto;
+  tab-size: 4;
+}
 .war-detail-page {
   display: grid;
   gap: 16px;

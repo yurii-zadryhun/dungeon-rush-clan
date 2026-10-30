@@ -1,19 +1,66 @@
-.data-table { --data-columns:minmax(0,1fr) auto; --data-gap:clamp(6px,2vw,16px); min-width:0; }
-.data-table-header,.data-table-row { display:grid; grid-template-columns:var(--data-columns);
-  gap:var(--data-gap); align-items:center; min-width:0; }
-.data-table-header { background:var(--surface-control); border:1px solid var(--stroke-subtle);
-  padding:11px; border-radius:var(--radius-md) var(--radius-md) 0 0;
-  font-size:11px; font-weight:850; color:var(--text-soft); }
-.data-table-row { padding:11px; border-bottom:1px solid var(--stroke-subtle);
-  border-left:1px solid transparent; border-right:1px solid transparent; }
-.data-table-row:nth-child(even) { background:rgba(255,255,255,.025); }
-.data-table-row:hover { background:rgba(255,255,255,.055); }
-.data-table-header > :last-child,.data-table-cell.numeric { text-align:right; }
-.data-table-cell { min-width:0; overflow-wrap:anywhere; font-variant-numeric:tabular-nums; }
-.data-table-header button { background:none; border:0; color:inherit; font:inherit; font-weight:inherit;
-  cursor:pointer; padding:4px 0; text-align:inherit; }
-.data-table-header button:hover { color:var(--text-on-accent); }
-@media(max-width:650px) {
-  .data-table-header,.data-table-row { padding:9px 6px; font-size:12px; }
-  .data-table-header { font-size:10px; }
+.data-table {
+  --data-columns: minmax(0, 1fr) auto;
+  --data-gap: clamp(6px, 2vw, 16px);
+  min-width: 0;
+}
+.data-table-header,
+.data-table-row {
+  display: grid;
+  grid-template-columns: var(--data-columns);
+  gap: var(--data-gap);
+  align-items: center;
+  min-width: 0;
+}
+.data-table-header {
+  background: var(--surface-control);
+  border: 1px solid var(--stroke-subtle);
+  padding: 11px;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  font-size: 11px;
+  font-weight: 850;
+  color: var(--text-soft);
+}
+.data-table-row {
+  padding: 11px;
+  border-bottom: 1px solid var(--stroke-subtle);
+  border-left: 1px solid transparent;
+  border-right: 1px solid transparent;
+}
+.data-table-row:nth-child(even) {
+  background: rgba(255, 255, 255, 0.025);
+}
+.data-table-row:hover {
+  background: rgba(255, 255, 255, 0.055);
+}
+.data-table-header > :last-child,
+.data-table-cell.numeric {
+  text-align: right;
+}
+.data-table-cell {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.data-table-header button {
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  cursor: pointer;
+  padding: 4px 0;
+  text-align: inherit;
+}
+.data-table-header button:hover {
+  color: var(--text-on-accent);
+}
+@media (max-width: 650px) {
+  .data-table-header,
+  .data-table-row {
+    padding: 9px 6px;
+    font-size: 12px;
+  }
+  .data-table-header {
+    font-size: 10px;
+  }
 }

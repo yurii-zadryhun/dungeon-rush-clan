@@ -113,9 +113,14 @@ async function bootstrap() {
     const encoding = /\bbr\b/.test(accepted) ? 'br' : /\bgzip\b/.test(accepted) ? 'gzip' : null;
     if (!encoding) return payload;
     const existingVary = String(reply.getHeader('vary') ?? '');
-    reply.header('Vary', existingVary
-      ? existingVary.includes('Accept-Encoding') ? existingVary : existingVary + ', Accept-Encoding'
-      : 'Accept-Encoding');
+    reply.header(
+      'Vary',
+      existingVary
+        ? existingVary.includes('Accept-Encoding')
+          ? existingVary
+          : existingVary + ', Accept-Encoding'
+        : 'Accept-Encoding',
+    );
     reply.header('Content-Encoding', encoding);
     reply.removeHeader('Content-Length');
     reply.removeHeader('ETag');

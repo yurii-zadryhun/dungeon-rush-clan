@@ -45,11 +45,17 @@ export function AdvancedInsights() {
       </div>
     );
   if (!data) return <div className="panel">{uk ? 'Завантаження аналітики…' : 'Loading analytics…'}</div>;
-  const balance = contributionBalance(data.powerContribution).sort((left, right) =>
-    (descending ? -1 : 1) * (left[powerSort] - right[powerSort]) || left.name.localeCompare(right.name));
+  const balance = contributionBalance(data.powerContribution).sort(
+    (left, right) =>
+      (descending ? -1 : 1) * (left[powerSort] - right[powerSort]) ||
+      left.name.localeCompare(right.name),
+  );
   function sortBalance(value: 'surplus' | 'points' | 'power') {
     if (powerSort === value) setDescending((current) => !current);
-    else { setPowerSort(value); setDescending(true); }
+    else {
+      setPowerSort(value);
+      setDescending(true);
+    }
   }
   const marker = (value: 'surplus' | 'points' | 'power') =>
     powerSort === value ? (descending ? ' ↓' : ' ↑') : '';
@@ -73,9 +79,11 @@ export function AdvancedInsights() {
             </div>
           ))}
         </div>
-        <p className="muted tiny">{uk
-          ? 'Новачки також враховуються в категоріях очок; три категорії за очками не перетинаються.'
-          : 'Newcomers also belong to a points tier; the three points tiers do not overlap.'}</p>
+        <p className="muted tiny">
+          {uk
+            ? 'Новачки також враховуються в категоріях очок; три категорії за очками не перетинаються.'
+            : 'Newcomers also belong to a points tier; the three points tiers do not overlap.'}
+        </p>
       </section>
       <section className="panel insight-widget">
         <h2>
@@ -89,64 +97,120 @@ export function AdvancedInsights() {
               </b>
               <strong>{entry.rate === null ? '—' : entry.rate + '%'}</strong>
               <small>
-                {entry.eligible > 0 ? entry.retained + ' / ' + entry.eligible :
-                  uk ? 'Недостатньо даних' : 'Not enough data'}
+                {entry.eligible > 0
+                  ? entry.retained + ' / ' + entry.eligible
+                  : uk
+                    ? 'Недостатньо даних'
+                    : 'Not enough data'}
               </small>
             </div>
           ))}
         </div>
       </section>
       <section className="panel insight-widget advanced-balance">
-        <h2><Scale size={19} /> {uk ? 'Сила та внесок' : 'Power vs Contribution'}</h2>
-        <p className="muted tiny">{uk
-          ? 'Різниця між часткою очок і часткою сили серед зіставлених гравців (п.п.). Це не оцінка ефективності білда.'
-          : 'Contribution share minus power share among matched players (percentage points). Not a build-efficiency rating.'}</p>
+        <h2>
+          <Scale size={19} /> {uk ? 'Сила та внесок' : 'Power vs Contribution'}
+        </h2>
+        <p className="muted tiny">
+          {uk
+            ? 'Різниця між часткою очок і часткою сили серед зіставлених гравців (п.п.). Це не оцінка ефективності білда.'
+            : 'Contribution share minus power share among matched players (percentage points). Not a build-efficiency rating.'}
+        </p>
         {balance.length > 0 ? (
-          <DataTable label={uk ? 'Сила та внесок гравців' : 'Power vs contribution'}
+          <DataTable
+            label={uk ? 'Сила та внесок гравців' : 'Power vs contribution'}
             columns="minmax(0,1fr) minmax(58px,90px) minmax(58px,90px) minmax(58px,90px)"
-            headers={[uk ? 'Гравець' : 'Player',
-              <button onClick={() => sortBalance('power')}>{uk ? 'Сила' : 'Power'}{marker('power')}</button>,
-              <button onClick={() => sortBalance('points')}>{uk ? 'Очки' : 'Points'}{marker('points')}</button>,
-              <button onClick={() => sortBalance('surplus')} title="Contribution share − power share">Δ pp{marker('surplus')}</button>]}>
+            headers={[
+              uk ? 'Гравець' : 'Player',
+              <button onClick={() => sortBalance('power')}>
+                {uk ? 'Сила' : 'Power'}
+                {marker('power')}
+              </button>,
+              <button onClick={() => sortBalance('points')}>
+                {uk ? 'Очки' : 'Points'}
+                {marker('points')}
+              </button>,
+              <button onClick={() => sortBalance('surplus')} title="Contribution share − power share">
+                Δ pp{marker('surplus')}
+              </button>,
+            ]}
+          >
             {balance.map((person) => (
               <DataTableRow key={person.id}>
-                <DataTableCell><PlayerLink id={person.id} name={person.name} /></DataTableCell>
+                <DataTableCell>
+                  <PlayerLink id={person.id} name={person.name} />
+                </DataTableCell>
                 <DataTableCell numeric>{shortNumber(person.power)}</DataTableCell>
                 <DataTableCell numeric>{shortNumber(person.points)}</DataTableCell>
                 <DataTableCell numeric>
-                  <span className={person.surplus > 0 ? 'friendly' : person.surplus < 0 ? 'enemy' : ''}
-                    title={(person.pointsShare * 100).toFixed(1) + '% − ' + (person.powerShare * 100).toFixed(1) + '%'}>
-                    {person.surplus > 0 ? '+' : ''}{person.surplus.toFixed(1)}
+                  <span
+                    className={person.surplus > 0 ? 'friendly' : person.surplus < 0 ? 'enemy' : ''}
+                    title={
+                      (person.pointsShare * 100).toFixed(1) +
+                      '% − ' +
+                      (person.powerShare * 100).toFixed(1) +
+                      '%'
+                    }
+                  >
+                    {person.surplus > 0 ? '+' : ''}
+                    {person.surplus.toFixed(1)}
                   </span>
                 </DataTableCell>
               </DataTableRow>
             ))}
           </DataTable>
-        ) : <p className="muted">{uk ? 'Потрібні очки війни та знімок сили.' : 'War scores and a roster power snapshot are required.'}</p>}
-        <p className="muted tiny">{uk ? 'Зіставлених гравців' : 'Matched players'}: {balance.length}.
-          {' '}{uk ? 'Знімок складу' : 'Roster snapshot'}: {data.asOf ? new Date(data.asOf).toLocaleDateString(locale) : '—'}.
-          {' '}{uk ? 'Остання війна' : 'Latest war'}: {data.latestWar ? formatWarRange(data.latestWar, locale) : '—'}.
+        ) : (
+          <p className="muted">
+            {uk
+              ? 'Потрібні очки війни та знімок сили.'
+              : 'War scores and a roster power snapshot are required.'}
+          </p>
+        )}
+        <p className="muted tiny">
+          {uk ? 'Зіставлених гравців' : 'Matched players'}: {balance.length}.{' '}
+          {uk ? 'Знімок складу' : 'Roster snapshot'}:{' '}
+          {data.asOf ? new Date(data.asOf).toLocaleDateString(locale) : '—'}.{' '}
+          {uk ? 'Остання війна' : 'Latest war'}:{' '}
+          {data.latestWar ? formatWarRange(data.latestWar, locale) : '—'}.
         </p>
-        <p className="muted tiny">{uk ? 'Знімок сили може бути зроблений пізніше за війну, тому це орієнтовне порівняння.'
-          : 'Power may have been captured after the war; interpret the comparison cautiously.'}</p>
+        <p className="muted tiny">
+          {uk
+            ? 'Знімок сили може бути зроблений пізніше за війну, тому це орієнтовне порівняння.'
+            : 'Power may have been captured after the war; interpret the comparison cautiously.'}
+        </p>
       </section>
       <section className="panel insight-widget">
         <h2>
           <TrendingUp size={19} /> {uk ? 'Лідери зростання сили' : 'Power growth leaders'}
         </h2>
         {data.rosterHistoryCount < 2 ? (
-          <p className="muted">{uk ? 'Потрібно два знімки складу. Імпортуй склад ще раз пізніше.'
-            : 'Two roster snapshots required. Import another roster later to track growth.'}</p>
+          <p className="muted">
+            {uk
+              ? 'Потрібно два знімки складу. Імпортуй склад ще раз пізніше.'
+              : 'Two roster snapshots required. Import another roster later to track growth.'}
+          </p>
         ) : data.powerGrowth.length === 0 ? (
-          <p className="muted">{uk ? 'Немає спільних гравців у двох знімках.' : 'No matching players between snapshots.'}</p>
+          <p className="muted">
+            {uk ? 'Немає спільних гравців у двох знімках.' : 'No matching players between snapshots.'}
+          </p>
         ) : (
-          <DataTable label="Power growth" columns="minmax(0,1fr) 90px 65px"
-            headers={[uk ? 'Гравець' : 'Player', uk ? 'Приріст' : 'Growth', '%']}>
+          <DataTable
+            label="Power growth"
+            columns="minmax(0,1fr) 90px 65px"
+            headers={[uk ? 'Гравець' : 'Player', uk ? 'Приріст' : 'Growth', '%']}
+          >
             {data.powerGrowth.map((person) => (
               <DataTableRow key={person.id}>
-                <DataTableCell><PlayerLink id={person.id} name={person.name} /></DataTableCell>
-                <DataTableCell numeric>{person.delta >= 0 ? '+' : ''}{shortNumber(person.delta)}</DataTableCell>
-                <DataTableCell numeric>{person.percentage === null ? '—' : person.percentage + '%'}</DataTableCell>
+                <DataTableCell>
+                  <PlayerLink id={person.id} name={person.name} />
+                </DataTableCell>
+                <DataTableCell numeric>
+                  {person.delta >= 0 ? '+' : ''}
+                  {shortNumber(person.delta)}
+                </DataTableCell>
+                <DataTableCell numeric>
+                  {person.percentage === null ? '—' : person.percentage + '%'}
+                </DataTableCell>
               </DataTableRow>
             ))}
           </DataTable>
@@ -154,12 +218,16 @@ export function AdvancedInsights() {
       </section>
       <section className="panel insight-widget">
         <h2>{uk ? 'Найстабільніші гравці' : 'Most consistent contributors'}</h2>
-        <DataTable label="Contribution consistency"
+        <DataTable
+          label="Contribution consistency"
           columns="minmax(0,1fr) minmax(55px,75px) minmax(65px,100px)"
-          headers={[uk ? 'Гравець' : 'Player', '%', uk ? 'Середнє' : 'Average']}>
+          headers={[uk ? 'Гравець' : 'Player', '%', uk ? 'Середнє' : 'Average']}
+        >
           {data.consistency.map((person) => (
             <DataTableRow key={person.id}>
-              <DataTableCell><PlayerLink id={person.id} name={person.name} /></DataTableCell>
+              <DataTableCell>
+                <PlayerLink id={person.id} name={person.name} />
+              </DataTableCell>
               <DataTableCell numeric>{person.consistency}%</DataTableCell>
               <DataTableCell numeric>{shortNumber(person.average)}</DataTableCell>
             </DataTableRow>
