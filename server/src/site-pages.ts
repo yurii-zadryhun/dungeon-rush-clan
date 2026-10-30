@@ -133,7 +133,7 @@ export class SitePagesController {
   // PWA assets live alongside the working logo under web/public/assets.
   // Hestia routes /api/ reliably to this application, while /sw.js can be
   // intercepted by Nginx. Serve the worker here with explicit root scope.
-  @Get('api/pwa/sw.js')
+  @Get('api/pwa/worker')
   serviceWorker(@Res() reply: FastifyReply) {
     const bundle = resolve(__dirname, '../../web/dist/assets/sw.js');
     const source = existsSync(bundle) ? bundle : resolve(__dirname, '../../web/public/assets/sw.js');

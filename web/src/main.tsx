@@ -3,7 +3,7 @@ import React from 'react';
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
     void navigator.serviceWorker
-      .register('/api/pwa/sw.js', { scope: '/', updateViaCache: 'none' })
+      .register('/api/pwa/worker', { scope: '/', updateViaCache: 'none' })
       .catch((error: unknown) => {
         console.error('Service worker registration failed:', error);
       });
