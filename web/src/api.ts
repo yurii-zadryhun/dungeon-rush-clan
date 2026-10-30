@@ -199,6 +199,24 @@ export interface ClanOcrResponse {
   reportedPower: number | null;
   reportedPowerText: string | null;
   warnings: string[];
+  diagnostics: Array<{
+    image: number;
+    headerHeight: number;
+    vision: {
+      raw: string;
+      words: Array<{ text: string; x: number; y: number }>;
+      width: number;
+      height: number;
+    };
+    parsed: {
+      players: ClanOcrPlayer[];
+      reportedMembers: number | null;
+      capacity: number | null;
+      reportedPower: number | null;
+      reportedPowerText: string | null;
+      warnings: string[];
+    };
+  }>;
 }
 export interface ClanRosterSnapshot {
   id: number;
