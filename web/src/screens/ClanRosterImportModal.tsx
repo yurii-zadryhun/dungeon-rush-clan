@@ -23,6 +23,7 @@ interface DraftEntry {
   powerText: string;
   playerId: number | null;
   source: number;
+  y?: number;
   ocrName?: string;
 }
 let nextKey = 1;
@@ -603,6 +604,9 @@ export function ClanRosterImportModal({
                   >
                     <label>
                       <span className="clan-roster-row-number">{index + 1}</span>
+                      {(!previous?.entries.some((entry) => entry.id === row.playerId) || row.playerId === null) && (
+                        <span className="clan-new-label">New</span>
+                      )}
                       <input
                         aria-label={t('playerColumn') + ' ' + (index + 1)}
                         value={row.name}
@@ -616,9 +620,6 @@ export function ClanRosterImportModal({
                       value={row.powerText}
                       onChange={(event) => update(row.key, { powerText: event.target.value })}
                     />
-                    {(!previous?.entries.some((entry) => entry.id === row.playerId) || row.playerId === null) && (
-                      <span className="clan-new-label">New</span>
-                    )}
                     <SearchSelect
                       value={row.playerId}
                       ariaLabel={t('clanMatch') + ': ' + row.name}
@@ -626,18 +627,20 @@ export function ClanRosterImportModal({
                       choices={candidateChoices}
                       onChange={(value) => choosePlayer(row.key, value)}
                     />
-                    {suspicious(row) && (
-                      <button type="button" className="clan-crop-button"
-                        title={locale === 'uk' ? 'Показати фрагмент скриншота' : 'Show screenshot crop'}
-                        onClick={() => void showCrop(row)}>◉</button>
-                    )}
-                    <button
+                    <div className="clan-roster-row-actions">
+                      {suspicious(row) && (
+                        <button type="button" className="clan-crop-button"
+                          title={locale === 'uk' ? 'Показати фрагмент скриншота' : 'Show screenshot crop'}
+                          onClick={() => void showCrop(row)}>◉</button>
+                      )}
+                      <button
                       type="button"
                       aria-label={t('remove') + ': ' + row.name}
                       onClick={() => setRows((all) => all.filter((entry) => entry.key !== row.key))}
                     >
                       <Trash2 size={15} />
                     </button>
+                    </div>
                     {cropKey === row.key && cropUrl && (
                       <img className="clan-player-crop" src={cropUrl} alt={row.name} />
                     )}

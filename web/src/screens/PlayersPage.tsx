@@ -47,7 +47,8 @@ interface StandaloneAccount {
 }
 type Membership = 'active' | 'all' | 'left';
 type Registration = 'all' | 'registered' | 'unregistered';
-type Order = 'score' | 'latest' | 'name';
+type Order = 'score' | 'latest' | 'name' | 'weeks';
+type SavedView = { name: string; membership: Membership; registration: Registration; order: Order; search: string };
 
 export function PlayersPage({
   account,
@@ -79,6 +80,38 @@ export function PlayersPage({
   const [membership, setMembership] = React.useState<Membership>('active');
   const [registration, setRegistration] = React.useState<Registration>('all');
   const [order, setOrder] = React.useState<Order>('score');
+  const [descending, setDescending] = React.useState(true);
+  const [viewName, setViewName] = React.useState('');
+  const [savedViews, setSavedViews] = React.useState<SavedView[]>(() => {
+    try {
+      const parsed: unknown = JSON.parse(localStorage.getItem('clan:player-views:v1') || '[]');
+      return Array.isArray(parsed) ? parsed.filter((item) => item && typeof item.name === 'string').slice(0, 10) : [];
+    } catch { return []; }
+  });
+
+  function sortBy(field: Order) {
+    if (order === field) setDescending((current) => !current);
+    else { setOrder(field); setDescending(field !== 'name'); }
+  }
+
+  function saveView() {
+    const name = viewName.trim().slice(0, 35);
+    if (!name) return;
+    const next = [...savedViews.filter((item) => item.name !== name),
+      { name, membership, registration, order, search }].slice(-10);
+    setSavedViews(next);
+    localStorage.setItem('clan:player-views:v1', JSON.stringify(next));
+    setViewName('');
+  }
+
+  function selectView(name: string) {
+    const view = savedViews.find((item) => item.name === name);
+    if (!view) return;
+    setMembership(view.membership);
+    setRegistration(view.registration);
+    setOrder(view.order);
+    setSearch(view.search);
+  }
 
   React.useEffect(() => {
     let alive = true;
@@ -122,10 +155,14 @@ export function PlayersPage({
     .sort((a, b) => {
       const aScore = stats.get(a.id);
       const bScore = stats.get(b.id);
-      if (order === 'name') return a.name.localeCompare(b.name);
-      if (order === 'latest')
-        return (bScore?.lastPoints ?? -1) - (aScore?.lastPoints ?? -1) || a.name.localeCompare(b.name);
-      return (bScore?.score ?? 0) - (aScore?.score ?? 0) || a.name.localeCompare(b.name);
+      const difference = order === 'name'
+        ? a.name.localeCompare(b.name)
+        : order === 'latest'
+          ? (aScore?.lastPoints ?? -1) - (bScore?.lastPoints ?? -1)
+          : order === 'weeks'
+            ? a.weeks.length - b.weeks.length
+            : (aScore?.score ?? 0) - (bScore?.score ?? 0);
+      return (descending ? -difference : difference) || a.name.localeCompare(b.name);
     });
   const activeCount = members.filter((player) => player.active).length;
   const matchingUnlinked =
@@ -235,12 +272,26 @@ export function PlayersPage({
               </label>
               <label className="players-filter-select">
                 <span>{t('sortBy')}</span>
-                <select value={order} onChange={(event) => setOrder(event.target.value as Order)}>
+                <select value={order} onChange={(event) => sortBy(event.target.value as Order)}>
                   <option value="score">{t('calculatedScore')}</option>
                   <option value="latest">{t('latestPoints')}</option>
                   <option value="name">{t('name')}</option>
+                  <option value="weeks">{t('weeksParticipated')}</option>
                 </select>
               </label>
+            </div>
+            <div className="player-saved-views">
+              <label>
+                <span>{t('saved') || 'Saved views'}</span>
+                <select defaultValue="" onChange={(event) => selectView(event.target.value)}>
+                  <option value="">—</option>
+                  {savedViews.map((view) => <option key={view.name} value={view.name}>{view.name}</option>)}
+                </select>
+              </label>
+              <input value={viewName} onChange={(event) => setViewName(event.target.value)}
+                maxLength={35} placeholder={t('name')} aria-label={t('name')}/>
+              <button type="button" className="game-button secondary" disabled={!viewName.trim()}
+                onClick={saveView}>{t('save')}</button>
             </div>
           </div>
           {error && (
@@ -260,16 +311,10 @@ export function PlayersPage({
               {visible.length > 0 && (
                 <div className="players-table" role="table" aria-label={t('clanRoster')}>
                   <div className="players-column-head" role="row">
-                    <span role="columnheader">{t('playerColumn')}</span>
-                    <span role="columnheader" title={t('calculatedScore')}>
-                      {t('scoreColumn')}
-                    </span>
-                    <span role="columnheader" title={t('latestPoints')}>
-                      {t('lastWarColumn')}
-                    </span>
-                    <span role="columnheader" title={t('weeksParticipated')}>
-                      {t('warsColumn')}
-                    </span>
+                    <button role="columnheader" onClick={() => sortBy('name')}>{t('playerColumn')} {order === 'name' ? (descending ? '↓' : '↑') : ''}</button>
+                    <button role="columnheader" onClick={() => sortBy('score')}>{t('scoreColumn')} {order === 'score' ? (descending ? '↓' : '↑') : ''}</button>
+                    <button role="columnheader" onClick={() => sortBy('latest')}>{t('lastWarColumn')} {order === 'latest' ? (descending ? '↓' : '↑') : ''}</button>
+                    <button role="columnheader" onClick={() => sortBy('weeks')}>{t('warsColumn')} {order === 'weeks' ? (descending ? '↓' : '↑') : ''}</button>
                   </div>
                   <div className="players-directory-list" role="rowgroup">
                     {visible.map((player) => (
@@ -391,6 +436,7 @@ function DirectoryRow({
             </span>
           )}
           {player.attention && <span className="directory-flag caution">{t('health_attention')}</span>}
+          {stat?.newcomer && <span className="directory-flag new-player">New</span>}
           {stat?.belowRequirement && player.active && (
             <span
               className="directory-player-low"

@@ -1,0 +1,17 @@
+{
+  "name": "Dungeon Rush · Clan Archive",
+  "short_name": "Clan Archive",
+  "description": "Dungeon Rush clan archive, statistics and wiki",
+  "start_url": "/#/archive",
+  "display": "standalone",
+  "background_color": "#121118",
+  "theme_color": "#121118",
+  "icons": [
+    {
+      "src": "/clan-emblem.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

@@ -22,6 +22,7 @@ export interface Player {
   appearances: number;
   lastPoints: number | null;
   belowRequirement: boolean;
+  newcomer?: boolean;
 }
 
 export interface PlayerScore {

@@ -444,3 +444,10 @@
   font-weight: 850;
   color: #eacb84;
 }
+
+.players-column-head button { cursor:pointer; padding:5px 2px; text-align:left; color:inherit; font:inherit; font-weight:inherit; background:transparent; border:0; }
+.players-column-head button:not(:first-child) { text-align:right; }
+.player-saved-views { display:flex; align-items:end; gap:9px; flex-wrap:wrap; margin-top:10px; }
+.player-saved-views label { display:grid; gap:4px; font-size:12px; }
+.player-saved-views input { width:140px; max-width:100%; }
+.directory-flag.new-player { background:#254d34; color:#98f0b4; border-color:#448856; }

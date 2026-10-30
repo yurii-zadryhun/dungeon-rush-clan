@@ -1,4 +1,10 @@
 import React from 'react';
+
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    void navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
 import { createRoot } from 'react-dom/client';
 import { LanguageProvider } from './i18n';
 import { initialLocale } from './locale';

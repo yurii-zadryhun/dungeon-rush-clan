@@ -10,6 +10,7 @@ export interface RankedPlayer {
   appearances: number;
   lastPoints: number | null;
   belowRequirement: boolean;
+  newcomer: boolean;
 }
 
 @Injectable()
@@ -54,7 +55,9 @@ export class RankingService {
       const average = entries.length
         ? Math.round(entries.reduce((sum, e) => sum + e.points, 0) / entries.length)
         : 0;
+      const newcomer = !!p.active && entries.length > 0 && entries.length <= 2;
       return {
+        newcomer,
         id: p.id,
         name: p.name,
         active: !!p.active,
@@ -62,7 +65,7 @@ export class RankingService {
         average,
         appearances: entries.length,
         lastPoints: latestId ? (lookup.get(latestId) ?? null) : null,
-        belowRequirement: entries.length > 0 && !!p.active && score < settings.minimum_points,
+        belowRequirement: !newcomer && entries.length > 0 && !!p.active && score < settings.minimum_points,
       };
     });
     return {
