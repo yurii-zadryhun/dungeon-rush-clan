@@ -14,9 +14,17 @@ interface CropRegion {
   height: number;
 }
 
+export interface CropSegment {
+  part: number;
+  fileIndex: number;
+  top: number;
+  height: number;
+}
+
 export interface PreparedScreenshots {
   parts: Blob[];
   headerHeight: number;
+  segments: CropSegment[];
 }
 
 export const regions: Record<ScreenshotMode, { rows: CropRegion; header?: CropRegion }> = {
@@ -103,6 +111,7 @@ export async function prepareScreenshots(
     const profile = regions[mode];
     const targetWidth = MOSAIC_WIDTH[mode];
     const parts: Blob[] = [];
+    const segments: CropSegment[] = [];
     let firstHeaderHeight = 0;
 
     for (let start = 0; start < bitmaps.length; start += PAGE_SIZE) {
@@ -130,14 +139,16 @@ export async function prepareScreenshots(
         firstHeaderHeight = y;
         y += SEPARATOR;
       }
-      for (const bitmap of current) {
+      for (const [index, bitmap] of current.entries()) {
+        const top = y;
         y += drawRegion(ctx, bitmap, profile.rows, y, targetWidth);
+        segments.push({ part: parts.length + 1, fileIndex: start + index, top, height: y - top });
         y += SEPARATOR;
       }
       parts.push(await toJpeg(canvas));
     }
 
-    return { parts, headerHeight: firstHeaderHeight };
+    return { parts, headerHeight: firstHeaderHeight, segments };
   } finally {
     bitmaps.forEach((bitmap) => bitmap.close());
   }

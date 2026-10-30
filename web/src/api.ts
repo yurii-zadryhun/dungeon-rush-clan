@@ -206,6 +206,7 @@ export interface ClanOcrPlayer {
   power: number;
   powerText: string;
   source: number;
+  y?: number;
 }
 export interface ClanOcrResponse {
   players: ClanOcrPlayer[];

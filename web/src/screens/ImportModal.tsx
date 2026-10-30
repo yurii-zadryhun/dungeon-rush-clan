@@ -111,6 +111,35 @@ export function ImportModal({
   const [busy, setBusy] = React.useState(false);
   const [quotaRefresh, setQuotaRefresh] = React.useState(0);
   const [error, setError] = React.useState('');
+  const storageKey = 'clan:war-review:' + week.start;
+
+  React.useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(storageKey);
+      if (!raw) return;
+      const saved = JSON.parse(raw) as {
+        at: number; draft: WarDraft; sections: WarSections; roster: Roster; warnings: string[];
+      };
+      if (Date.now() - saved.at > 86_400_000) {
+        sessionStorage.removeItem(storageKey);
+        return;
+      }
+      if (!saved.draft || !saved.sections) return;
+      setDraft(saved.draft);
+      setSections(saved.sections);
+      setRoster(saved.roster ?? emptyRoster);
+      setWarnings(saved.warnings ?? []);
+      setStage('review');
+    } catch { /* Invalid draft is ignored. */ }
+  }, [storageKey]);
+
+  React.useEffect(() => {
+    if (stage !== 'review') return;
+    try {
+      sessionStorage.setItem(storageKey,
+        JSON.stringify({ at: Date.now(), draft, sections, roster, warnings }));
+    } catch { /* Browser storage may be unavailable. */ }
+  }, [stage, draft, sections, roster, warnings, storageKey]);
 
   async function scan() {
     if (!rankingImages.length && !resultImage) {
@@ -159,6 +188,7 @@ export function ImportModal({
       setRoster(available);
       setWarnings(recognized.warnings);
       setDraft({
+        championship: week.championship,
         players: recognized.players.map((player) => ({
           ...player,
           playerId:
@@ -199,6 +229,7 @@ export function ImportModal({
         'import/confirm',
         json('POST', warSubmission(week.start, draft, sections)),
       );
+      sessionStorage.removeItem(storageKey);
       onDone(updated);
     } catch (failure) {
       setError((failure as Error).message);
@@ -244,6 +275,13 @@ export function ImportModal({
             />
           )}
           {stage === 'upload' && <OcrLimitStatus refreshKey={quotaRefresh} />}
+          {stage === 'review' && (
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px' }}>
+              <input type="checkbox" checked={!!draft.championship}
+                onChange={(event) => setDraft((current) => ({ ...current, championship: event.target.checked }))} />
+              Championship
+            </label>
+          )}
           {stage === 'review' && (
             <WarReviewEditor
               draft={draft}

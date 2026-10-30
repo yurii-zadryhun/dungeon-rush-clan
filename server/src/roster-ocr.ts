@@ -23,6 +23,7 @@ export interface RecognizedPower {
   power: number;
   powerText: string;
   source: number;
+  y: number;
 }
 export interface RosterRecognition {
   players: RecognizedPower[];
@@ -125,7 +126,7 @@ export function parseRosterScreenshot(
       const tierOnly = /^(?:IM|M|E|D)$/i.test(inline);
       const name = preceding && tierOnly ? preceding : plausibleName(inline) ? inline : preceding;
       if (powerValue !== null && name) {
-        output.push({ name, power: powerValue, powerText, source });
+        output.push({ name, power: powerValue, powerText, source, y: row.y });
         if (inferred) {
           warnings.push(
             'Verify ' +

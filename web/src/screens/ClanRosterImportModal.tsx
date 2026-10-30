@@ -11,7 +11,7 @@ import {
   type Dashboard,
 } from '../api';
 import { useI18n } from '../i18n';
-import { prepareScreenshots, type PreparedScreenshots } from './image-prep';
+import { prepareScreenshots, regions, type PreparedScreenshots } from './image-prep';
 import { SearchSelect } from './SearchSelect';
 import { OcrLimitStatus } from './OcrLimitStatus';
 import { matchRosterName } from './roster-match';
@@ -87,6 +87,43 @@ export function ClanRosterImportModal({
   const [busy, setBusy] = React.useState(false);
   const [quotaRefresh, setQuotaRefresh] = React.useState(0);
   const [error, setError] = React.useState('');
+  const [reviewOnly, setReviewOnly] = React.useState(false);
+  const [cropKey, setCropKey] = React.useState<number | null>(null);
+  const [cropUrl, setCropUrl] = React.useState<string | null>(null);
+  const [screenshotCount, setScreenshotCount] = React.useState(0);
+  const [restored, setRestored] = React.useState(false);
+
+  React.useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('clan:roster-review:v1');
+      if (!saved) return;
+      const state = JSON.parse(saved) as {
+        at: number; rows: DraftEntry[]; expected: string; reportedPower: string;
+        capturedLocal: string; count: number;
+      };
+      if (Date.now() - state.at > 86_400_000 || !Array.isArray(state.rows) || !state.rows.length) {
+        sessionStorage.removeItem('clan:roster-review:v1');
+        return;
+      }
+      setRows(state.rows.map((row) => ({ ...row, key: nextKey++ })));
+      setExpected(state.expected);
+      setReportedPower(state.reportedPower);
+      setCapturedLocal(state.capturedLocal);
+      setScreenshotCount(state.count);
+      setStage('review');
+      setRestored(true);
+    } catch { /* Corrupt browser draft is ignored. */ }
+  }, []);
+
+  React.useEffect(() => {
+    if (stage !== 'review' || !rows.length) return;
+    try {
+      sessionStorage.setItem('clan:roster-review:v1', JSON.stringify({
+        at: Date.now(), rows, expected, reportedPower, capturedLocal,
+        count: screenshotCount || files.length,
+      }));
+    } catch { /* Storage is optional. */ }
+  }, [stage, rows, expected, reportedPower, capturedLocal, screenshotCount, files.length]);
 
   // Only the original screenshots are shown as thumbnails. The optimized mosaics
   // still go to OCR, but are never rendered or retained as object URLs.
@@ -165,6 +202,45 @@ export function ClanRosterImportModal({
     () => [...rows].sort((a, b) => compareNames.compare(a.name, b.name) || a.key - b.key),
     [rows, compareNames],
   );
+  const suspicious = (row: DraftEntry) => {
+    if (row.ocrName || row.playerId === null || magnitude(row.powerText) === null) return true;
+    const older = previous?.entries.find((entry) => entry.id === row.playerId);
+    const current = magnitude(row.powerText);
+    return !!(older && current !== null && older.power > 0 &&
+      (current / older.power > 20 || current / older.power < 0.05));
+  };
+  const reviewCount = rows.filter(suspicious).length;
+  const reviewRows = reviewOnly ? sortedRows.filter(suspicious) : sortedRows;
+
+  async function showCrop(row: DraftEntry) {
+    setCropKey(row.key);
+    setCropUrl(null);
+    const segment = visiblePreview?.result.segments.find((entry) =>
+      entry.part === row.source && typeof row.y === 'number' &&
+      row.y >= entry.top && row.y < entry.top + entry.height,
+    );
+    const file = segment && files[segment.fileIndex];
+    if (!segment || !file) return;
+    const bitmap = await createImageBitmap(file);
+    try {
+      const relative = ((row.y ?? segment.top) - segment.top) / segment.height;
+      const centerY = (regions.clan.rows.y + relative * regions.clan.rows.height) * bitmap.height;
+      const cropX = Math.round(bitmap.width * 0.19);
+      const cropY = Math.max(0, Math.round(centerY - bitmap.height * 0.048));
+      const cropWidth = Math.round(bitmap.width * 0.49);
+      const cropHeight = Math.min(bitmap.height - cropY, Math.round(bitmap.height * 0.096));
+      const canvas = document.createElement('canvas');
+      canvas.width = cropWidth;
+      canvas.height = cropHeight;
+      const context = canvas.getContext('2d');
+      if (!context) return;
+      context.drawImage(bitmap, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+      setCropUrl(canvas.toDataURL('image/jpeg', 0.9));
+    } finally {
+      bitmap.close();
+    }
+  }
+
   const candidateChoices = React.useMemo(
     () => [
       { value: null, label: t('clanNewPlayer') },
@@ -255,6 +331,8 @@ export function ClanRosterImportModal({
       setReportedPower(result.reportedPowerText ?? '');
       setCapacity(result.capacity);
       setWarnings(result.warnings);
+      setScreenshotCount(files.length);
+      setRestored(false);
       setStage('review');
     } catch (reason) {
       setError((reason as Error).message);
@@ -292,11 +370,12 @@ export function ClanRosterImportModal({
           capturedAt: new Date(capturedLocal).toISOString(),
           reportedMembers: count,
           reportedPowerText: reportedPower || null,
-          screenshotCount: files.length,
+          screenshotCount: screenshotCount || files.length,
           acknowledgePowerMismatch: acknowledge,
           players: rows.map(({ name, powerText, playerId }) => ({ name, powerText, playerId })),
         }),
       );
+      sessionStorage.removeItem('clan:roster-review:v1');
       const dashboard = await api<Dashboard>('dashboard');
       onDone(dashboard);
     } catch (reason) {
@@ -497,6 +576,15 @@ export function ClanRosterImportModal({
                   )}
                 </div>
               )}
+              <div className="clan-review-tools">
+                {restored && <span>{locale === 'uk' ? 'Чернетку відновлено' : 'Draft restored'}</span>}
+                <button className={!reviewOnly ? 'selected' : ''} onClick={() => setReviewOnly(false)}>
+                  {locale === 'uk' ? 'Усі' : 'All'} ({rows.length})
+                </button>
+                <button className={reviewOnly ? 'selected' : ''} onClick={() => setReviewOnly(true)}>
+                  {locale === 'uk' ? 'Перевірити' : 'Review'} ({reviewCount})
+                </button>
+              </div>
               <div className="clan-roster-table">
                 <div className="clan-roster-columns">
                   <span>{t('playerColumn')}</span>
@@ -504,11 +592,12 @@ export function ClanRosterImportModal({
                   <span>{t('clanMatch')}</span>
                   <span />
                 </div>
-                {sortedRows.map((row, index) => (
+                {reviewRows.map((row, index) => (
                   <div
                     className={
                       'clan-roster-entry' +
-                      (magnitude(row.powerText) === null || !row.name.trim() ? ' invalid' : '')
+                      (magnitude(row.powerText) === null || !row.name.trim() ? ' invalid' : '') +
+                      (suspicious(row) ? ' suspicious' : '')
                     }
                     key={row.key}
                   >
@@ -527,6 +616,9 @@ export function ClanRosterImportModal({
                       value={row.powerText}
                       onChange={(event) => update(row.key, { powerText: event.target.value })}
                     />
+                    {(!previous?.entries.some((entry) => entry.id === row.playerId) || row.playerId === null) && (
+                      <span className="clan-new-label">New</span>
+                    )}
                     <SearchSelect
                       value={row.playerId}
                       ariaLabel={t('clanMatch') + ': ' + row.name}
@@ -534,6 +626,11 @@ export function ClanRosterImportModal({
                       choices={candidateChoices}
                       onChange={(value) => choosePlayer(row.key, value)}
                     />
+                    {suspicious(row) && (
+                      <button type="button" className="clan-crop-button"
+                        title={locale === 'uk' ? 'Показати фрагмент скриншота' : 'Show screenshot crop'}
+                        onClick={() => void showCrop(row)}>◉</button>
+                    )}
                     <button
                       type="button"
                       aria-label={t('remove') + ': ' + row.name}
@@ -541,6 +638,9 @@ export function ClanRosterImportModal({
                     >
                       <Trash2 size={15} />
                     </button>
+                    {cropKey === row.key && cropUrl && (
+                      <img className="clan-player-crop" src={cropUrl} alt={row.name} />
+                    )}
                   </div>
                 ))}
               </div>
