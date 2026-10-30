@@ -278,6 +278,16 @@ async function run() {
     'No-key environment rejects AI requests without contacting Google',
   );
   ensure((await request('auth/me', 'GET', null, ownerCookie)).body.role, 'owner', 'Owner role');
+  const quotaBefore = await request('ocr/limit', 'GET', null, ownerCookie);
+  ensure(quotaBefore.status, 200, 'Owner can inspect OCR usage');
+  ensure(quotaBefore.body.limit, 8, 'OCR scan budget documented by the API');
+  ensure(quotaBefore.body.remaining, 8, 'No OCR requests have been spent');
+  ensure(quotaBefore.body.windowSeconds, 600, 'OCR budget resets in 10 minutes');
+  const malformedScan = await request('ocr/clan', 'POST', {}, ownerCookie);
+  assert.notEqual(malformedScan.status, 200, 'Malformed scan is not accepted');
+  ensure((await request('ocr/limit', 'GET', null, ownerCookie)).body.remaining, 7,
+    'Both clan and war OCR share the same authenticated scan budget');
+
   ensure(
     (await request('public/clan')).body.leader,
     'owner',
@@ -581,6 +591,9 @@ async function run() {
   });
   ensure(member.status, 201, 'Member account registered');
   const memberCookie = member.cookie;
+  ensure((await request('ocr/limit', 'GET', null, memberCookie)).status, 403,
+    'Members cannot inspect OCR scan usage');
+
   ensure(
     (await request('auth/impersonate', 'POST', { accountId: owner.body.id }, memberCookie)).status,
     403,

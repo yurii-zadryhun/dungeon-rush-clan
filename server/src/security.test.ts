@@ -6,6 +6,7 @@ describe('request rate limits', () => {
     expect(limitFor('POST', '/api/auth/login')?.group).toBe('authentication');
     expect(limitFor('POST', '/api/auth/invite/abc/register')?.group).toBe('registration');
     expect(limitFor('POST', '/api/ocr')?.group).toBe('ocr');
+    expect(limitFor('POST', '/api/ocr/clan')?.group).toBe('ocr');
     expect(limitFor('GET', '/clan/en')?.group).toBe('public-page');
     expect(limitFor('GET', '/api/public/clan')?.group).toBe('public-data');
     expect(limitFor('GET', '/api/players')?.group).toBe('api-reads');
@@ -28,5 +29,8 @@ describe('request rate limits', () => {
     expect(limiter.check('client', { group: 'ocr', max: 1, windowMs: 60000 }, 100)).toBe(0);
     expect(limiter.check('client', { group: 'ocr', max: 1, windowMs: 60000 }, 100)).toBe(60);
     expect(limiter.check('client', { group: 'api-reads', max: 1, windowMs: 60000 }, 100)).toBe(0);
+    const quota = limiter.usage('client', { group: 'ocr', max: 1, windowMs: 60000 }, 100);
+    expect(quota).toEqual({ limit: 1, remaining: 0, windowSeconds: 60, resetAt: 60100 });
+    expect(limiter.usage('client', { group: 'ocr', max: 1, windowMs: 60000 }, 60100).remaining).toBe(1);
   });
 });
