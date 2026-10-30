@@ -1,4 +1,5 @@
 import React from 'react';
+import { confirmAction, notify } from './Toast';
 import { GitMerge, ShieldAlert } from 'lucide-react';
 import { api, json, type Dashboard } from '../api';
 import { useI18n } from '../i18n';
@@ -42,7 +43,7 @@ export function MergePlayers({ onMerged }: { onMerged: (dashboard: Dashboard) =>
 
   async function merge() {
     if (!source || !target || source.id === target.id) return;
-    if (!window.confirm(t('mergeConfirm', { old: source.name, correct: target.name }))) return;
+    if (!(await confirmAction(t('mergeConfirm', { old: source.name, correct: target.name })))) return;
     setBusy(true);
     setError('');
     setDone('');
@@ -56,6 +57,7 @@ export function MergePlayers({ onMerged }: { onMerged: (dashboard: Dashboard) =>
       setInto(null);
       await load();
       setDone(t('mergeComplete'));
+      notify(t('mergeComplete'));
     } catch (failure) {
       setError((failure as Error).message);
     } finally {

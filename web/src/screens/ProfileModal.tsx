@@ -1,4 +1,5 @@
 import React from 'react';
+import { notify } from './Toast';
 import { ModalDialog } from './ModalDialog';
 import { KeyRound, Trash2, UserRound, X } from 'lucide-react';
 import { api, json, type Account } from '../api';
@@ -44,6 +45,7 @@ export function ProfileModal({
         }),
       );
       await onSaved(accountUpdate);
+      notify(t('profileSaved'));
       onClose();
     } catch (failure) {
       setError((failure as Error).message);

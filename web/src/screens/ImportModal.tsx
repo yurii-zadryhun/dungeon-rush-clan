@@ -1,4 +1,5 @@
 import React from 'react';
+import { notify } from './Toast';
 import { ModalDialog } from './ModalDialog';
 import { CheckCircle, ScanLine, UploadCloud, X } from 'lucide-react';
 import {
@@ -275,6 +276,7 @@ export function ImportModal({
         json('POST', warSubmission(week.start, draft, sections)),
       );
       sessionStorage.removeItem(storageKey);
+      notify(t('changesSaved'));
       onDone(updated);
     } catch (failure) {
       setError((failure as Error).message);

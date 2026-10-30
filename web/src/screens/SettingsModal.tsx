@@ -1,4 +1,5 @@
 import React from 'react';
+import { notify } from './Toast';
 import { ModalDialog } from './ModalDialog';
 import { Plus, Save, Settings, Trash2, X } from 'lucide-react';
 import { api, json, type Dashboard } from '../api';
@@ -58,6 +59,7 @@ export function SettingsModal({
           weights: list,
         }),
       );
+      notify(t('changesSaved'));
       onDone(updated);
     } catch (failure) {
       setError((failure as Error).message);

@@ -15,7 +15,7 @@ import { formatWarRange } from '../date-format';
 import { nChoice, useI18n, type Locale } from '../i18n';
 
 import { SiteHeader } from './SiteHeader';
-import { ToastHost, notify } from './Toast';
+import { ToastHost, ConfirmationHost, notify } from './Toast';
 import { ClanSocialLinks } from './ClanSocialLinks';
 import { PersonalDashboard } from './PersonalDashboard';
 import './PersonalDashboard.css';
@@ -491,6 +491,7 @@ export function ClanDashboard({
   return (
     <div className="page">
       <ToastHost />
+      <ConfirmationHost />
       <SiteHeader
         user={user}
         isWiki={isWiki}

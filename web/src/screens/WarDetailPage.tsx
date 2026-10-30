@@ -1,4 +1,5 @@
 import React from 'react';
+import { notify } from './Toast';
 import { ArrowLeft, Copy, Trophy, Users, Crown } from 'lucide-react';
 import { api, shortNumber, type WarDetail } from '../api';
 import { formatWarRange } from '../date-format';
@@ -68,6 +69,7 @@ export function WarDetailPage({ start, clanName }: { start: string; clanName: st
     try {
       await navigator.clipboard.writeText(reportText(war, clanName, uk));
       setCopied(true);
+      notify(uk ? 'Звіт скопійовано' : 'Report copied');
     } catch {
       setError(uk ? 'Не вдалося скопіювати звіт' : 'Could not copy report');
     }

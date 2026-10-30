@@ -1,4 +1,5 @@
 import React from 'react';
+import { confirmAction } from './Toast';
 import { notify } from './Toast';
 import {
   AlertCircle,
@@ -160,8 +161,8 @@ export function PlayerManagementPanel({ playerId }: { playerId: number }) {
     );
   }
 
-  function removeNote(noteId: number) {
-    if (!window.confirm(t('confirmDeleteNote')) || notesBusy) return;
+  async function removeNote(noteId: number) {
+    if (notesBusy || !(await confirmAction(t('confirmDeleteNote')))) return;
     void updateNotes(() =>
       api<PlayerManagement>(`player-management/${playerId}/notes/${noteId}`, { method: 'DELETE' }),
     );

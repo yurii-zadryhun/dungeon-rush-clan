@@ -1,4 +1,5 @@
 import React from 'react';
+import { notify } from './Toast';
 import { ModalDialog } from './ModalDialog';
 import { Camera, CheckCircle, Copy, Plus, Trash2, UploadCloud, X } from 'lucide-react';
 import {
@@ -401,6 +402,7 @@ export function ClanRosterImportModal({
       );
       sessionStorage.removeItem('clan:roster-review:v1');
       const dashboard = await api<Dashboard>('dashboard');
+      notify(t('changesSaved'));
       onDone(dashboard);
     } catch (reason) {
       setError((reason as Error).message);

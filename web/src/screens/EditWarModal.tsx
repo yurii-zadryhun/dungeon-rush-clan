@@ -1,4 +1,5 @@
 import React from 'react';
+import { notify } from './Toast';
 import { ModalDialog } from './ModalDialog';
 import { Pencil, Save, X } from 'lucide-react';
 import { api, json, type Dashboard, type Roster, type Week } from '../api';
@@ -75,6 +76,7 @@ export function EditWarModal({
       );
       const updated = latest.weeks.find((candidate) => candidate.start === week.start);
       if (!updated) throw new Error(t('serverError'));
+      notify(t('changesSaved'));
       onDone(dashboard, updated);
     } catch (failure) {
       setError((failure as Error).message);

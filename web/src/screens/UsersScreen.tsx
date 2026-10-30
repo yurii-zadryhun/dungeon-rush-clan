@@ -1,4 +1,5 @@
 import React from 'react';
+import { confirmAction, notify } from './Toast';
 import { AuditHistory } from './AuditHistory';
 import { ModalDialog } from './ModalDialog';
 import { Copy, Eye, Link2, Pencil, Trash2, UserPlus, Users, X } from 'lucide-react';
@@ -79,6 +80,7 @@ export function UsersScreen({
     setError('');
     try {
       await task();
+      notify(t('changesSaved'));
     } catch (failure) {
       setError((failure as Error).message);
     } finally {
@@ -104,8 +106,8 @@ export function UsersScreen({
     });
   }
 
-  function revokeGroup() {
-    if (!window.confirm(t('confirmRevoke'))) return;
+  async function revokeGroup() {
+    if (!(await confirmAction(t('confirmRevoke')))) return;
     void perform(async () => {
       await api('auth/shared-invite', { method: 'DELETE' });
       setGroupUrl('');
@@ -113,16 +115,16 @@ export function UsersScreen({
     });
   }
 
-  function revokeInvite(invite: Invitation) {
-    if (!window.confirm(t('confirmRevoke'))) return;
+  async function revokeInvite(invite: Invitation) {
+    if (!(await confirmAction(t('confirmRevoke')))) return;
     void perform(async () => {
       await api('auth/invites/' + invite.id, { method: 'DELETE' });
       await refresh();
     });
   }
 
-  function deleteAccount(person: ManagedAccount) {
-    if (!window.confirm(t('confirmDeleteUser'))) return;
+  async function deleteAccount(person: ManagedAccount) {
+    if (!(await confirmAction(t('confirmDeleteUser')))) return;
     void perform(async () => {
       await api('auth/accounts/' + person.id, { method: 'DELETE' });
       await refresh();

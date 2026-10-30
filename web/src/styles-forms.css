@@ -720,3 +720,7 @@
 /* Shared keyboard-accessible modal shell. */
 .modal[role='dialog']:focus { outline: none; }
 .modal-backdrop { overscroll-behavior: contain; }
+
+.confirm-dialog { width:min(100%, 440px); }
+.confirm-dialog .modal-content p { margin:0; line-height:1.5; }
+.management-toast > button { background:transparent; color:inherit; border:0; padding:4px; margin-left:8px; display:inline-grid; place-items:center; }
