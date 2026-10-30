@@ -1,0 +1,6 @@
+.player-link { color:var(--text-primary); font-weight:850; text-decoration:none;
+  overflow-wrap:anywhere; text-underline-offset:3px; }
+.player-link:hover,.player-link:focus-visible { color:var(--color-blue); text-decoration:underline; }
+.player-link.is-me { color:var(--color-gold); }
+.data-table-row:has(.player-link.is-me) { border-color:var(--color-gold);
+  background:rgba(242,189,69,.09); }

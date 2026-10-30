@@ -1,4 +1,6 @@
 import React from 'react';
+import { PlayerLink } from './PlayerLink';
+import { DataTable, DataTableRow, DataTableCell } from './DataTable';
 import { Award, Crown, Medal, Trophy } from 'lucide-react';
 import { api, shortNumber, type RecognitionOverview } from '../api';
 import { useI18n } from '../i18n';
@@ -53,7 +55,7 @@ export function RecognitionWidget() {
           </p>
           <div className="recognition-awards">
             {data.awards.map((award) => (
-              <a key={award.kind} href={'#/players/' + award.playerId}>
+              <div key={award.kind}>
                 {award.kind === 'firstPlaces' ? (
                   <Medal size={17} />
                 ) : award.kind === 'championship' ? (
@@ -63,29 +65,29 @@ export function RecognitionWidget() {
                 )}
                 <span>
                   <small>{labels[award.kind][uk ? 0 : 1]}</small>
-                  <strong>{award.name}</strong>
+                  <strong><PlayerLink id={award.playerId} name={award.name} /></strong>
                 </span>
                 <b>
                   {award.kind === 'points' || award.kind === 'championship'
                     ? shortNumber(award.value)
                     : award.value}
                 </b>
-              </a>
+              </div>
             ))}
           </div>
           <h3>{uk ? 'Лідери за всі війни' : 'All-time contributors'}</h3>
-          <div className="recognition-leaders">
-            {data.leaderboard.slice(0, 10).map((person, index) => (
-              <a key={person.id} href={'#/players/' + person.id}>
-                <span>{index + 1}.</span>
-                <strong>{person.name}</strong>
-                <small>
-                  {person.mvps} MVP · {person.firstPlaces} #1
-                </small>
-                <b>{shortNumber(person.points)}</b>
-              </a>
+          <DataTable label={uk ? 'Лідери за всі війни' : 'All-time contributors'}
+            columns="26px minmax(0,1fr) minmax(64px,95px) minmax(70px,95px)"
+            headers={['#', uk ? 'Гравець' : 'Player', 'MVP / #1', uk ? 'Очки' : 'Points']}>
+            {data.leaderboard.slice(0,10).map((person,index) => (
+              <DataTableRow key={person.id}>
+                <DataTableCell>{index + 1}</DataTableCell>
+                <DataTableCell><PlayerLink id={person.id} name={person.name} /></DataTableCell>
+                <DataTableCell numeric>{person.mvps} / {person.firstPlaces}</DataTableCell>
+                <DataTableCell numeric><strong>{shortNumber(person.points)}</strong></DataTableCell>
+              </DataTableRow>
             ))}
-          </div>
+          </DataTable>
           {data.recent.length > 0 && (
             <>
               <h3>{uk ? 'Герої останніх воєн' : 'Recent war leaders'}</h3>
@@ -95,7 +97,7 @@ export function RecognitionWidget() {
                     <span>
                       {formatWarRange(entry.start, locale)} {entry.championship && '🏆'}
                     </span>
-                    <strong>{entry.name}</strong>
+                    <strong><PlayerLink id={entry.id} name={entry.name} /></strong>
                     <b>{shortNumber(entry.points)}</b>
                   </a>
                 ))}

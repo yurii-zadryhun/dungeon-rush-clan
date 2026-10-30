@@ -1,4 +1,5 @@
 import React from 'react';
+import { PlayerIdentityProvider, PlayerLink } from './PlayerLink';
 import { ChevronsLeft, History, Medal, Pencil, Swords } from 'lucide-react';
 import {
   api,
@@ -112,9 +113,7 @@ function Leaders({
           >
             <span className={'place place-' + index}>{index + 1}</span>
             <div className="leader-name">
-              <a className="player-profile-link" href={'#/players/' + player.id}>
-                {player.name}
-              </a>
+              <PlayerLink id={player.id} name={player.name} className="player-profile-link" />
               <small>
                 {player.appearances}{' '}
                 {nChoice(locale, player.appearances, t('warsSingular'), t('warsFew'), t('warsPlural'))}{' '}
@@ -242,13 +241,7 @@ function WarColumn({
                     .join(' ')}
                 >
                   <span className="rank-number">{player.position}</span>
-                  <a
-                    className="roster-name player-profile-link"
-                    title={player.name}
-                    href={'#/players/' + player.id}
-                  >
-                    {player.name}
-                  </a>
+                  <PlayerLink id={player.id} name={player.name} className="roster-name player-profile-link" />
                   <b>{shortNumber(player.points)}</b>
                 </div>
               );
@@ -489,6 +482,7 @@ export function ClanDashboard({
       </main>
     );
   return (
+    <PlayerIdentityProvider account={user}>
     <div className="page">
       <ToastHost />
       <ConfirmationHost />
@@ -652,5 +646,6 @@ export function ClanDashboard({
         )}
       </React.Suspense>
     </div>
+    </PlayerIdentityProvider>
   );
 }

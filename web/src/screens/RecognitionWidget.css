@@ -10,7 +10,7 @@
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 9px;
 }
-.recognition-awards a {
+.recognition-awards > div {
   display: flex;
   align-items: center;
   gap: 9px;

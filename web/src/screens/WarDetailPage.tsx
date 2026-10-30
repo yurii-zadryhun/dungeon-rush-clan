@@ -1,5 +1,7 @@
 import React from 'react';
 import { notify } from './Toast';
+import { PlayerLink } from './PlayerLink';
+import { DataTable, DataTableRow, DataTableCell } from './DataTable';
 import { ArrowLeft, Copy, Trophy, Users, Crown } from 'lucide-react';
 import { api, shortNumber, type WarDetail } from '../api';
 import { formatWarRange } from '../date-format';
@@ -14,6 +16,8 @@ function reportText(war: WarDetail, clanName: string, uk: boolean): string {
       ? 'Результат очікується'
       : 'Result pending';
   const top = [...war.players].sort((a, b) => b.points - a.points).slice(0, 5);
+  const winnerWidth = Math.max(0, ...war.days.map((day) =>
+    (day.winner === 'ours' ? clanName : war.opponent || '?').length));
   return [
     `⚔️ ${clanName} vs ${war.opponent || '?'}`,
     `${formatWarRange(war.start, uk ? 'uk' : 'en')}${war.championship ? ' 🏆 Championship' : ''}`,
@@ -30,7 +34,7 @@ function reportText(war: WarDetail, clanName: string, uk: boolean): string {
     ...(war.resultImported
       ? war.days.map(
           (day) =>
-            `${uk ? 'День' : 'Day'} ${day.day}: ${day.winner === 'ours' ? clanName : war.opponent || '?'} · MVP ${day.mvp}`,
+            `${uk ? 'День' : 'Day'} ${day.day}: ${(day.winner === 'ours' ? clanName : war.opponent || '?').padEnd(winnerWidth)} · MVP ${day.mvp}`,
         )
       : []),
   ].join('\n');
@@ -87,7 +91,7 @@ export function WarDetailPage({ start, clanName }: { start: string; clanName: st
 
   return (
     <main className="war-detail-page">
-      <a className="player-back" href="#/archive">
+      <a className="war-detail-back" href="#/archive">
         <ArrowLeft size={17} />
         {uk ? 'Архів воєн' : 'War archive'}
       </a>
@@ -163,7 +167,7 @@ export function WarDetailPage({ start, clanName }: { start: string; clanName: st
                     <span>
                       MVP:{' '}
                       {day.mvpPlayerId && day.winner === 'ours' ? (
-                        <a href={'#/players/' + day.mvpPlayerId}>{day.mvp}</a>
+                        <PlayerLink id={day.mvpPlayerId} name={day.mvp} />
                       ) : (
                         day.mvp
                       )}
@@ -179,17 +183,20 @@ export function WarDetailPage({ start, clanName }: { start: string; clanName: st
               <div className="war-recognition">
                 <span>
                   🏅 {uk ? 'Найбільший внесок' : 'Top contributor'}:{' '}
-                  <a href={'#/players/' + [...war.players].sort((a, b) => b.points - a.points)[0].id}>
-                    {[...war.players].sort((a, b) => b.points - a.points)[0].name}
-                  </a>
+                  <PlayerLink
+                    id={[...war.players].sort((a, b) => b.points - a.points)[0].id}
+                    name={[...war.players].sort((a, b) => b.points - a.points)[0].name}
+                  />
                 </span>
                 {war.days.some((day) => day.winner === 'ours') && (
                   <span>
                     🏆 {uk ? 'MVP наших перемог' : 'Our winning MVPs'}:{' '}
-                    {war.days
-                      .filter((day) => day.winner === 'ours')
-                      .map((day) => day.mvp)
-                      .join(', ')}
+                    {war.days.filter((day) => day.winner === 'ours').map((day, index) => (
+                      <React.Fragment key={day.day}>
+                        {index > 0 && ', '}
+                        {day.mvpPlayerId ? <PlayerLink id={day.mvpPlayerId} name={day.mvp} /> : day.mvp}
+                      </React.Fragment>
+                    ))}
                   </span>
                 )}
               </div>
@@ -211,30 +218,21 @@ export function WarDetailPage({ start, clanName }: { start: string; clanName: st
                 {war.summary.topTenShare - war.summary.topFiveShare}% · {uk ? 'Інші' : 'Others'}:{' '}
                 {100 - war.summary.topTenShare}%
               </p>
-              <div
-                className="war-detail-table"
-                role="table"
-                aria-label={uk ? 'Рейтинг гравців' : 'Player ranking'}
-              >
-                <div className="war-detail-row war-detail-columns" role="row">
-                  <button onClick={() => orderBy('position')}>
-                    {uk ? 'Місце' : 'Rank'} {sort === 'position' ? (descending ? '↓' : '↑') : ''}
-                  </button>
-                  <button onClick={() => orderBy('name')}>
-                    {uk ? 'Гравець' : 'Player'} {sort === 'name' ? (descending ? '↓' : '↑') : ''}
-                  </button>
-                  <button onClick={() => orderBy('points')}>
-                    {uk ? 'Очки' : 'Points'} {sort === 'points' ? (descending ? '↓' : '↑') : ''}
-                  </button>
-                </div>
+              <DataTable label={uk ? 'Рейтинг гравців' : 'Player ranking'}
+                columns="minmax(44px,70px) minmax(0,1fr) minmax(75px,115px)"
+                headers={[
+                  <button onClick={() => orderBy('position')}>{uk ? 'Місце' : 'Rank'} {sort === 'position' ? (descending ? '↓' : '↑') : ''}</button>,
+                  <button onClick={() => orderBy('name')}>{uk ? 'Гравець' : 'Player'} {sort === 'name' ? (descending ? '↓' : '↑') : ''}</button>,
+                  <button onClick={() => orderBy('points')}>{uk ? 'Очки' : 'Points'} {sort === 'points' ? (descending ? '↓' : '↑') : ''}</button>,
+                ]}>
                 {players.map((player) => (
-                  <div className="war-detail-row" role="row" key={player.id}>
-                    <span>{player.position}</span>
-                    <a href={'#/players/' + player.id}>{player.name}</a>
-                    <strong>{shortNumber(player.points)}</strong>
-                  </div>
+                  <DataTableRow key={player.id}>
+                    <DataTableCell>{player.position}</DataTableCell>
+                    <DataTableCell><PlayerLink id={player.id} name={player.name} /></DataTableCell>
+                    <DataTableCell numeric><strong>{shortNumber(player.points)}</strong></DataTableCell>
+                  </DataTableRow>
                 ))}
-              </div>
+              </DataTable>
             </section>
           )}
           <section className="panel war-detail-section">
