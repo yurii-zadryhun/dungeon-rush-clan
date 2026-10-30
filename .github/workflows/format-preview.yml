@@ -1,0 +1,21 @@
+name: Temporary format preview
+on:
+  push:
+    branches: [format-preview-20261030]
+permissions:
+  contents: read
+jobs:
+  format:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm ci --no-audit --no-fund
+      - name: Print already-formatted source files
+        shell: bash
+        run: |
+          npx prettier --write server/src/insights.ts server/src/main.ts web/public/manifest.webmanifest web/public/sw.js web/src/screens/AdvancedInsights.css web/src/screens/AdvancedInsights.tsx web/src/screens/ClanDashboard.tsx web/src/screens/DataTable.css web/src/screens/DataTable.tsx web/src/screens/PlayerLink.css web/src/screens/PlayerLink.tsx web/src/screens/PlayersPage.tsx web/src/screens/RecognitionWidget.css web/src/screens/RecognitionWidget.tsx web/src/screens/WarDetailPage.css web/src/screens/WarDetailPage.tsx
+          node -e "const fs=require('fs'); for(const p of process.argv.slice(1)) console.log('FMT:'+p+':'+fs.readFileSync(p).toString('base64'))" server/src/insights.ts server/src/main.ts web/public/manifest.webmanifest web/public/sw.js web/src/screens/AdvancedInsights.css web/src/screens/AdvancedInsights.tsx web/src/screens/ClanDashboard.tsx web/src/screens/DataTable.css web/src/screens/DataTable.tsx web/src/screens/PlayerLink.css web/src/screens/PlayerLink.tsx web/src/screens/PlayersPage.tsx web/src/screens/RecognitionWidget.css web/src/screens/RecognitionWidget.tsx web/src/screens/WarDetailPage.css web/src/screens/WarDetailPage.tsx
