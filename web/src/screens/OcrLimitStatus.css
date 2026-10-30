@@ -1,0 +1,19 @@
+.ocr-limit-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+  padding: 10px 12px;
+  border: 1px solid #4b5866;
+  border-radius: 9px;
+  background: #242e39;
+  color: #d2e5f6;
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.4;
+}
+.ocr-limit-status svg { flex: none; color: #8bc5f1; }
+.ocr-limit-status span { display: grid; gap: 2px; min-width: 0; }
+.ocr-limit-status small { color: #adbfce; font-size: 10px; font-weight: 550; }
+.ocr-limit-status.exhausted { background: #423222; border-color: #98713e; color: #ffe5a6; }
+.ocr-limit-status.exhausted svg { color: #f0c075; }
