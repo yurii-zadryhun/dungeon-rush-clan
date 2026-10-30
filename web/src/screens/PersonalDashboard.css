@@ -1,0 +1,11 @@
+.personal-dashboard { display:grid; gap:12px; padding:16px; margin:0 0 16px; }
+.personal-dashboard-top { display:flex; gap:10px; align-items:center; justify-content:space-between; }
+.personal-dashboard-top h2 { font-size:17px; display:flex; gap:7px; align-items:center; margin:0; }
+.personal-dashboard-top a { display:flex; gap:4px; align-items:center; color:inherit; text-decoration:none; font-size:12px; }
+.personal-dashboard-metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+.personal-dashboard-metrics > div { display:grid; gap:5px; }
+.personal-dashboard-metrics strong { font-size:clamp(16px,3vw,25px); }
+.personal-dashboard-metrics small { color:var(--muted); font-size:11px; }
+.personal-requirement { height:6px; border-radius:5px; background:#48444d; overflow:hidden; }
+.personal-requirement span { display:block; height:100%; background:var(--green); }
+@media(max-width:650px) { .personal-dashboard-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } }

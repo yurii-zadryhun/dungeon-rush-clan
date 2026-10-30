@@ -16,6 +16,7 @@ import { useI18n } from '../i18n';
 import { OcrLimitStatus } from './OcrLimitStatus';
 import {
   WarReviewEditor,
+  invalidWarDraft,
   emptyRoster,
   makeResult,
   warSubmission,
@@ -249,6 +250,10 @@ export function ImportModal({
   }
 
   async function confirm() {
+    if (invalidWarDraft(draft, sections)) {
+      setError(locale === 'uk' ? 'Виправ виділені помилки перед імпортом.' : 'Correct the highlighted fields before importing.');
+      return;
+    }
     if (sections.players && !draft.players.length) {
       setError(t('playersRequired'));
       return;

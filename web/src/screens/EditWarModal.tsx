@@ -6,6 +6,7 @@ import { formatWarRange } from '../date-format';
 import { useI18n } from '../i18n';
 import {
   WarReviewEditor,
+  invalidWarDraft,
   draftFromWeek,
   emptyRoster,
   warSubmission,
@@ -47,6 +48,10 @@ export function EditWarModal({
   }, [week.start]);
 
   async function save() {
+    if (invalidWarDraft(draft, sections)) {
+      setError(locale === 'uk' ? 'Виправ виділені помилки перед збереженням.' : 'Correct the highlighted fields before saving.');
+      return;
+    }
     if (sections.players && !draft.players.length) {
       setError(t('playersRequired'));
       return;

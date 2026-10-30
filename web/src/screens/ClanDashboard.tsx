@@ -17,6 +17,8 @@ import { nChoice, useI18n, type Locale } from '../i18n';
 import { SiteHeader } from './SiteHeader';
 import { ToastHost, notify } from './Toast';
 import { ClanSocialLinks } from './ClanSocialLinks';
+import { PersonalDashboard } from './PersonalDashboard';
+import './PersonalDashboard.css';
 
 // Route-only screens and heavy editors should not be bundled into the archive's first paint.
 const WikiScreen = React.lazy(() =>
@@ -553,6 +555,7 @@ export function ClanDashboard({
         ) : (
           <main className="dashboard">
             {error && <div className="error-strip">{error}</div>}
+            {user.playerId !== null && <PersonalDashboard account={user} data={data} />}
             <div className="dashboard-top dashboard-top-compact">
               <ClanOverview data={data} />
               <Leaders allTime={data.rankings.allTime} latest={data.rankings.latest} account={user} />

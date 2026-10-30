@@ -132,7 +132,6 @@ export function UsersScreen({
 
   function viewAs(person: ManagedAccount) {
     if (!owner || person.role === 'owner' || !person.active) return;
-    if (!window.confirm(t('impersonationConfirm', { name: person.display_name }))) return;
     void perform(async () => {
       const assumed = await api<Account>('auth/impersonate', json('POST', { accountId: person.id }));
       onImpersonate(assumed);

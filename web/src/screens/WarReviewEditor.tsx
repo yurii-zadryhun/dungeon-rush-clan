@@ -32,6 +32,33 @@ export const emptyRoster: Roster = { previousStart: null, previous: [], all: [] 
 
 const dayPoints = [1, 2, 2, 2, 2, 4] as const;
 
+export function invalidWarDraft(draft: WarDraft, sections: WarSections): boolean {
+  if (sections.players) {
+    if (!draft.players.length) return true;
+    const positions = new Set<number>();
+    const identities = new Set<string>();
+    for (const player of draft.players) {
+      const identity = player.playerId ? 'id:' + player.playerId : 'name:' + normalizeName(player.name);
+      if (!Number.isInteger(player.position) || player.position < 1 || player.position > 100 ||
+        !player.name.trim() || player.name.trim().length > 80 ||
+        !Number.isInteger(player.points) || player.points < 0 || player.points > 1_000_000_000 ||
+        positions.has(player.position) || identities.has(identity)) return true;
+      positions.add(player.position);
+      identities.add(identity);
+    }
+  }
+  if (sections.result) {
+    if (!draft.result || !draft.result.opponent.trim() || draft.result.opponent.length > 80) return true;
+    const result = draft.result;
+    const our = result.days.filter((day) => day.winner === 'ours').reduce((total, day) => total + day.points, 0);
+    const opponent = result.days.filter((day) => day.winner === 'opponent').reduce((total, day) => total + day.points, 0);
+    if (result.days.length !== 6 || result.days.some((day) => !day.winner || !day.mvp.trim()) ||
+      !result.ourScore.trim() || !result.opponentScore.trim() ||
+      Number(result.ourScore) !== our || Number(result.opponentScore) !== opponent) return true;
+  }
+  return false;
+}
+
 export function makeResult(parsed: OcrResponse['result']): EditableResult | null {
   if (!parsed) return null;
   return {
@@ -136,6 +163,13 @@ function PlayersPanel({
   const isSuspicious = (player: OcrPlayer) => !player.playerId ||
     (player.confidence !== undefined && player.confidence < 0.85);
   const suspiciousCount = players.filter(isSuspicious).length;
+  const positionCount = new Map<number, number>();
+  const nameCount = new Map<string, number>();
+  for (const player of players) {
+    positionCount.set(player.position, (positionCount.get(player.position) ?? 0) + 1);
+    const key = player.playerId ? 'id:' + player.playerId : 'name:' + normalizeName(player.name);
+    nameCount.set(key, (nameCount.get(key) ?? 0) + 1);
+  }
   const previousIds = new Set(roster.previous.map((player) => player.id));
   const participants = new Set(players.map((player) => player.playerId).filter(Boolean));
   const departures = roster.previous.filter((player) => !participants.has(player.id));
@@ -185,6 +219,12 @@ function PlayersPanel({
       <div className="war-editor-players">
         {players.map((player, index) => {
           if (suspiciousOnly && !isSuspicious(player)) return null;
+          const invalidPosition = !Number.isInteger(player.position) || player.position < 1 ||
+            player.position > 100 || (positionCount.get(player.position) ?? 0) > 1;
+          const identityKey = player.playerId ? 'id:' + player.playerId : 'name:' + normalizeName(player.name);
+          const invalidName = !player.name.trim() || player.name.trim().length > 80 ||
+            (nameCount.get(identityKey) ?? 0) > 1;
+          const invalidPoints = !Number.isInteger(player.points) || player.points < 0 || player.points > 1_000_000_000;
           const isNew = !player.playerId;
           const isReturning = !!player.playerId && !previousIds.has(player.playerId);
           const near = !player.playerId
@@ -203,6 +243,7 @@ function PlayersPanel({
               <div className="war-editor-player-fields">
                 <input
                   aria-label={t('rank')}
+                  aria-invalid={invalidPosition}
                   title={t('rank')}
                   type="number"
                   min="1"
@@ -212,6 +253,7 @@ function PlayersPanel({
                 />
                 <input
                   aria-label={t('name')}
+                  aria-invalid={invalidName}
                   title={t('name')}
                   value={player.name}
                   placeholder={t('name')}
@@ -219,6 +261,7 @@ function PlayersPanel({
                 />
                 <input
                   aria-label={t('points')}
+                  aria-invalid={invalidPoints}
                   title={t('points')}
                   type="number"
                   min="0"
@@ -234,6 +277,12 @@ function PlayersPanel({
                   <Trash2 size={16} />
                 </button>
               </div>
+              {(invalidPosition || invalidName || invalidPoints) && (
+                <small className="war-row-validation" role="alert">
+                  {locale === 'uk' ? 'Перевір ранг, ім’я та очки — значення мають бути коректними й унікальними.' :
+                    'Check rank, name and points. Values must be valid and unique.'}
+                </small>
+              )}
               <div className="war-editor-player-meta">
                 {(isNew || isReturning) && (
                   <span className={'tag ' + (isNew ? 'new-player' : 'success')}>
@@ -305,6 +354,7 @@ function ResultPanel({
           {t('opponent')}
           <input
             value={result.opponent}
+            aria-invalid={!result.opponent.trim() || result.opponent.length > 80}
             onChange={(e) => onChange({ ...result, opponent: e.target.value })}
           />
         </label>
@@ -315,6 +365,7 @@ function ResultPanel({
             min="0"
             max="13"
             value={result.ourScore}
+            aria-invalid={!result.ourScore.trim() || Number(result.ourScore) !== score('ours')}
             onChange={(e) => onChange({ ...result, ourScore: e.target.value })}
           />
         </label>
@@ -325,6 +376,7 @@ function ResultPanel({
             min="0"
             max="13"
             value={result.opponentScore}
+            aria-invalid={!result.opponentScore.trim() || Number(result.opponentScore) !== score('opponent')}
             onChange={(e) => onChange({ ...result, opponentScore: e.target.value })}
           />
         </label>

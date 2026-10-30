@@ -294,3 +294,6 @@
 .war-review-reattach { display:grid; gap:5px; padding:8px; margin-bottom:8px; font-size:11px; color:#e4e0e5; }
 
 .war-review-controls { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+
+.war-editor-player input[aria-invalid='true'], .war-editor-result-fields input[aria-invalid='true'] { border-color:var(--red); box-shadow:0 0 0 1px var(--red); }
+.war-row-validation { color:#ffb5b5; font-size:11px; padding:3px 5px; }
